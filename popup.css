@@ -29,24 +29,24 @@ button, input { font: inherit; }
 
 .masthead {
   display: grid;
-  grid-template-columns: 42px 1fr auto;
+  grid-template-columns: 42px minmax(0, 1fr) 8px;
   gap: 12px;
   align-items: center;
   margin-bottom: 18px;
 }
 
-.header-actions { display: flex; align-items: center; gap: 10px; }
+.brand-copy { min-width: 0; }
 
 .language-picker select {
-  max-width: 76px;
-  height: 28px;
+  width: 112px;
+  height: 32px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #242529;
   color: #d9dade;
   cursor: pointer;
-  font-size: 10px;
-  padding: 0 5px;
+  font-size: 11px;
+  padding: 0 8px;
 }
 
 .language-picker select:focus-visible, .type-switch button:focus-visible {
@@ -83,10 +83,17 @@ button, input { font: inherit; }
 }
 
 h1, h2 { margin: 0; }
-h1 { font-size: 18px; line-height: 1.25; letter-spacing: .01em; }
+h1 {
+  max-width: 270px;
+  font-size: 16px;
+  line-height: 1.22;
+  letter-spacing: 0;
+  text-wrap: balance;
+}
 h2 { font-size: 16px; line-height: 1.35; }
 
 .status-dot {
+  justify-self: end;
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -308,6 +315,37 @@ kbd {
 .shortcut-hint strong, .shortcut-hint span { display: block; }
 .shortcut-hint strong { font-size: 12px; }
 .shortcut-hint span { color: var(--muted); font-size: 10px; margin-top: 2px; }
+
+.language-settings {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 12px;
+  padding: 14px 4px 0;
+  border-top: 1px solid var(--line);
+}
+
+.language-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #c9cacf;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.language-glyph {
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  border: 1px solid #44464c;
+  border-radius: 7px;
+  background: #242529;
+  color: var(--muted);
+  font-size: 11px;
+}
 
 .sr-only {
   position: absolute;
