@@ -6,6 +6,7 @@ const { chromium } = require("playwright");
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 390, height: 900 } });
   await page.addInitScript(() => {
+    globalThis.savedSettings = [];
     globalThis.chrome = {
       i18n: { getUILanguage: () => "ja-JP" },
       storage: {
@@ -15,10 +16,11 @@ const { chromium } = require("playwright");
               language: "system",
               global: { speed: 1, quality: "hd1080" },
               shorts: { speed: 3, quality: "highest" },
+              shortsControls: { seekSeconds: 10, arrowKeysEnabled: false },
               channels: {}
             }
           }),
-          set: async () => {}
+          set: async (value) => savedSettings.push(value)
         }
       },
       tabs: { query: async () => [] }
@@ -34,12 +36,23 @@ const { chromium } = require("playwright");
   assert.equal(await page.locator("#globalSpeed .selected").innerText(), "3×");
   assert.equal(await page.locator("#globalKicker").innerText(), "すべてのショート");
   assert.equal(await page.locator("#shortsQualityNote").isVisible(), true);
+  assert.equal(await page.locator("#shortsControls").isVisible(), true);
+  assert.equal(await page.locator("#shortsSeekSeconds .selected").innerText(), "10 秒");
+  assert.equal(await page.locator("#shortsArrowKeysEnabled").isChecked(), false);
 
   await page.locator("#languageSelect").selectOption("en");
   assert.equal(await page.locator("#appTitle").innerText(), "YouTube Quick Speed / Quality Settings");
   assert.match(await page.locator("#shortcutDescription").innerText(), /0 restarts/);
+  assert.match(await page.locator("#shortcutDescription").innerText(), /10 sec/);
   assert.equal(await page.locator("#shortcutKeys kbd").count(), 6);
   assert.deepEqual(await page.locator("#shortcutKeys kbd").allTextContents(), ["←", "→", "0", "−", "＋", "＊"]);
+
+  await page.getByRole("radio", { name: "3 sec" }).click();
+  assert.equal(await page.locator("#shortsSeekSeconds .selected").innerText(), "3 sec");
+  assert.match(await page.locator("#shortcutDescription").innerText(), /3 sec/);
+  await page.locator("#shortsArrowKeysEnabled").check();
+  const saved = await page.evaluate(() => savedSettings.at(-1).ytQuickSettings.shortsControls);
+  assert.deepEqual(saved, { seekSeconds: 3, arrowKeysEnabled: true });
 
   const masthead = await page.locator(".masthead").boundingBox();
   const title = await page.locator("#appTitle").boundingBox();

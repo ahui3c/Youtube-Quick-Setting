@@ -64,6 +64,7 @@ Priority order:
 | `0` | Return a Short to the beginning |
 
 Shortcuts are ignored while typing in search, comment, and other text fields.
+The Shorts settings let you disable the arrow keys or select a `3`, `5` (default), or `10` second seek interval. The `0` shortcut remains available when the arrow keys are disabled.
 
 ## Quality behavior
 

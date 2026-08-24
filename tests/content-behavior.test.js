@@ -10,7 +10,7 @@ assert.match(source, /event\.key === "ArrowRight"/);
 assert.match(source, /event\.key === "0"/);
 assert.match(source, /event\.code === "Numpad0"/);
 source = source.replace(/^\s*show(?:Speed|Seek)Overlay\([^;]+;\r?$/gm, "");
-source = source.replace(/\ndocument\.addEventListener\("keydown"[\s\S]*$/, "\nthis.__contentTest = { contentType, isVideoPage, effectiveSettings, restoreNormalSpeed, seekShorts, handleKeyboardShortcut, ytqsNormalizeSettings };" );
+source = source.replace(/\ndocument\.addEventListener\("keydown"[\s\S]*$/, "\nthis.__contentTest = { contentType, isVideoPage, effectiveSettings, restoreNormalSpeed, seekShorts, handleKeyboardShortcut, ytqsNormalizeSettings, setSettings: (value) => { ytqsSettings = ytqsNormalizeSettings(value); } };" );
 
 const messages = [];
 const video = {
@@ -101,15 +101,36 @@ repeatedForward.repeat = true;
 assert.equal(api.handleKeyboardShortcut(repeatedForward), true);
 assert.equal(video.currentTime, 5);
 
+api.setSettings({
+  global: { speed: 1, quality: "hd1080" },
+  shorts: { speed: 1, quality: "hd1080" },
+  shortsControls: { seekSeconds: 10, arrowKeysEnabled: true }
+});
+const tenSecondForward = keyboardEvent("ArrowRight");
+assert.equal(api.handleKeyboardShortcut(tenSecondForward), true);
+assert.equal(video.currentTime, 15);
+
+api.setSettings({
+  global: { speed: 1, quality: "hd1080" },
+  shorts: { speed: 1, quality: "hd1080" },
+  shortsControls: { seekSeconds: 3, arrowKeysEnabled: false }
+});
+const disabledArrow = keyboardEvent("ArrowLeft");
+assert.equal(api.handleKeyboardShortcut(disabledArrow), false);
+assert.equal(video.currentTime, 15);
+const zeroWhileDisabled = keyboardEvent("0", "Digit0");
+assert.equal(api.handleKeyboardShortcut(zeroWhileDisabled), true);
+assert.equal(video.currentTime, 0);
+
 const typingTarget = keyboardEvent("ArrowRight");
 typingTarget.target = new MockHTMLElement("INPUT");
 assert.equal(api.handleKeyboardShortcut(typingTarget), false);
-assert.equal(video.currentTime, 5);
+assert.equal(video.currentTime, 0);
 
 sandbox.location.pathname = "/watch";
 sandbox.location.search = "?v=abc123";
 const regularArrow = keyboardEvent("ArrowRight");
 assert.equal(api.handleKeyboardShortcut(regularArrow), false);
-assert.equal(video.currentTime, 5);
+assert.equal(video.currentTime, 0);
 
 console.log("CONTENT_BEHAVIOR_TESTS_OK");

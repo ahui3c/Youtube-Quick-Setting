@@ -2,9 +2,11 @@ const YTQS_DEFAULTS = {
   language: "system",
   global: { speed: 1, quality: "hd1080" },
   shorts: { speed: 1, quality: "hd1080" },
+  shortsControls: { seekSeconds: 5, arrowKeysEnabled: true },
   channels: {}
 };
 const YTQS_SPEEDS = [0.7, 1, 1.25, 2, 3];
+const YTQS_SEEK_SECONDS = [3, 5, 10];
 let ytqsSettings = YTQS_DEFAULTS;
 let ytqsContext = { isVideo: false, contentType: "regular", channelId: "", channelName: "" };
 let ytqsRefreshTimer = 0;
@@ -48,6 +50,10 @@ function ytqsNormalizeSettings(value) {
     language: ["system", "zh-Hant", "en", "ja"].includes(value?.language) ? value.language : "system",
     global,
     shorts,
+    shortsControls: {
+      seekSeconds: YTQS_SEEK_SECONDS.includes(Number(value?.shortsControls?.seekSeconds)) ? Number(value.shortsControls.seekSeconds) : 5,
+      arrowKeysEnabled: value?.shortsControls?.arrowKeysEnabled !== false
+    },
     channels
   };
 }
@@ -367,8 +373,9 @@ function isSeekBlockedTarget(target) {
 function handleKeyboardShortcut(event) {
   if (!isVideoPage() || event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey || isTypingTarget(event.target)) return false;
   const isShorts = contentType() === "shorts";
-  const isSeekBackward = isShorts && event.key === "ArrowLeft";
-  const isSeekForward = isShorts && event.key === "ArrowRight";
+  const shortsControls = ytqsSettings.shortsControls || YTQS_DEFAULTS.shortsControls;
+  const isSeekBackward = isShorts && shortsControls.arrowKeysEnabled && event.key === "ArrowLeft";
+  const isSeekForward = isShorts && shortsControls.arrowKeysEnabled && event.key === "ArrowRight";
   const isSeekStart = isShorts && (event.key === "0" || event.code === "Numpad0");
   const isPlus = event.key === "+" || event.code === "NumpadAdd";
   const isMinus = event.key === "-" || event.key === "−" || event.code === "NumpadSubtract";
@@ -379,9 +386,9 @@ function handleKeyboardShortcut(event) {
   const handled = isSeekStart
     ? seekShorts(0)
     : isSeekBackward
-      ? seekShorts(-5)
+      ? seekShorts(-shortsControls.seekSeconds)
       : isSeekForward
-        ? seekShorts(5)
+        ? seekShorts(shortsControls.seekSeconds)
         : isReset
           ? restoreNormalSpeed()
           : adjustSpeed(isPlus ? 1 : -1);

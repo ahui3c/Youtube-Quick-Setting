@@ -6,6 +6,7 @@ const QUALITIES = [
 ];
 const PROFILE_KEYS = ["regular", "shorts"];
 const LANGUAGES = ["system", "zh-Hant", "en", "ja"];
+const SHORTS_SEEK_SECONDS = [3, 5, 10];
 
 const MESSAGES = {
   "zh-Hant": {
@@ -17,7 +18,9 @@ const MESSAGES = {
     enableChannel: "啟用目前頻道專屬設定", removeChannel: "移除頻道專屬設定",
     channelEmpty: "請在 YouTube 影片或 Shorts 頁面開啟此面板，即可加入頻道專屬設定。",
     shortcutTitle: "播放時直接調速", shortcutDescription: "按 −／+ 切換速度，按 * 恢復 1×",
-    shortsShortcutTitle: "Shorts 快速操作", shortsShortcutDescription: "←／→ 前後 5 秒，0 回片頭；−／+ 調速，* 回復 1×",
+    shortsShortcutTitle: "Shorts 快速操作", shortsShortcutDescription: "←／→ 前後 {seconds} 秒，0 回片頭；−／+ 調速，* 回復 1×",
+    shortsSeekSeconds: "快進秒數", secondsUnit: "秒", shortsArrowKeysTitle: "啟用 Shorts 左右方向鍵",
+    shortsArrowKeysDescription: "控制 ←／→ 快退快進，0 回片頭不受影響",
     connected: "已連線到目前影片", disconnected: "請開啟 YouTube 影片或 Shorts", languageLabel: "介面語言",
     qualityHighest: "自動最高", quality4k: "4K", quality1080: "1080p", qualityPremiumHint: "可用時優先使用 1080p Premium",
     shortsQualityNote: "YouTube Shorts 提供畫質控制時才會套用此偏好。"
@@ -31,7 +34,9 @@ const MESSAGES = {
     enableChannel: "Enable settings for the current channel", removeChannel: "Remove channel settings",
     channelEmpty: "Open this panel on a YouTube video or Short to add channel-specific settings.",
     shortcutTitle: "Adjust speed while playing", shortcutDescription: "Press −/+ to change speed, or * to restore 1×",
-    shortsShortcutTitle: "Shorts quick controls", shortsShortcutDescription: "←/→ seek 5 sec, 0 restarts; −/+ changes speed, * restores 1×",
+    shortsShortcutTitle: "Shorts quick controls", shortsShortcutDescription: "←/→ seek {seconds} sec, 0 restarts; −/+ changes speed, * restores 1×",
+    shortsSeekSeconds: "Seek interval", secondsUnit: "sec", shortsArrowKeysTitle: "Enable Shorts arrow keys",
+    shortsArrowKeysDescription: "Controls ←/→ seeking; 0 always returns to the start",
     connected: "Connected to the current video", disconnected: "Open a YouTube video or Short", languageLabel: "Interface language",
     qualityHighest: "Highest", quality4k: "4K", quality1080: "1080p", qualityPremiumHint: "Prefer 1080p Premium when available",
     shortsQualityNote: "This preference applies when YouTube provides quality controls for Shorts."
@@ -45,7 +50,9 @@ const MESSAGES = {
     enableChannel: "現在のチャンネル専用設定を有効にする", removeChannel: "チャンネル専用設定を削除",
     channelEmpty: "YouTube 動画またはショートのページでこのパネルを開くと、チャンネル専用設定を追加できます。",
     shortcutTitle: "再生中に速度を変更", shortcutDescription: "−／+ で速度変更、* で 1× に戻す",
-    shortsShortcutTitle: "ショートのクイック操作", shortsShortcutDescription: "←／→ で 5 秒移動、0 で先頭へ。−／+ で速度変更、* で 1×",
+    shortsShortcutTitle: "ショートのクイック操作", shortsShortcutDescription: "←／→ で {seconds} 秒移動、0 で先頭へ。−／+ で速度変更、* で 1×",
+    shortsSeekSeconds: "移動秒数", secondsUnit: "秒", shortsArrowKeysTitle: "ショートの左右キーを有効化",
+    shortsArrowKeysDescription: "←／→ の移動を制御。0 の先頭移動は常に有効",
     connected: "現在の動画に接続しました", disconnected: "YouTube 動画またはショートを開いてください", languageLabel: "表示言語",
     qualityHighest: "最高画質", quality4k: "4K", quality1080: "1080p", qualityPremiumHint: "利用可能なら 1080p Premium を優先",
     shortsQualityNote: "YouTube がショートの画質設定を提供している場合に適用されます。"
@@ -57,6 +64,7 @@ const DEFAULT_SETTINGS = {
   language: "system",
   global: { ...DEFAULT_PROFILE },
   shorts: { ...DEFAULT_PROFILE },
+  shortsControls: { seekSeconds: 5, arrowKeysEnabled: true },
   channels: {}
 };
 
@@ -92,6 +100,10 @@ function normalizeSettings(value) {
     language: LANGUAGES.includes(value?.language) ? value.language : "system",
     global,
     shorts,
+    shortsControls: {
+      seekSeconds: SHORTS_SEEK_SECONDS.includes(Number(value?.shortsControls?.seekSeconds)) ? Number(value.shortsControls.seekSeconds) : 5,
+      arrowKeysEnabled: value?.shortsControls?.arrowKeysEnabled !== false
+    },
     channels
   };
 }
@@ -141,7 +153,8 @@ function applyTranslations() {
   $("#channelEmpty").textContent = t("channelEmpty");
   const isShorts = activeContentType === "shorts";
   $("#shortcutTitle").textContent = t(isShorts ? "shortsShortcutTitle" : "shortcutTitle");
-  $("#shortcutDescription").textContent = t(isShorts ? "shortsShortcutDescription" : "shortcutDescription");
+  $("#shortcutDescription").textContent = t(isShorts ? "shortsShortcutDescription" : "shortcutDescription")
+    .replace("{seconds}", String(settings.shortsControls.seekSeconds));
   const shortcutKeys = $("#shortcutKeys");
   shortcutKeys.classList.toggle("shorts", isShorts);
   shortcutKeys.replaceChildren(...(isShorts ? ["←", "→", "0", "−", "＋", "＊"] : ["−", "＋", "＊"]).map((key) => {
@@ -152,6 +165,10 @@ function applyTranslations() {
   $("#globalKicker").textContent = t(activeContentType === "shorts" ? "allShorts" : "allRegular");
   $("#shortsQualityNote").textContent = t("shortsQualityNote");
   $("#shortsQualityNote").hidden = activeContentType !== "shorts";
+  $("#shortsSeekSecondsLegend").textContent = t("shortsSeekSeconds");
+  $("#shortsArrowKeysTitle").textContent = t("shortsArrowKeysTitle");
+  $("#shortsArrowKeysDescription").textContent = t("shortsArrowKeysDescription");
+  $("#shortsArrowKeysLabel").textContent = t("shortsArrowKeysTitle");
   $("#statusDot").title = context?.isVideo ? t("connected") : t("disconnected");
 }
 
@@ -215,6 +232,32 @@ function renderGlobal() {
     renderGlobal();
     await persist();
   });
+  renderShortsControls();
+}
+
+function renderShortsControls() {
+  const container = $("#shortsControls");
+  const visible = activeContentType === "shorts";
+  container.hidden = !visible;
+  if (!visible) return;
+  const selected = settings.shortsControls.seekSeconds;
+  const choices = $("#shortsSeekSeconds");
+  choices.replaceChildren();
+  SHORTS_SEEK_SECONDS.forEach((seconds) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `quality-button${selected === seconds ? " selected" : ""}`;
+    button.textContent = `${seconds} ${t("secondsUnit")}`;
+    button.setAttribute("role", "radio");
+    button.setAttribute("aria-checked", String(selected === seconds));
+    button.addEventListener("click", async () => {
+      settings.shortsControls.seekSeconds = seconds;
+      renderType();
+      await persist();
+    });
+    choices.append(button);
+  });
+  $("#shortsArrowKeysEnabled").checked = settings.shortsControls.arrowKeysEnabled;
 }
 
 function channelInitial(name) {
@@ -285,6 +328,12 @@ $("#typeSwitch").addEventListener("click", (event) => {
 $("#languageSelect").addEventListener("change", async (event) => {
   settings.language = LANGUAGES.includes(event.target.value) ? event.target.value : "system";
   renderType();
+  await persist();
+});
+
+$("#shortsArrowKeysEnabled").addEventListener("change", async (event) => {
+  settings.shortsControls.arrowKeysEnabled = event.target.checked;
+  applyTranslations();
   await persist();
 });
 

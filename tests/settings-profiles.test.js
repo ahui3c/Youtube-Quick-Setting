@@ -30,6 +30,10 @@ assert.deepEqual(
   { speed: 1.25, quality: "hd2160" }
 );
 assert.deepEqual(
+  JSON.parse(JSON.stringify(migrated.shortsControls)),
+  { seekSeconds: 5, arrowKeysEnabled: true }
+);
+assert.deepEqual(
   JSON.parse(JSON.stringify(migrated.channels.channelA.regular)),
   { speed: 2, quality: "highest" }
 );
@@ -42,6 +46,7 @@ const independent = normalizeSettings({
   language: "ja",
   global: { speed: 1, quality: "hd1080" },
   shorts: { speed: 3, quality: "highest" },
+  shortsControls: { seekSeconds: 10, arrowKeysEnabled: false },
   channels: {
     channelB: {
       regular: { speed: 1.25, quality: "hd1080" },
@@ -52,6 +57,8 @@ const independent = normalizeSettings({
 assert.equal(independent.language, "ja");
 assert.equal(independent.global.speed, 1);
 assert.equal(independent.shorts.speed, 3);
+assert.equal(independent.shortsControls.seekSeconds, 10);
+assert.equal(independent.shortsControls.arrowKeysEnabled, false);
 assert.equal(channelProfile(independent.channels.channelB, "regular").speed, 1.25);
 assert.equal(channelProfile(independent.channels.channelB, "shorts").speed, 0.7);
 assert.equal(profileKey("regular"), "global");

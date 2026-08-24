@@ -41,6 +41,24 @@
           <div class="choice-grid" id="globalQuality" role="radiogroup" aria-label="全域影片畫質"></div>
           <p class="context-note" id="shortsQualityNote" hidden>YouTube Shorts 提供畫質控制時才會套用此偏好。</p>
         </fieldset>
+
+        <div class="shorts-controls" id="shortsControls" hidden>
+          <fieldset>
+            <legend id="shortsSeekSecondsLegend">快進秒數</legend>
+            <div class="choice-grid" id="shortsSeekSeconds" role="radiogroup" aria-labelledby="shortsSeekSecondsLegend"></div>
+          </fieldset>
+          <div class="toggle-setting">
+            <div>
+              <strong id="shortsArrowKeysTitle">啟用 Shorts 左右方向鍵</strong>
+              <span id="shortsArrowKeysDescription">控制 ←／→ 快退快進，0 回片頭不受影響</span>
+            </div>
+            <label class="switch">
+              <input id="shortsArrowKeysEnabled" type="checkbox">
+              <span class="switch-ui" aria-hidden="true"></span>
+              <span class="sr-only" id="shortsArrowKeysLabel">啟用 Shorts 左右方向鍵</span>
+            </label>
+          </div>
+        </div>
       </section>
 
       <section class="channel-card" id="channelCard" aria-labelledby="channelHeading">
