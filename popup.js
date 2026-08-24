@@ -304,6 +304,8 @@ function renderType() {
     button.setAttribute("aria-current", selected ? "true" : "false");
   });
   applyTranslations();
+  const shortcutTarget = $(activeContentType === "shorts" ? "#shortsShortcutSlot" : "#regularShortcutSlot");
+  if ($("#shortcutHint").parentElement !== shortcutTarget) shortcutTarget.append($("#shortcutHint"));
   renderGlobal();
   renderChannel();
 }

@@ -31,6 +31,9 @@ const { chromium } = require("playwright");
   await page.waitForSelector("#globalSpeed .option-button");
   assert.equal(await page.locator("#appTitle").innerText(), "YouTube 速度 / 画質クイック設定");
   assert.equal(await page.locator("#globalSpeed .selected").innerText(), "1×");
+  const regularChannel = await page.locator("#channelCard").boundingBox();
+  const regularShortcut = await page.locator("#shortcutHint").boundingBox();
+  assert.ok(regularChannel && regularShortcut && regularShortcut.y >= regularChannel.y + regularChannel.height - 1, "regular-video shortcuts should stay below channel settings");
 
   await page.locator("[data-content-type='shorts']").click();
   assert.equal(await page.locator("#globalSpeed .selected").innerText(), "3×");
@@ -39,6 +42,12 @@ const { chromium } = require("playwright");
   assert.equal(await page.locator("#shortsControls").isVisible(), true);
   assert.equal(await page.locator("#shortsSeekSeconds .selected").innerText(), "10 秒");
   assert.equal(await page.locator("#shortsArrowKeysEnabled").isChecked(), false);
+  const shortsSettings = await page.locator(".settings-card").boundingBox();
+  const shortsShortcut = await page.locator("#shortcutHint").boundingBox();
+  const shortsChannel = await page.locator("#channelCard").boundingBox();
+  assert.ok(shortsSettings && shortsShortcut && shortsChannel, "Shorts layout regions should render");
+  assert.ok(shortsShortcut.y >= shortsSettings.y + shortsSettings.height - 1, "Shorts shortcuts should follow the seek settings");
+  assert.ok(shortsChannel.y >= shortsShortcut.y + shortsShortcut.height - 1, "Shorts shortcuts should appear above channel settings");
 
   await page.locator("#languageSelect").selectOption("en");
   assert.equal(await page.locator("#appTitle").innerText(), "YouTube Quick Speed / Quality Settings");
@@ -64,6 +73,12 @@ const { chromium } = require("playwright");
   assert.ok(shortcuts && languageSettings && languageSettings.y > shortcuts.y + shortcuts.height - 1, "language selector should be the final settings row");
   assert.equal(await page.locator(".masthead #languageSelect").count(), 0);
   assert.equal(await page.locator(".language-settings #languageSelect").isVisible(), true);
+
+  await page.locator("[data-content-type='regular']").click();
+  const movedRegularChannel = await page.locator("#channelCard").boundingBox();
+  const movedRegularShortcut = await page.locator("#shortcutHint").boundingBox();
+  assert.ok(movedRegularChannel && movedRegularShortcut && movedRegularShortcut.y >= movedRegularChannel.y + movedRegularChannel.height - 1, "switching back should restore the regular shortcut position");
+  await page.locator("[data-content-type='shorts']").click();
 
   await page.locator("#languageSelect").selectOption("zh-Hant");
   assert.equal(await page.locator("#appTitle").innerText(), "YouTube 快速設定速度 / 畫質");
