@@ -1,8 +1,8 @@
-# YouTube クイック設定
+# YouTube 速度 / 画質クイック設定
 
 [繁體中文](README.md) · [English](README.en.md) · [日本語](README.ja.md)
 
-![YouTube クイック設定 4K プロモーション画像](docs/images/promo-ja-4k.png)
+![YouTube 速度・画質クイック設定 4K プロモーション画像](docs/images/promo-ja-4k.png)
 
 YouTube の通常動画とショートに、再生速度・画質・チャンネル別設定を自動適用する Chrome 拡張機能です。
 

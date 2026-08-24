@@ -9,7 +9,7 @@ const LANGUAGES = ["system", "zh-Hant", "en", "ja"];
 
 const MESSAGES = {
   "zh-Hant": {
-    appTitle: "YouTube 快速設定", system: "系統", regular: "一般影片", shorts: "Shorts",
+    appTitle: "YouTube 快速設定速度 / 畫質", system: "系統", regular: "一般影片", shorts: "Shorts",
     typeLabel: "影片類型", allRegular: "所有一般影片", allShorts: "所有 Shorts",
     globalHeading: "全域預設", saved: "已儲存", speed: "播放速度", quality: "影片畫質",
     channelKicker: "目前頻道優先", loadingChannel: "正在讀取頻道…", noChannel: "尚未偵測到影片頻道",
@@ -22,7 +22,7 @@ const MESSAGES = {
     shortsQualityNote: "YouTube Shorts 提供畫質控制時才會套用此偏好。"
   },
   en: {
-    appTitle: "YouTube Quick Setting", system: "System", regular: "Videos", shorts: "Shorts",
+    appTitle: "YouTube Quick Speed / Quality Settings", system: "System", regular: "Videos", shorts: "Shorts",
     typeLabel: "Video type", allRegular: "All standard videos", allShorts: "All Shorts",
     globalHeading: "Global defaults", saved: "Saved", speed: "Playback speed", quality: "Video quality",
     channelKicker: "Current channel override", loadingChannel: "Loading channel…", noChannel: "No video channel detected",
@@ -35,7 +35,7 @@ const MESSAGES = {
     shortsQualityNote: "This preference applies when YouTube provides quality controls for Shorts."
   },
   ja: {
-    appTitle: "YouTube クイック設定", system: "システム", regular: "通常動画", shorts: "ショート",
+    appTitle: "YouTube 速度 / 画質クイック設定", system: "システム", regular: "通常動画", shorts: "ショート",
     typeLabel: "動画タイプ", allRegular: "すべての通常動画", allShorts: "すべてのショート",
     globalHeading: "全体の既定値", saved: "保存済み", speed: "再生速度", quality: "動画の画質",
     channelKicker: "現在のチャンネルを優先", loadingChannel: "チャンネルを読み込み中…", noChannel: "動画のチャンネルを検出できません",

@@ -1,8 +1,8 @@
-# YouTube Quick Setting
+# YouTube Quick Speed / Quality Settings
 
 [繁體中文](README.md) · [English](README.en.md) · [日本語](README.ja.md)
 
-![YouTube Quick Setting 4K promotional image](docs/images/promo-en-4k.png)
+![YouTube Quick Speed and Quality Settings 4K promotional image](docs/images/promo-en-4k.png)
 
 A Chrome extension that automatically applies playback speed, video quality, and channel-specific preferences to standard YouTube videos and Shorts.
 

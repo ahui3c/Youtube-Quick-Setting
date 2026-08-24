@@ -1,8 +1,8 @@
-# YouTube 快速設定
+# YouTube 快速設定速度 / 畫質
 
 [繁體中文](README.md) · [English](README.en.md) · [日本語](README.ja.md)
 
-![YouTube 快速設定 4K 宣傳圖](docs/images/promo-zh-4k.png)
+![YouTube 快速設定速度與畫質 4K 宣傳圖](docs/images/promo-zh-4k.png)
 
 自動為 YouTube 一般影片與 Shorts 套用播放速度、畫質與頻道專屬設定的 Chrome 擴充功能。
 

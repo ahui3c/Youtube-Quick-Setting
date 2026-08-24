@@ -14,7 +14,8 @@ const locales = {
     title: "每支影片，都用你習慣的速度與畫質",
     subtitle: "自動套用全域、Shorts 與頻道專屬設定",
     chips: ["頻道優先", "Shorts 獨立", "1080p Premium", "＋／－ 調速", "＊ 回復 1×"],
-    eyebrow: "YOUTUBE QUICK SETTING"
+    eyebrow: "YOUTUBE QUICK SETTING",
+    brandName: "YouTube 快速設定速度 / 畫質"
   },
   en: {
     language: "en",
@@ -23,7 +24,8 @@ const locales = {
     title: "Every video, at your speed and quality",
     subtitle: "Automatic defaults for videos, Shorts, and individual channels",
     chips: ["Channel overrides", "Separate Shorts", "1080p Premium", "+ / − speed", "* resets to 1×"],
-    eyebrow: "YOUTUBE QUICK SETTING"
+    eyebrow: "YOUTUBE QUICK SETTING",
+    brandName: "YouTube Quick Speed / Quality Settings"
   },
   ja: {
     language: "ja",
@@ -32,7 +34,8 @@ const locales = {
     title: "いつもの速度と画質を、すべての動画に",
     subtitle: "通常動画・ショート・チャンネル別設定を自動適用",
     chips: ["チャンネル優先", "ショート個別設定", "1080p Premium", "＋／－ で速度変更", "＊ で 1×"],
-    eyebrow: "YOUTUBE QUICK SETTING"
+    eyebrow: "YOUTUBE QUICK SETTING",
+    brandName: "YouTube 速度 / 画質クイック設定"
   }
 };
 
@@ -96,14 +99,14 @@ async function renderHero(browser, localeKey, locale, popupPath) {
       .noise{position:absolute;inset:0;z-index:1;opacity:.16;background-image:radial-gradient(rgba(255,255,255,.2) .7px,transparent .7px);background-size:6px 6px;mix-blend-mode:soft-light}
       main{position:relative;z-index:2;display:grid;grid-template-columns:1.2fr .8fr;gap:180px;align-items:center;width:100%;height:100%;padding:190px 260px 160px 280px}
       .brand{display:flex;align-items:center;gap:34px;margin-bottom:130px}.brand img{width:112px;height:112px;border-radius:28px;box-shadow:0 24px 70px rgba(255,59,48,.35)}
-      .brand strong{font-size:46px;letter-spacing:.01em}.eyebrow{margin:0 0 38px;color:#ff5d54;font-size:26px;font-weight:800;letter-spacing:.22em}
+      .brand strong{max-width:980px;font-size:42px;line-height:1.2;letter-spacing:.01em}.eyebrow{margin:0 0 38px;color:#ff5d54;font-size:26px;font-weight:800;letter-spacing:.22em}
       h1{max-width:2050px;margin:0;font-size:142px;line-height:1.08;letter-spacing:-.055em;text-wrap:balance}
       .subtitle{max-width:1750px;margin:52px 0 66px;color:#c7c9ce;font-size:50px;line-height:1.45}
       .chips{display:flex;flex-wrap:wrap;gap:20px}.chips span{padding:18px 28px;border:1px solid rgba(255,255,255,.2);border-radius:999px;background:rgba(31,33,37,.7);box-shadow:inset 0 1px rgba(255,255,255,.08);font-size:28px;font-weight:700;backdrop-filter:blur(18px)}
       .shot{position:relative;justify-self:end;transform:rotate(2deg)}.shot:before{content:"";position:absolute;inset:10% -13%;border-radius:50%;background:#ff3b30;filter:blur(150px);opacity:.27}
       .shot img{position:relative;width:800px;border:2px solid rgba(255,255,255,.18);border-radius:34px;box-shadow:0 90px 180px rgba(0,0,0,.66),0 0 0 18px rgba(255,255,255,.025)}
       footer{position:absolute;z-index:3;left:282px;right:260px;bottom:86px;display:flex;justify-content:space-between;color:#8d9097;font-size:24px;letter-spacing:.06em}
-    </style></head><body><div class="noise"></div><main><section><div class="brand"><img src="${icon}"><strong>YouTube Quick Setting</strong></div><p class="eyebrow">${locale.eyebrow}</p><h1>${locale.title}</h1><p class="subtitle">${locale.subtitle}</p><div class="chips">${chips}</div></section><div class="shot"><img src="${popup}"></div></main><footer><span>CHROME EXTENSION · v1.1.0</span><span>繁體中文 · ENGLISH · 日本語</span></footer></body></html>`);
+    </style></head><body><div class="noise"></div><main><section><div class="brand"><img src="${icon}"><strong>${locale.brandName}</strong></div><p class="eyebrow">${locale.eyebrow}</p><h1>${locale.title}</h1><p class="subtitle">${locale.subtitle}</p><div class="chips">${chips}</div></section><div class="shot"><img src="${popup}"></div></main><footer><span>CHROME EXTENSION · v1.1.1</span><span>繁體中文 · ENGLISH · 日本語</span></footer></body></html>`);
   await page.screenshot({ path: path.join(outputDir, `promo-${localeKey}-4k.png`), animations: "disabled" });
   await page.close();
 }
