@@ -106,7 +106,7 @@ async function renderHero(browser, localeKey, locale, popupPath) {
       .shot{position:relative;justify-self:end;transform:rotate(2deg)}.shot:before{content:"";position:absolute;inset:10% -13%;border-radius:50%;background:#ff3b30;filter:blur(150px);opacity:.27}
       .shot img{position:relative;width:800px;border:2px solid rgba(255,255,255,.18);border-radius:34px;box-shadow:0 90px 180px rgba(0,0,0,.66),0 0 0 18px rgba(255,255,255,.025)}
       footer{position:absolute;z-index:3;left:282px;right:260px;bottom:86px;display:flex;justify-content:space-between;color:#8d9097;font-size:24px;letter-spacing:.06em}
-    </style></head><body><div class="noise"></div><main><section><div class="brand"><img src="${icon}"><strong>${locale.brandName}</strong></div><p class="eyebrow">${locale.eyebrow}</p><h1>${locale.title}</h1><p class="subtitle">${locale.subtitle}</p><div class="chips">${chips}</div></section><div class="shot"><img src="${popup}"></div></main><footer><span>CHROME EXTENSION · v1.3.1</span><span>繁體中文 · ENGLISH · 日本語</span></footer></body></html>`);
+    </style></head><body><div class="noise"></div><main><section><div class="brand"><img src="${icon}"><strong>${locale.brandName}</strong></div><p class="eyebrow">${locale.eyebrow}</p><h1>${locale.title}</h1><p class="subtitle">${locale.subtitle}</p><div class="chips">${chips}</div></section><div class="shot"><img src="${popup}"></div></main><footer><span>CHROME EXTENSION · v1.3.2</span><span>繁體中文 · ENGLISH · 日本語</span></footer></body></html>`);
   await page.screenshot({ path: path.join(outputDir, `promo-${localeKey}-4k.png`), animations: "disabled" });
   await page.close();
 }

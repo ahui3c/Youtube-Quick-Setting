@@ -46,8 +46,8 @@ const { chromium } = require("playwright");
   const shortsShortcut = await page.locator("#shortcutHint").boundingBox();
   const shortsChannel = await page.locator("#channelCard").boundingBox();
   assert.ok(shortsSettings && shortsShortcut && shortsChannel, "Shorts layout regions should render");
-  assert.ok(shortsShortcut.y >= shortsSettings.y + shortsSettings.height - 1, "Shorts shortcuts should follow the seek settings");
-  assert.ok(shortsChannel.y >= shortsShortcut.y + shortsShortcut.height - 1, "Shorts shortcuts should appear above channel settings");
+  assert.ok(shortsChannel.y >= shortsSettings.y + shortsSettings.height - 1, "Shorts channel settings should follow the global settings");
+  assert.ok(shortsShortcut.y >= shortsChannel.y + shortsChannel.height - 1, "Shorts shortcuts should stay below channel settings");
 
   await page.locator("#languageSelect").selectOption("en");
   assert.equal(await page.locator("#appTitle").innerText(), "YouTube Quick Speed / Quality Settings");
@@ -77,7 +77,7 @@ const { chromium } = require("playwright");
   await page.locator("[data-content-type='regular']").click();
   const movedRegularChannel = await page.locator("#channelCard").boundingBox();
   const movedRegularShortcut = await page.locator("#shortcutHint").boundingBox();
-  assert.ok(movedRegularChannel && movedRegularShortcut && movedRegularShortcut.y >= movedRegularChannel.y + movedRegularChannel.height - 1, "switching back should restore the regular shortcut position");
+  assert.ok(movedRegularChannel && movedRegularShortcut && movedRegularShortcut.y >= movedRegularChannel.y + movedRegularChannel.height - 1, "switching back should keep the regular shortcut position");
   await page.locator("[data-content-type='shorts']").click();
 
   await page.locator("#languageSelect").selectOption("zh-Hant");
