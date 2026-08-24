@@ -1,0 +1,13 @@
+{
+  "name": "youtube-quick-setting",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Localized Chrome extension for automatic YouTube playback speed and quality preferences.",
+  "scripts": {
+    "test": "node tests/quality-selection.test.js && node tests/settings-profiles.test.js && node tests/content-behavior.test.js && node tests/popup-ui.test.js",
+    "render:marketing": "node scripts/render-marketing-assets.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.1"
+  }
+}

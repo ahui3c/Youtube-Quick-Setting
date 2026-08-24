@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>YouTube Quick Setting</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main class="panel">
+      <header class="masthead">
+        <div class="brand-mark" aria-hidden="true"><span></span></div>
+        <div>
+          <p class="eyebrow">YT QUICK SETTING</p>
+          <h1 id="appTitle">YouTube 快速設定</h1>
+        </div>
+        <div class="header-actions">
+          <label class="language-picker">
+            <span class="sr-only" id="languageLabel">介面語言</span>
+            <select id="languageSelect" aria-labelledby="languageLabel">
+              <option value="system">系統</option>
+              <option value="zh-Hant">繁中</option>
+              <option value="en">EN</option>
+              <option value="ja">日本語</option>
+            </select>
+          </label>
+          <span class="status-dot" id="statusDot" title="等待 YouTube 頁面"></span>
+        </div>
+      </header>
+
+      <nav class="type-switch" id="typeSwitch" aria-label="影片類型">
+        <button type="button" data-content-type="regular" class="selected">一般影片</button>
+        <button type="button" data-content-type="shorts">Shorts</button>
+      </nav>
+
+      <section class="settings-card" aria-labelledby="globalHeading">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker" id="globalKicker">所有一般影片</p>
+            <h2 id="globalHeading">全域預設</h2>
+          </div>
+          <span class="save-state" id="saveState" aria-live="polite">已儲存</span>
+        </div>
+
+        <fieldset>
+          <legend id="globalSpeedLegend">播放速度</legend>
+          <div class="speed-track" id="globalSpeed" role="radiogroup" aria-label="全域播放速度"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend id="globalQualityLegend">影片畫質</legend>
+          <div class="choice-grid" id="globalQuality" role="radiogroup" aria-label="全域影片畫質"></div>
+          <p class="context-note" id="shortsQualityNote" hidden>YouTube Shorts 提供畫質控制時才會套用此偏好。</p>
+        </fieldset>
+      </section>
+
+      <section class="channel-card" id="channelCard" aria-labelledby="channelHeading">
+        <div class="section-heading">
+          <div class="channel-title-wrap">
+            <span class="channel-avatar" id="channelAvatar" aria-hidden="true">頻</span>
+            <div>
+              <p class="section-kicker" id="channelKicker">目前頻道優先</p>
+              <h2 id="channelHeading">正在讀取頻道…</h2>
+            </div>
+          </div>
+          <label class="switch">
+            <input id="channelEnabled" type="checkbox">
+            <span class="switch-ui" aria-hidden="true"></span>
+            <span class="sr-only" id="channelToggleLabel">啟用目前頻道專屬設定</span>
+          </label>
+        </div>
+
+        <div id="channelControls" class="channel-controls" hidden>
+          <fieldset>
+            <legend id="channelSpeedLegend">這個頻道的播放速度</legend>
+            <div class="speed-track" id="channelSpeed" role="radiogroup" aria-label="頻道播放速度"></div>
+          </fieldset>
+
+          <fieldset>
+            <legend id="channelQualityLegend">這個頻道的影片畫質</legend>
+            <div class="choice-grid" id="channelQuality" role="radiogroup" aria-label="頻道影片畫質"></div>
+          </fieldset>
+          <button class="remove-button" id="removeChannel" type="button">移除頻道專屬設定</button>
+        </div>
+
+        <p class="channel-empty" id="channelEmpty">請在 YouTube 影片頁面開啟此面板，即可加入頻道專屬設定。</p>
+      </section>
+
+      <footer class="shortcut-hint">
+        <div class="key-pair" aria-hidden="true"><kbd>−</kbd><kbd>＋</kbd><kbd>＊</kbd></div>
+        <p><strong id="shortcutTitle">播放時直接調速</strong><span id="shortcutDescription">按 −／+ 切換速度，按 * 恢復 1×</span></p>
+      </footer>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>
