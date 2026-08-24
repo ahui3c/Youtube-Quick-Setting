@@ -22,6 +22,7 @@ Key features:
 - Per-channel profiles override global defaults
 - A two-second on-video notice confirms applied channel settings
 - Use + / − to change speed and * to return instantly to 1×
+- In Shorts, use ← / → to seek 5 seconds and 0 to return to the beginning
 - On-screen speed feedback and synchronized YouTube settings-menu values
 - Traditional Chinese, English, and Japanese UI; follow the system language or choose manually
 

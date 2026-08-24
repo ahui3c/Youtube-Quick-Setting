@@ -17,6 +17,7 @@ const MESSAGES = {
     enableChannel: "啟用目前頻道專屬設定", removeChannel: "移除頻道專屬設定",
     channelEmpty: "請在 YouTube 影片或 Shorts 頁面開啟此面板，即可加入頻道專屬設定。",
     shortcutTitle: "播放時直接調速", shortcutDescription: "按 −／+ 切換速度，按 * 恢復 1×",
+    shortsShortcutTitle: "Shorts 快速操作", shortsShortcutDescription: "←／→ 前後 5 秒，0 回片頭；−／+ 調速，* 回復 1×",
     connected: "已連線到目前影片", disconnected: "請開啟 YouTube 影片或 Shorts", languageLabel: "介面語言",
     qualityHighest: "自動最高", quality4k: "4K", quality1080: "1080p", qualityPremiumHint: "可用時優先使用 1080p Premium",
     shortsQualityNote: "YouTube Shorts 提供畫質控制時才會套用此偏好。"
@@ -30,6 +31,7 @@ const MESSAGES = {
     enableChannel: "Enable settings for the current channel", removeChannel: "Remove channel settings",
     channelEmpty: "Open this panel on a YouTube video or Short to add channel-specific settings.",
     shortcutTitle: "Adjust speed while playing", shortcutDescription: "Press −/+ to change speed, or * to restore 1×",
+    shortsShortcutTitle: "Shorts quick controls", shortsShortcutDescription: "←/→ seek 5 sec, 0 restarts; −/+ changes speed, * restores 1×",
     connected: "Connected to the current video", disconnected: "Open a YouTube video or Short", languageLabel: "Interface language",
     qualityHighest: "Highest", quality4k: "4K", quality1080: "1080p", qualityPremiumHint: "Prefer 1080p Premium when available",
     shortsQualityNote: "This preference applies when YouTube provides quality controls for Shorts."
@@ -43,6 +45,7 @@ const MESSAGES = {
     enableChannel: "現在のチャンネル専用設定を有効にする", removeChannel: "チャンネル専用設定を削除",
     channelEmpty: "YouTube 動画またはショートのページでこのパネルを開くと、チャンネル専用設定を追加できます。",
     shortcutTitle: "再生中に速度を変更", shortcutDescription: "−／+ で速度変更、* で 1× に戻す",
+    shortsShortcutTitle: "ショートのクイック操作", shortsShortcutDescription: "←／→ で 5 秒移動、0 で先頭へ。−／+ で速度変更、* で 1×",
     connected: "現在の動画に接続しました", disconnected: "YouTube 動画またはショートを開いてください", languageLabel: "表示言語",
     qualityHighest: "最高画質", quality4k: "4K", quality1080: "1080p", qualityPremiumHint: "利用可能なら 1080p Premium を優先",
     shortsQualityNote: "YouTube がショートの画質設定を提供している場合に適用されます。"
@@ -136,8 +139,16 @@ function applyTranslations() {
   $("#channelQualityLegend").textContent = t("channelQuality");
   $("#removeChannel").textContent = t("removeChannel");
   $("#channelEmpty").textContent = t("channelEmpty");
-  $("#shortcutTitle").textContent = t("shortcutTitle");
-  $("#shortcutDescription").textContent = t("shortcutDescription");
+  const isShorts = activeContentType === "shorts";
+  $("#shortcutTitle").textContent = t(isShorts ? "shortsShortcutTitle" : "shortcutTitle");
+  $("#shortcutDescription").textContent = t(isShorts ? "shortsShortcutDescription" : "shortcutDescription");
+  const shortcutKeys = $("#shortcutKeys");
+  shortcutKeys.classList.toggle("shorts", isShorts);
+  shortcutKeys.replaceChildren(...(isShorts ? ["←", "→", "0", "−", "＋", "＊"] : ["−", "＋", "＊"]).map((key) => {
+    const element = document.createElement("kbd");
+    element.textContent = key;
+    return element;
+  }));
   $("#globalKicker").textContent = t(activeContentType === "shorts" ? "allShorts" : "allRegular");
   $("#shortsQualityNote").textContent = t("shortsQualityNote");
   $("#shortsQualityNote").hidden = activeContentType !== "shorts";

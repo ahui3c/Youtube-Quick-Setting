@@ -33,9 +33,9 @@ const scenes = [
     file: "screenshot-03-channel-shortcuts.png",
     kicker: "頻道優先 + 快速鍵",
     title: "喜愛的頻道，開場就是指定設定",
-    subtitle: "＋／－ 即時調速，＊ 恢復 1×；套用頻道設定時顯示兩秒確認提示。",
+    subtitle: "Shorts 用 ←／→ 前後 5 秒、0 回片頭；＋／－ 即時調速，＊ 恢復 1×。",
     popup: "popup-ja.png",
-    badge: "頻道設定已套用 · 1.25× · 1080p"
+    badge: "← 5 秒 · → 5 秒 · 0 回片頭"
   }
 ];
 

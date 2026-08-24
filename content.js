@@ -18,9 +18,9 @@ const YTQS_QUALITY_LABELS = {
 };
 
 const YTQS_MESSAGES = {
-  "zh-Hant": { channelSettings: "頻道指定設定", speed: "速度", quality: "解析度", playbackSpeed: "播放速度" },
-  en: { channelSettings: "Channel settings", speed: "Speed", quality: "Quality", playbackSpeed: "Playback speed" },
-  ja: { channelSettings: "チャンネル設定", speed: "速度", quality: "画質", playbackSpeed: "再生速度" }
+  "zh-Hant": { channelSettings: "頻道指定設定", speed: "速度", quality: "解析度", playbackSpeed: "播放速度", seconds: "秒", backToStart: "回到片頭" },
+  en: { channelSettings: "Channel settings", speed: "Speed", quality: "Quality", playbackSpeed: "Playback speed", seconds: "sec", backToStart: "Back to start" },
+  ja: { channelSettings: "チャンネル設定", speed: "速度", quality: "画質", playbackSpeed: "再生速度", seconds: "秒", backToStart: "先頭に戻る" }
 };
 
 function ytqsNormalizeProfile(value, fallback = YTQS_DEFAULTS.global) {
@@ -256,6 +256,7 @@ function showSpeedOverlay(speed) {
     `;
     document.documentElement.append(style, overlay);
   }
+  overlay.querySelector(".ytqs-speed-icon").textContent = "▶▶";
   overlay.querySelector(".ytqs-speed-value").textContent = `${speed}×`;
   overlay.querySelector(".ytqs-speed-label").textContent = ytqsText("playbackSpeed");
   overlay.classList.remove("ytqs-show");
@@ -263,6 +264,51 @@ function showSpeedOverlay(speed) {
   overlay.classList.add("ytqs-show");
   clearTimeout(showSpeedOverlay.timer);
   showSpeedOverlay.timer = setTimeout(() => overlay.classList.remove("ytqs-show"), 1050);
+}
+
+function formatPlaybackTime(value) {
+  const totalSeconds = Math.max(0, Math.floor(Number(value) || 0));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return hours > 0
+    ? `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
+    : `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+function showSeekOverlay(deltaSeconds, currentTime, duration) {
+  let overlay = document.querySelector("#ytqs-speed-overlay");
+  if (!overlay) {
+    showSpeedOverlay(1);
+    overlay = document.querySelector("#ytqs-speed-overlay");
+  }
+  if (!overlay) return;
+  const isReset = deltaSeconds === 0;
+  overlay.querySelector(".ytqs-speed-icon").textContent = isReset ? "↶" : deltaSeconds > 0 ? "▶▶" : "◀◀";
+  overlay.querySelector(".ytqs-speed-value").textContent = isReset
+    ? formatPlaybackTime(currentTime)
+    : `${deltaSeconds > 0 ? "+" : "−"}${Math.abs(deltaSeconds)} ${ytqsText("seconds")}`;
+  overlay.querySelector(".ytqs-speed-label").textContent = isReset
+    ? ytqsText("backToStart")
+    : `${formatPlaybackTime(currentTime)} / ${formatPlaybackTime(duration)}`;
+  overlay.classList.remove("ytqs-show");
+  void overlay.offsetWidth;
+  overlay.classList.add("ytqs-show");
+  clearTimeout(showSpeedOverlay.timer);
+  showSpeedOverlay.timer = setTimeout(() => overlay.classList.remove("ytqs-show"), 1050);
+}
+
+function seekShorts(deltaSeconds) {
+  if (contentType() !== "shorts") return false;
+  const video = currentVideo();
+  const duration = Number(video?.duration);
+  const player = currentPlayer();
+  if (!video || !Number.isFinite(duration) || duration <= 0 || player?.classList?.contains("ad-showing")) return false;
+  const current = Number(video.currentTime) || 0;
+  const next = deltaSeconds === 0 ? 0 : Math.min(duration, Math.max(0, current + deltaSeconds));
+  video.currentTime = next;
+  showSeekOverlay(deltaSeconds, next, duration);
+  return true;
 }
 
 function adjustSpeed(direction) {
@@ -314,17 +360,40 @@ function restoreNormalSpeed() {
   return true;
 }
 
-document.addEventListener("keydown", (event) => {
-  if (!isVideoPage() || event.defaultPrevented || event.repeat || event.ctrlKey || event.altKey || event.metaKey || isTypingTarget(event.target)) return;
+function isSeekBlockedTarget(target) {
+  return target instanceof HTMLElement && Boolean(target.closest("button, a, [role='button'], [role='menu'], [role='menuitem'], [role='slider']"));
+}
+
+function handleKeyboardShortcut(event) {
+  if (!isVideoPage() || event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey || isTypingTarget(event.target)) return false;
+  const isShorts = contentType() === "shorts";
+  const isSeekBackward = isShorts && event.key === "ArrowLeft";
+  const isSeekForward = isShorts && event.key === "ArrowRight";
+  const isSeekStart = isShorts && (event.key === "0" || event.code === "Numpad0");
   const isPlus = event.key === "+" || event.code === "NumpadAdd";
   const isMinus = event.key === "-" || event.key === "−" || event.code === "NumpadSubtract";
   const isReset = event.key === "*" || event.code === "NumpadMultiply";
-  if (!isPlus && !isMinus && !isReset) return;
-  const handled = isReset ? restoreNormalSpeed() : adjustSpeed(isPlus ? 1 : -1);
+  if (!isSeekBackward && !isSeekForward && !isSeekStart && !isPlus && !isMinus && !isReset) return false;
+  if (event.repeat && !isSeekBackward && !isSeekForward) return false;
+  if ((isSeekBackward || isSeekForward || isSeekStart) && isSeekBlockedTarget(event.target)) return false;
+  const handled = isSeekStart
+    ? seekShorts(0)
+    : isSeekBackward
+      ? seekShorts(-5)
+      : isSeekForward
+        ? seekShorts(5)
+        : isReset
+          ? restoreNormalSpeed()
+          : adjustSpeed(isPlus ? 1 : -1);
   if (handled) {
     event.preventDefault();
     event.stopImmediatePropagation();
   }
+  return handled;
+}
+
+document.addEventListener("keydown", (event) => {
+  handleKeyboardShortcut(event);
 }, true);
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {

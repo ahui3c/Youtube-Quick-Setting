@@ -37,7 +37,9 @@ const { chromium } = require("playwright");
 
   await page.locator("#languageSelect").selectOption("en");
   assert.equal(await page.locator("#appTitle").innerText(), "YouTube Quick Speed / Quality Settings");
-  assert.match(await page.locator("#shortcutDescription").innerText(), /restore 1×/);
+  assert.match(await page.locator("#shortcutDescription").innerText(), /0 restarts/);
+  assert.equal(await page.locator("#shortcutKeys kbd").count(), 6);
+  assert.deepEqual(await page.locator("#shortcutKeys kbd").allTextContents(), ["←", "→", "0", "−", "＋", "＊"]);
 
   const masthead = await page.locator(".masthead").boundingBox();
   const title = await page.locator("#appTitle").boundingBox();

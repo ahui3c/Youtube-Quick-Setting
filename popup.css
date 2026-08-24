@@ -298,6 +298,7 @@ legend {
 }
 
 .key-pair { display: flex; gap: 3px; }
+.key-pair.shorts { display: grid; grid-template-columns: repeat(3, 25px); gap: 3px; }
 kbd {
   display: grid;
   place-items: center;

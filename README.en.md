@@ -60,6 +60,8 @@ Priority order:
 | `+` | Select the next faster speed |
 | `-` | Select the next slower speed |
 | `*` | Reset the current playback session to `1×` |
+| `←` / `→` | Seek backward/forward 5 seconds in Shorts |
+| `0` | Return a Short to the beginning |
 
 Shortcuts are ignored while typing in search, comment, and other text fields.
 
