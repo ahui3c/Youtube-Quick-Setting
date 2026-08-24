@@ -82,6 +82,8 @@
 - 僅在 `youtube.com` 執行。
 - 設定只保存在 Chrome 同步儲存空間。
 
+完整內容請參閱 [隱私權政策](PRIVACY.md)。
+
 ## 開發與測試
 
 此專案使用 Chrome Manifest V3，主要檔案如下：

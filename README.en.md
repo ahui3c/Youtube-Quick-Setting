@@ -78,6 +78,8 @@ The current desktop Shorts player does not expose a native quality menu or a usa
 - The extension runs only on `youtube.com`.
 - Preferences stay in Chrome sync storage.
 
+See the complete [Privacy Policy](PRIVACY.md).
+
 ## Development
 
 The project uses Chrome Manifest V3. Tests under `tests/` cover quality fallback, legacy-setting migration, keyboard behavior, and localized popup rendering. Run `npm install`, `npx playwright install chromium`, and `npm test` to execute the complete suite.

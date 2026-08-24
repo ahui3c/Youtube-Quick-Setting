@@ -78,6 +78,8 @@ YouTube の通常動画とショートに、再生速度・画質・チャンネ
 - `youtube.com` 上でのみ動作します。
 - 設定は Chrome の同期ストレージだけに保存します。
 
+詳細は [プライバシーポリシー](PRIVACY.md) をご覧ください。
+
 ## 開発
 
 Chrome Manifest V3 を使用しています。`tests/` には、画質フォールバック、旧設定の移行、キーボード操作、多言語パネル表示のテストがあります。`npm install`、`npx playwright install chromium`、`npm test` の順に実行すると、すべてのテストを確認できます。
