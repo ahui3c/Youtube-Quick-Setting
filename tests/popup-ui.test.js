@@ -14,7 +14,7 @@ const { chromium } = require("playwright");
           get: async () => ({
             ytQuickSettings: {
               language: "system",
-              global: { speed: 1, quality: "hd1080" },
+              global: { speed: 1, quality: "hd1080", theaterModeEnabled: true },
               shorts: { speed: 3, quality: "highest" },
               shortsControls: { seekSeconds: 10, arrowKeysEnabled: false },
               channels: {}
@@ -23,7 +23,10 @@ const { chromium } = require("playwright");
           set: async (value) => savedSettings.push(value)
         }
       },
-      tabs: { query: async () => [] }
+      tabs: {
+        query: async () => [{ id: 1, url: "https://www.youtube.com/watch?v=abc123" }],
+        sendMessage: async () => ({ isVideo: true, contentType: "regular", channelId: "channelA", channelName: "Test Channel" })
+      }
     };
   });
 
@@ -31,6 +34,13 @@ const { chromium } = require("playwright");
   await page.waitForSelector("#globalSpeed .option-button");
   assert.equal(await page.locator("#appTitle").innerText(), "YouTube 速度 / 画質クイック設定");
   assert.equal(await page.locator("#globalSpeed .selected").innerText(), "1×");
+  assert.equal(await page.locator("#globalTheaterSetting").isVisible(), true);
+  assert.equal(await page.locator("#globalTheaterEnabled").isChecked(), true);
+  await page.locator("#channelEnabled").check();
+  assert.equal(await page.locator("#channelTheaterFieldset").isVisible(), true);
+  await page.getByRole("radio", { name: "常にオフ" }).click();
+  assert.equal(await page.locator("#channelTheaterMode .selected").innerText(), "常にオフ");
+  assert.equal(await page.evaluate(() => savedSettings.at(-1).ytQuickSettings.channels.channelA.regular.theaterModeOverride), "off");
   const regularChannel = await page.locator("#channelCard").boundingBox();
   const regularShortcut = await page.locator("#shortcutHint").boundingBox();
   assert.ok(regularChannel && regularShortcut && regularShortcut.y >= regularChannel.y + regularChannel.height - 1, "regular-video shortcuts should stay below channel settings");
@@ -40,6 +50,8 @@ const { chromium } = require("playwright");
   assert.equal(await page.locator("#globalKicker").innerText(), "すべてのショート");
   assert.equal(await page.locator("#shortsQualityNote").isVisible(), true);
   assert.equal(await page.locator("#shortsControls").isVisible(), true);
+  assert.equal(await page.locator("#globalTheaterSetting").isVisible(), false);
+  assert.equal(await page.locator("#channelTheaterFieldset").isVisible(), false);
   assert.equal(await page.locator("#shortsSeekSeconds .selected").innerText(), "10 秒");
   assert.equal(await page.locator("#shortsArrowKeysEnabled").isChecked(), false);
   const shortsSettings = await page.locator(".settings-card").boundingBox();

@@ -7,6 +7,7 @@ const QUALITIES = [
 const PROFILE_KEYS = ["regular", "shorts"];
 const LANGUAGES = ["system", "zh-Hant", "en", "ja"];
 const SHORTS_SEEK_SECONDS = [3, 5, 10];
+const THEATER_OVERRIDES = ["inherit", "on", "off"];
 
 const MESSAGES = {
   "zh-Hant": {
@@ -21,6 +22,8 @@ const MESSAGES = {
     shortsShortcutTitle: "Shorts 快速操作", shortsShortcutDescription: "←／→ 前後 {seconds} 秒，0 回片頭；−／+ 調速，* 回復 1×",
     shortsSeekSeconds: "快進秒數", secondsUnit: "秒", shortsArrowKeysTitle: "啟用 Shorts 左右方向鍵",
     shortsArrowKeysDescription: "控制 ←／→ 快退快進，0 回片頭不受影響",
+    globalTheaterTitle: "自動開啟劇院模式", globalTheaterDescription: "進入一般影片時自動切換為劇院模式",
+    channelTheater: "這個頻道的劇院模式", theaterInherit: "跟隨全局", theaterOn: "強制開啟", theaterOff: "強制關閉",
     connected: "已連線到目前影片", disconnected: "請開啟 YouTube 影片或 Shorts", languageLabel: "介面語言",
     qualityHighest: "自動最高", quality4k: "4K", quality1080: "1080p", qualityPremiumHint: "可用時優先使用 1080p Premium",
     shortsQualityNote: "YouTube Shorts 提供畫質控制時才會套用此偏好。"
@@ -37,6 +40,8 @@ const MESSAGES = {
     shortsShortcutTitle: "Shorts quick controls", shortsShortcutDescription: "←/→ seek {seconds} sec, 0 restarts; −/+ changes speed, * restores 1×",
     shortsSeekSeconds: "Seek interval", secondsUnit: "sec", shortsArrowKeysTitle: "Enable Shorts arrow keys",
     shortsArrowKeysDescription: "Controls ←/→ seeking; 0 always returns to the start",
+    globalTheaterTitle: "Automatically open Theater mode", globalTheaterDescription: "Switch standard videos to Theater mode when they open",
+    channelTheater: "Theater mode for this channel", theaterInherit: "Follow global", theaterOn: "Force on", theaterOff: "Force off",
     connected: "Connected to the current video", disconnected: "Open a YouTube video or Short", languageLabel: "Interface language",
     qualityHighest: "Highest", quality4k: "4K", quality1080: "1080p", qualityPremiumHint: "Prefer 1080p Premium when available",
     shortsQualityNote: "This preference applies when YouTube provides quality controls for Shorts."
@@ -53,6 +58,8 @@ const MESSAGES = {
     shortsShortcutTitle: "ショートのクイック操作", shortsShortcutDescription: "←／→ で {seconds} 秒移動、0 で先頭へ。−／+ で速度変更、* で 1×",
     shortsSeekSeconds: "移動秒数", secondsUnit: "秒", shortsArrowKeysTitle: "ショートの左右キーを有効化",
     shortsArrowKeysDescription: "←／→ の移動を制御。0 の先頭移動は常に有効",
+    globalTheaterTitle: "シアターモードを自動的に有効化", globalTheaterDescription: "通常動画を開いたときにシアターモードへ切り替えます",
+    channelTheater: "このチャンネルのシアターモード", theaterInherit: "全体設定に従う", theaterOn: "常にオン", theaterOff: "常にオフ",
     connected: "現在の動画に接続しました", disconnected: "YouTube 動画またはショートを開いてください", languageLabel: "表示言語",
     qualityHighest: "最高画質", quality4k: "4K", quality1080: "1080p", qualityPremiumHint: "利用可能なら 1080p Premium を優先",
     shortsQualityNote: "YouTube がショートの画質設定を提供している場合に適用されます。"
@@ -62,7 +69,7 @@ const MESSAGES = {
 const DEFAULT_PROFILE = { speed: 1, quality: "hd1080" };
 const DEFAULT_SETTINGS = {
   language: "system",
-  global: { ...DEFAULT_PROFILE },
+  global: { ...DEFAULT_PROFILE, theaterModeEnabled: false },
   shorts: { ...DEFAULT_PROFILE },
   shortsControls: { seekSeconds: 5, arrowKeysEnabled: true },
   channels: {}
@@ -83,7 +90,10 @@ function normalizeProfile(value, fallback = DEFAULT_PROFILE) {
 }
 
 function normalizeSettings(value) {
-  const global = normalizeProfile(value?.global);
+  const global = {
+    ...normalizeProfile(value?.global),
+    theaterModeEnabled: value?.global?.theaterModeEnabled === true
+  };
   const shorts = normalizeProfile(value?.shorts, global);
   const channels = {};
   if (value?.channels && typeof value.channels === "object") {
@@ -91,7 +101,12 @@ function normalizeSettings(value) {
       const legacy = normalizeProfile(channel, global);
       channels[id] = {
         name: channel?.name || "",
-        regular: normalizeProfile(channel?.regular, legacy),
+        regular: {
+          ...normalizeProfile(channel?.regular, legacy),
+          theaterModeOverride: THEATER_OVERRIDES.includes(channel?.regular?.theaterModeOverride)
+            ? channel.regular.theaterModeOverride
+            : "inherit"
+        },
         shorts: normalizeProfile(channel?.shorts, legacy)
       };
     });
@@ -169,6 +184,10 @@ function applyTranslations() {
   $("#shortsArrowKeysTitle").textContent = t("shortsArrowKeysTitle");
   $("#shortsArrowKeysDescription").textContent = t("shortsArrowKeysDescription");
   $("#shortsArrowKeysLabel").textContent = t("shortsArrowKeysTitle");
+  $("#globalTheaterTitle").textContent = t("globalTheaterTitle");
+  $("#globalTheaterDescription").textContent = t("globalTheaterDescription");
+  $("#globalTheaterLabel").textContent = t("globalTheaterTitle");
+  $("#channelTheaterLegend").textContent = t("channelTheater");
   $("#statusDot").title = context?.isVideo ? t("connected") : t("disconnected");
 }
 
@@ -208,6 +227,25 @@ function createQualityControl(container, selected, onChange) {
   });
 }
 
+function createTheaterOverrideControl(container, selected, onChange) {
+  const options = [
+    { value: "inherit", label: t("theaterInherit") },
+    { value: "on", label: t("theaterOn") },
+    { value: "off", label: t("theaterOff") }
+  ];
+  container.replaceChildren();
+  options.forEach(({ value, label }) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `quality-button${selected === value ? " selected" : ""}`;
+    button.textContent = label;
+    button.setAttribute("role", "radio");
+    button.setAttribute("aria-checked", String(selected === value));
+    button.addEventListener("click", () => onChange(value));
+    container.append(button);
+  });
+}
+
 function flashSaved() {
   const el = $("#saveState");
   el.classList.add("visible");
@@ -232,6 +270,9 @@ function renderGlobal() {
     renderGlobal();
     await persist();
   });
+  const theaterSetting = $("#globalTheaterSetting");
+  theaterSetting.hidden = activeContentType === "shorts";
+  $("#globalTheaterEnabled").checked = settings.global.theaterModeEnabled;
   renderShortsControls();
 }
 
@@ -295,6 +336,15 @@ function renderChannel() {
     renderChannel();
     await persist();
   });
+  const theaterFieldset = $("#channelTheaterFieldset");
+  theaterFieldset.hidden = activeContentType === "shorts";
+  if (activeContentType === "regular") {
+    createTheaterOverrideControl($("#channelTheaterMode"), profile.theaterModeOverride, async (value) => {
+      profile.theaterModeOverride = value;
+      renderChannel();
+      await persist();
+    });
+  }
 }
 
 function renderType() {
@@ -337,12 +387,21 @@ $("#shortsArrowKeysEnabled").addEventListener("change", async (event) => {
   await persist();
 });
 
+$("#globalTheaterEnabled").addEventListener("change", async (event) => {
+  settings.global.theaterModeEnabled = event.target.checked;
+  await persist();
+});
+
 $("#channelEnabled").addEventListener("change", async (event) => {
   if (!context?.channelId) return;
   if (event.target.checked) {
     settings.channels[context.channelId] = {
       name: context.channelName || t("currentChannel"),
-      regular: { ...settings.global },
+      regular: {
+        speed: settings.global.speed,
+        quality: settings.global.quality,
+        theaterModeOverride: "inherit"
+      },
       shorts: { ...settings.shorts }
     };
   } else {

@@ -1,12 +1,13 @@
 const YTQS_DEFAULTS = {
   language: "system",
-  global: { speed: 1, quality: "hd1080" },
+  global: { speed: 1, quality: "hd1080", theaterModeEnabled: false },
   shorts: { speed: 1, quality: "hd1080" },
   shortsControls: { seekSeconds: 5, arrowKeysEnabled: true },
   channels: {}
 };
 const YTQS_SPEEDS = [0.7, 1, 1.25, 2, 3];
 const YTQS_SEEK_SECONDS = [3, 5, 10];
+const YTQS_THEATER_OVERRIDES = ["inherit", "on", "off"];
 let ytqsSettings = YTQS_DEFAULTS;
 let ytqsContext = { isVideo: false, contentType: "regular", channelId: "", channelName: "" };
 let ytqsRefreshTimer = 0;
@@ -33,7 +34,10 @@ function ytqsNormalizeProfile(value, fallback = YTQS_DEFAULTS.global) {
 }
 
 function ytqsNormalizeSettings(value) {
-  const global = ytqsNormalizeProfile(value?.global);
+  const global = {
+    ...ytqsNormalizeProfile(value?.global),
+    theaterModeEnabled: value?.global?.theaterModeEnabled === true
+  };
   const shorts = ytqsNormalizeProfile(value?.shorts, global);
   const channels = {};
   if (value?.channels && typeof value.channels === "object") {
@@ -41,7 +45,12 @@ function ytqsNormalizeSettings(value) {
       const legacy = ytqsNormalizeProfile(channel, global);
       channels[id] = {
         name: channel?.name || "",
-        regular: ytqsNormalizeProfile(channel?.regular, legacy),
+        regular: {
+          ...ytqsNormalizeProfile(channel?.regular, legacy),
+          theaterModeOverride: YTQS_THEATER_OVERRIDES.includes(channel?.regular?.theaterModeOverride)
+            ? channel.regular.theaterModeOverride
+            : "inherit"
+        },
         shorts: ytqsNormalizeProfile(channel?.shorts, legacy)
       };
     });
@@ -105,8 +114,17 @@ function readChannelContext() {
 
 function effectiveSettings() {
   const channel = ytqsContext.channelId && ytqsSettings.channels?.[ytqsContext.channelId];
-  if (channel) return channel[ytqsContext.contentType] || channel.regular;
-  return ytqsContext.contentType === "shorts" ? ytqsSettings.shorts : ytqsSettings.global;
+  const profile = channel
+    ? channel[ytqsContext.contentType] || channel.regular
+    : ytqsContext.contentType === "shorts" ? ytqsSettings.shorts : ytqsSettings.global;
+  if (ytqsContext.contentType === "shorts") return profile;
+  const override = channel?.regular?.theaterModeOverride || "inherit";
+  const theaterMode = override === "on"
+    ? true
+    : override === "off"
+      ? false
+      : ytqsSettings.global.theaterModeEnabled === true ? true : null;
+  return { ...profile, theaterMode };
 }
 
 function currentVideoId() {
@@ -210,7 +228,7 @@ function applySettings() {
   window.postMessage({
     source: "yt-quick-setting-extension",
     type: "APPLY_SETTINGS",
-    settings: channelSettings || effectiveSettings()
+    settings: effectiveSettings()
   }, location.origin);
   if (channelSettings) showChannelSettingsNotice(channelSettings);
 }

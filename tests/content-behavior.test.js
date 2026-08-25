@@ -10,7 +10,7 @@ assert.match(source, /event\.key === "ArrowRight"/);
 assert.match(source, /event\.key === "0"/);
 assert.match(source, /event\.code === "Numpad0"/);
 source = source.replace(/^\s*show(?:Speed|Seek)Overlay\([^;]+;\r?$/gm, "");
-source = source.replace(/\ndocument\.addEventListener\("keydown"[\s\S]*$/, "\nthis.__contentTest = { contentType, isVideoPage, effectiveSettings, restoreNormalSpeed, seekShorts, handleKeyboardShortcut, ytqsNormalizeSettings, setSettings: (value) => { ytqsSettings = ytqsNormalizeSettings(value); } };" );
+source = source.replace(/\ndocument\.addEventListener\("keydown"[\s\S]*$/, "\nthis.__contentTest = { contentType, isVideoPage, effectiveSettings, restoreNormalSpeed, seekShorts, handleKeyboardShortcut, ytqsNormalizeSettings, setSettings: (value) => { ytqsSettings = ytqsNormalizeSettings(value); }, setContext: (value) => { ytqsContext = value; } };" );
 
 const messages = [];
 const video = {
@@ -60,6 +60,22 @@ assert.equal(api.restoreNormalSpeed(), true);
 assert.equal(messages.at(-1).type, "SET_SESSION_SPEED");
 assert.equal(messages.at(-1).speed, 1);
 assert.equal(video.playbackRate, 1);
+
+api.setSettings({
+  global: { speed: 1, quality: "hd1080", theaterModeEnabled: true },
+  channels: {
+    channelA: {
+      regular: { speed: 1.25, quality: "hd1080", theaterModeOverride: "off" },
+      shorts: { speed: 2, quality: "highest" }
+    }
+  }
+});
+api.setContext({ isVideo: true, contentType: "regular", channelId: "channelA", channelName: "Channel A" });
+assert.equal(api.effectiveSettings().theaterMode, false);
+api.setContext({ isVideo: true, contentType: "regular", channelId: "", channelName: "" });
+assert.equal(api.effectiveSettings().theaterMode, true);
+api.setSettings({ global: { speed: 1, quality: "hd1080", theaterModeEnabled: false } });
+assert.equal(api.effectiveSettings().theaterMode, null);
 
 assert.equal(api.seekShorts(5), true);
 assert.equal(video.currentTime, 17);

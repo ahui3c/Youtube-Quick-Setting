@@ -42,6 +42,18 @@
           <p class="context-note" id="shortsQualityNote" hidden>YouTube Shorts 提供畫質控制時才會套用此偏好。</p>
         </fieldset>
 
+        <div class="toggle-setting theater-setting" id="globalTheaterSetting">
+          <div>
+            <strong id="globalTheaterTitle">自動開啟劇院模式</strong>
+            <span id="globalTheaterDescription">進入一般影片時自動切換為劇院模式</span>
+          </div>
+          <label class="switch">
+            <input id="globalTheaterEnabled" type="checkbox">
+            <span class="switch-ui" aria-hidden="true"></span>
+            <span class="sr-only" id="globalTheaterLabel">自動開啟劇院模式</span>
+          </label>
+        </div>
+
         <div class="shorts-controls" id="shortsControls" hidden>
           <fieldset>
             <legend id="shortsSeekSecondsLegend">快進秒數</legend>
@@ -86,6 +98,11 @@
           <fieldset>
             <legend id="channelQualityLegend">這個頻道的影片畫質</legend>
             <div class="choice-grid" id="channelQuality" role="radiogroup" aria-label="頻道影片畫質"></div>
+          </fieldset>
+
+          <fieldset id="channelTheaterFieldset">
+            <legend id="channelTheaterLegend">這個頻道的劇院模式</legend>
+            <div class="choice-grid" id="channelTheaterMode" role="radiogroup" aria-labelledby="channelTheaterLegend"></div>
           </fieldset>
           <button class="remove-button" id="removeChannel" type="button">移除頻道專屬設定</button>
         </div>

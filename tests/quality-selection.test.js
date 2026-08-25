@@ -5,20 +5,55 @@ const vm = require("node:vm");
 let source = fs.readFileSync("page-bridge.js", "utf8");
 source = source.replace(
   /\n\}\)\(\);\s*$/,
-  "\nwindow.__qualityTest = { bestQuality, chooseMenuQuality };\n})();"
+  "\nwindow.__qualityTest = { bestQuality, chooseMenuQuality, applyTheaterMode, applyTheaterModeOnce };\n})();"
 );
 
+let theaterEnabled = false;
+let sizeButtonClicks = 0;
+const player = {
+  classList: { contains: (name) => name === "ytp-big-mode" && theaterEnabled },
+  querySelector: (selector) => selector === ".ytp-size-button" ? { click: () => { theaterEnabled = !theaterEnabled; sizeButtonClicks += 1; } } : null
+};
 const sandbox = {
   window: { addEventListener() {} },
-  document: { addEventListener() {} },
+  document: {
+    addEventListener() {},
+    querySelector: (selector) => selector === "ytd-watch-flexy" ? { hasAttribute: (name) => name === "theater" && theaterEnabled } : null
+  },
   setTimeout() {},
-  location: { origin: "https://www.youtube.com" },
+  location: { origin: "https://www.youtube.com", pathname: "/watch", search: "?v=video-a", href: "https://www.youtube.com/watch?v=video-a" },
+  URLSearchParams,
   Promise
 };
 vm.createContext(sandbox);
 vm.runInContext(source, sandbox, { filename: "page-bridge.js" });
 
-const { bestQuality, chooseMenuQuality } = sandbox.window.__qualityTest;
+const { bestQuality, chooseMenuQuality, applyTheaterMode, applyTheaterModeOnce } = sandbox.window.__qualityTest;
+
+assert.equal(applyTheaterMode(player, true), true);
+assert.equal(theaterEnabled, true);
+assert.equal(sizeButtonClicks, 1);
+assert.equal(applyTheaterMode(player, true), true);
+assert.equal(sizeButtonClicks, 1);
+assert.equal(applyTheaterMode(player, false), true);
+assert.equal(theaterEnabled, false);
+assert.equal(sizeButtonClicks, 2);
+assert.equal(applyTheaterMode(player, null), false);
+
+assert.equal(applyTheaterModeOnce(player, true), true);
+assert.equal(theaterEnabled, true);
+assert.equal(sizeButtonClicks, 3);
+// Simulate the viewer leaving Theater mode after the extension applied it.
+theaterEnabled = false;
+assert.equal(applyTheaterModeOnce(player, true), false);
+assert.equal(theaterEnabled, false);
+assert.equal(sizeButtonClicks, 3);
+// A different video gets one new load-time application.
+sandbox.location.search = "?v=video-b";
+sandbox.location.href = "https://www.youtube.com/watch?v=video-b";
+assert.equal(applyTheaterModeOnce(player, true), true);
+assert.equal(theaterEnabled, true);
+assert.equal(sizeButtonClicks, 4);
 
 assert.equal(bestQuality(["hd1440", "hd1080", "hd720"], "hd2160"), "hd1440");
 assert.equal(bestQuality(["hd2160", "hd1440"], "hd1080"), "hd1440");

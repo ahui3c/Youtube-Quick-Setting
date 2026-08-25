@@ -35,7 +35,7 @@ assert.deepEqual(
 );
 assert.deepEqual(
   JSON.parse(JSON.stringify(migrated.channels.channelA.regular)),
-  { speed: 2, quality: "highest" }
+  { speed: 2, quality: "highest", theaterModeOverride: "inherit" }
 );
 assert.deepEqual(
   JSON.parse(JSON.stringify(migrated.channels.channelA.shorts)),
@@ -44,22 +44,24 @@ assert.deepEqual(
 
 const independent = normalizeSettings({
   language: "ja",
-  global: { speed: 1, quality: "hd1080" },
+  global: { speed: 1, quality: "hd1080", theaterModeEnabled: true },
   shorts: { speed: 3, quality: "highest" },
   shortsControls: { seekSeconds: 10, arrowKeysEnabled: false },
   channels: {
     channelB: {
-      regular: { speed: 1.25, quality: "hd1080" },
+      regular: { speed: 1.25, quality: "hd1080", theaterModeOverride: "off" },
       shorts: { speed: 0.7, quality: "highest" }
     }
   }
 });
 assert.equal(independent.language, "ja");
 assert.equal(independent.global.speed, 1);
+assert.equal(independent.global.theaterModeEnabled, true);
 assert.equal(independent.shorts.speed, 3);
 assert.equal(independent.shortsControls.seekSeconds, 10);
 assert.equal(independent.shortsControls.arrowKeysEnabled, false);
 assert.equal(channelProfile(independent.channels.channelB, "regular").speed, 1.25);
+assert.equal(channelProfile(independent.channels.channelB, "regular").theaterModeOverride, "off");
 assert.equal(channelProfile(independent.channels.channelB, "shorts").speed, 0.7);
 assert.equal(profileKey("regular"), "global");
 assert.equal(profileKey("shorts"), "shorts");

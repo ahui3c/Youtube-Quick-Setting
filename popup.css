@@ -246,11 +246,17 @@ legend {
   gap: 14px;
   margin-top: 15px;
 }
+.toggle-setting[hidden], fieldset[hidden] { display: none; }
 
 .toggle-setting > div { min-width: 0; }
 .toggle-setting strong, .toggle-setting span { display: block; }
 .toggle-setting strong { color: #d3d4d7; font-size: 12px; line-height: 1.35; }
 .toggle-setting > div > span { margin-top: 3px; color: var(--muted); font-size: 10px; line-height: 1.45; }
+.theater-setting {
+  margin-top: 16px;
+  padding-top: 15px;
+  border-top: 1px solid var(--line);
+}
 
 .channel-title-wrap { display: flex; gap: 10px; align-items: center; min-width: 0; }
 .channel-title-wrap > div { min-width: 0; }

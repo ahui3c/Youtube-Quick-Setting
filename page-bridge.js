@@ -18,6 +18,8 @@
   let currentSettings = null;
   let applyToken = 0;
   let qualityMenuBusy = false;
+  let theaterVideoKey = "";
+  let theaterHandledForVideo = false;
 
   function getActiveShortVideo() {
     const videos = [...document.querySelectorAll("ytd-reel-video-renderer video, ytd-shorts video")];
@@ -53,6 +55,37 @@
       video.defaultPlaybackRate = speed;
       video.playbackRate = speed;
     }
+  }
+
+  function applyTheaterMode(player, desired) {
+    if (typeof desired !== "boolean" || /^\/shorts\/[^/]+/.test(location.pathname)) return false;
+    if (!player || player.classList?.contains("ytp-fullscreen")) return false;
+    const flexy = document.querySelector("ytd-watch-flexy");
+    const isTheater = Boolean(flexy?.hasAttribute("theater")) || player.classList?.contains("ytp-big-mode") === true;
+    if (isTheater === desired) return true;
+    const sizeButton = player.querySelector?.(".ytp-size-button");
+    if (!sizeButton) return false;
+    sizeButton.click();
+    return true;
+  }
+
+  function currentTheaterVideoKey() {
+    if (location.pathname === "/watch") {
+      return new URLSearchParams(location.search).get("v") || location.href;
+    }
+    return location.pathname;
+  }
+
+  function applyTheaterModeOnce(player, desired) {
+    const videoKey = currentTheaterVideoKey();
+    if (videoKey !== theaterVideoKey) {
+      theaterVideoKey = videoKey;
+      theaterHandledForVideo = false;
+    }
+    if (theaterHandledForVideo || typeof desired !== "boolean") return false;
+    const handled = applyTheaterMode(player, desired);
+    if (handled) theaterHandledForVideo = true;
+    return handled;
   }
 
   function bestQuality(available, preference) {
@@ -169,6 +202,11 @@
       const speed = Number(currentSettings.speed);
       applyPlaybackRate(player, video, speed);
     }
+
+    // Theater mode is a load-time preference. Once the initial state has been
+    // applied successfully, later quality/speed retries must respect any
+    // theater-mode change the viewer makes manually.
+    applyTheaterModeOnce(player, currentSettings.theaterMode);
 
     if (!player) return;
     const available = typeof player.getAvailableQualityLevels === "function"
