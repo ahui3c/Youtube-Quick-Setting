@@ -111,7 +111,19 @@
     return new Promise((resolve) => setTimeout(resolve, milliseconds));
   }
 
-  function chooseMenuQuality(rows, preference) {
+  function hasPremiumSubscription() {
+    try {
+      const iconType = window.ytInitialData?.topbar?.desktopTopbarRenderer
+        ?.logo?.topbarLogoRenderer?.iconImage?.iconType;
+      if (iconType === "YOUTUBE_PREMIUM_LOGO") return true;
+      const topbarMarkup = document.querySelector("ytd-topbar-logo-renderer")?.innerHTML || "";
+      return /YOUTUBE_PREMIUM_LOGO|YouTube Premium/i.test(topbarMarkup);
+    } catch {
+      return false;
+    }
+  }
+
+  function chooseMenuQuality(rows, preference, allowPremium = false) {
     const options = rows.map((element) => {
       const text = element.textContent?.replace(/\s+/g, " ").trim() || "";
       const match = text.match(/(\d{3,4})\s*p/i);
@@ -122,11 +134,12 @@
       };
     }).filter((item) => Number.isFinite(item.height));
 
-    if (!options.length) return null;
+    const safeOptions = allowPremium ? options : options.filter((item) => !item.premium);
+    if (!safeOptions.length) return null;
     const targetHeight = preference === "highest"
       ? Number.POSITIVE_INFINITY
       : QUALITY_HEIGHTS[preference];
-    const descending = [...options].sort((a, b) => {
+    const descending = [...safeOptions].sort((a, b) => {
       if (a.height !== b.height) return b.height - a.height;
       return Number(b.premium) - Number(a.premium);
     });
@@ -135,7 +148,7 @@
 
     // This uncommon case means YouTube only exposed qualities above the target.
     // Choose the closest one rather than jumping to the absolute maximum.
-    return [...options].sort((a, b) => {
+    return [...safeOptions].sort((a, b) => {
       if (a.height !== b.height) return a.height - b.height;
       return Number(b.premium) - Number(a.premium);
     })[0];
@@ -177,7 +190,11 @@
       if (token !== applyToken) return;
 
       const qualityRows = [...(menu?.querySelectorAll(".ytp-menuitem") || [])];
-      const selected = chooseMenuQuality(qualityRows, currentSettings.quality);
+      const selected = chooseMenuQuality(
+        qualityRows,
+        currentSettings.quality,
+        hasPremiumSubscription()
+      );
       if (!selected) return;
       selected.element.click();
     } catch {

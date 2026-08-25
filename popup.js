@@ -25,7 +25,7 @@ const MESSAGES = {
     globalTheaterTitle: "自動開啟劇院模式", globalTheaterDescription: "進入一般影片時自動切換為劇院模式",
     channelTheater: "這個頻道的劇院模式", theaterInherit: "跟隨全局", theaterOn: "強制開啟", theaterOff: "強制關閉",
     connected: "已連線到目前影片", disconnected: "請開啟 YouTube 影片或 Shorts", languageLabel: "介面語言",
-    qualityHighest: "自動最高", quality4k: "4K", quality1080: "1080p", qualityPremiumHint: "可用時優先使用 1080p Premium",
+    qualityHighest: "自動最高", quality4k: "4K", quality1080: "1080p", qualityPremiumHint: "已訂閱 Premium 時優先使用強化位元率",
     shortsQualityNote: "YouTube Shorts 提供畫質控制時才會套用此偏好。"
   },
   en: {
@@ -43,7 +43,7 @@ const MESSAGES = {
     globalTheaterTitle: "Automatically open Theater mode", globalTheaterDescription: "Switch standard videos to Theater mode when they open",
     channelTheater: "Theater mode for this channel", theaterInherit: "Follow global", theaterOn: "Force on", theaterOff: "Force off",
     connected: "Connected to the current video", disconnected: "Open a YouTube video or Short", languageLabel: "Interface language",
-    qualityHighest: "Highest", quality4k: "4K", quality1080: "1080p", qualityPremiumHint: "Prefer 1080p Premium when available",
+    qualityHighest: "Highest", quality4k: "4K", quality1080: "1080p", qualityPremiumHint: "Prefer enhanced bitrate only for Premium subscribers",
     shortsQualityNote: "This preference applies when YouTube provides quality controls for Shorts."
   },
   ja: {
@@ -61,7 +61,7 @@ const MESSAGES = {
     globalTheaterTitle: "シアターモードを自動的に有効化", globalTheaterDescription: "通常動画を開いたときにシアターモードへ切り替えます",
     channelTheater: "このチャンネルのシアターモード", theaterInherit: "全体設定に従う", theaterOn: "常にオン", theaterOff: "常にオフ",
     connected: "現在の動画に接続しました", disconnected: "YouTube 動画またはショートを開いてください", languageLabel: "表示言語",
-    qualityHighest: "最高画質", quality4k: "4K", quality1080: "1080p", qualityPremiumHint: "利用可能なら 1080p Premium を優先",
+    qualityHighest: "最高画質", quality4k: "4K", quality1080: "1080p", qualityPremiumHint: "Premium 登録済みの場合のみ高ビットレートを優先",
     shortsQualityNote: "YouTube がショートの画質設定を提供している場合に適用されます。"
   }
 };
