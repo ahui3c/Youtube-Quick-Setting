@@ -18,6 +18,7 @@ A Chrome extension that automatically applies playback speed, video quality, and
 - A two-second player notice shows the active channel speed and quality
 - Press `+` or `-` to change speed, and `*` to return immediately to `1×`
 - Keeps YouTube's native speed and quality menus in sync whenever the player permits it
+- De-duplicates identical per-video quality applications to prevent repeated loading at the beginning
 - Traditional Chinese, English, and Japanese interfaces, with system or manual language selection
 - Settings are stored with `chrome.storage.sync`
 

@@ -5,11 +5,12 @@ const vm = require("node:vm");
 let source = fs.readFileSync("page-bridge.js", "utf8");
 source = source.replace(
   /\n\}\)\(\);\s*$/,
-  "\nwindow.__qualityTest = { bestQuality, chooseMenuQuality, applyTheaterMode, applyTheaterModeOnce };\n})();"
+  "\nwindow.__qualityTest = { bestQuality, chooseMenuQuality, applyTheaterMode, applyTheaterModeOnce, applyWithRetries };\n})();"
 );
 
 let theaterEnabled = false;
 let sizeButtonClicks = 0;
+let scheduledTasks = 0;
 const player = {
   classList: { contains: (name) => name === "ytp-big-mode" && theaterEnabled },
   querySelector: (selector) => selector === ".ytp-size-button" ? { click: () => { theaterEnabled = !theaterEnabled; sizeButtonClicks += 1; } } : null
@@ -20,7 +21,7 @@ const sandbox = {
     addEventListener() {},
     querySelector: (selector) => selector === "ytd-watch-flexy" ? { hasAttribute: (name) => name === "theater" && theaterEnabled } : null
   },
-  setTimeout() {},
+  setTimeout() { scheduledTasks += 1; },
   location: { origin: "https://www.youtube.com", pathname: "/watch", search: "?v=video-a", href: "https://www.youtube.com/watch?v=video-a" },
   URLSearchParams,
   Promise
@@ -28,7 +29,7 @@ const sandbox = {
 vm.createContext(sandbox);
 vm.runInContext(source, sandbox, { filename: "page-bridge.js" });
 
-const { bestQuality, chooseMenuQuality, applyTheaterMode, applyTheaterModeOnce } = sandbox.window.__qualityTest;
+const { bestQuality, chooseMenuQuality, applyTheaterMode, applyTheaterModeOnce, applyWithRetries } = sandbox.window.__qualityTest;
 
 assert.equal(applyTheaterMode(player, true), true);
 assert.equal(theaterEnabled, true);
@@ -55,15 +56,24 @@ assert.equal(applyTheaterModeOnce(player, true), true);
 assert.equal(theaterEnabled, true);
 assert.equal(sizeButtonClicks, 4);
 
+applyWithRetries({ speed: 1, quality: "hd1080", premiumQualityEnabled: false, theaterMode: true });
+assert.equal(scheduledTasks, 5);
+applyWithRetries({ speed: 1, quality: "hd1080", premiumQualityEnabled: false, theaterMode: true });
+assert.equal(scheduledTasks, 5);
+applyWithRetries({ speed: 1, quality: "hd2160", premiumQualityEnabled: false, theaterMode: true });
+assert.equal(scheduledTasks, 10);
+
 assert.equal(bestQuality(["hd1440", "hd1080", "hd720"], "hd2160"), "hd1440");
 assert.equal(bestQuality(["hd2160", "hd1440"], "hd1080"), "hd1440");
 assert.equal(bestQuality(["hd2160", "hd1080", "hd720"], "hd1080"), "hd1080");
 assert.equal(bestQuality(["hd1440", "hd1080", "hd720"], "highest"), "hd1440");
 
-function row(id, text, premium = false) {
+function row(id, text, premium = false, selected = false) {
   return {
     id,
     textContent: text,
+    classList: { contains: (name) => name === "ytp-menuitem-checked" && selected },
+    getAttribute: (name) => name === "aria-checked" && selected ? "true" : null,
     querySelector(selector) {
       return selector === ".ytp-premium-label" && premium ? {} : null;
     }
@@ -77,6 +87,7 @@ const qualityRows = [
   row("720", "720p")
 ];
 assert.equal(chooseMenuQuality(qualityRows, "hd1080").element.id, "1080-standard");
+assert.equal(chooseMenuQuality([row("1080-selected", "1080p", false, true)], "hd1080").selected, true);
 assert.equal(chooseMenuQuality(qualityRows, "hd1080", true).element.id, "1080-premium");
 assert.equal(chooseMenuQuality(qualityRows, "highest").element.id, "4k");
 assert.equal(chooseMenuQuality(qualityRows, "hd2160").element.id, "4k");

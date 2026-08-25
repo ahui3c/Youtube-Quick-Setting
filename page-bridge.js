@@ -20,6 +20,7 @@
   let qualityMenuBusy = false;
   let theaterVideoKey = "";
   let theaterHandledForVideo = false;
+  let lastApplySignature = "";
 
   function getActiveShortVideo() {
     const videos = [...document.querySelectorAll("ytd-reel-video-renderer video, ytd-shorts video")];
@@ -118,7 +119,9 @@
       return {
         element,
         height: match ? Number(match[1]) : null,
-        premium: Boolean(element.querySelector(".ytp-premium-label")) || /premium/i.test(text)
+        premium: Boolean(element.querySelector(".ytp-premium-label")) || /premium/i.test(text),
+        selected: element.getAttribute("aria-checked") === "true"
+          || element.classList.contains("ytp-menuitem-checked")
       };
     }).filter((item) => Number.isFinite(item.height));
 
@@ -184,7 +187,7 @@
         currentSettings.premiumQualityEnabled === true
       );
       if (!selected) return;
-      selected.element.click();
+      if (!selected.selected) selected.element.click();
     } catch {
       // YouTube may rebuild the menu during SPA navigation; later navigation
       // or settings changes will try again with the new player tree.
@@ -219,6 +222,10 @@
       : [];
     const quality = bestQuality(available, currentSettings.quality);
     if (!quality) return;
+    const currentQuality = typeof player.getPlaybackQuality === "function"
+      ? player.getPlaybackQuality()
+      : null;
+    if (currentQuality === quality) return;
     try {
       player.setPlaybackQualityRange?.(quality, quality);
       player.setPlaybackQuality?.(quality);
@@ -229,6 +236,15 @@
 
   function applyWithRetries(settings) {
     currentSettings = settings;
+    const signature = [
+      currentTheaterVideoKey(),
+      Number(settings?.speed),
+      settings?.quality || "",
+      settings?.premiumQualityEnabled === true ? "premium" : "standard",
+      typeof settings?.theaterMode === "boolean" ? String(settings.theaterMode) : "theater-auto"
+    ].join("|");
+    if (signature === lastApplySignature) return;
+    lastApplySignature = signature;
     const token = ++applyToken;
     [0, 500, 1500, 3500].forEach((delay) => setTimeout(() => applyNow(token), delay));
     setTimeout(() => applyQualityViaMenu(token), 900);
@@ -244,5 +260,8 @@
     }
   });
 
+  // Repeated metadata events can be caused by YouTube replacing the media
+  // source after a quality change. applyWithRetries de-duplicates the same
+  // video/settings signature so that replacement cannot become a reload loop.
   document.addEventListener("loadedmetadata", () => currentSettings && applyWithRetries(currentSettings), true);
 })();
