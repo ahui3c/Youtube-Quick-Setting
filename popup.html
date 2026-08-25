@@ -42,6 +42,18 @@
           <p class="context-note" id="shortsQualityNote" hidden>YouTube Shorts 提供畫質控制時才會套用此偏好。</p>
         </fieldset>
 
+        <div class="toggle-setting" id="globalPremiumQualitySetting">
+          <div>
+            <strong id="globalPremiumQualityTitle">使用 Premium 強化畫質</strong>
+            <span id="globalPremiumQualityDescription">開啟後才會選擇 1080p Premium，僅適用已訂閱會員</span>
+          </div>
+          <label class="switch">
+            <input id="globalPremiumQualityEnabled" type="checkbox">
+            <span class="switch-ui" aria-hidden="true"></span>
+            <span class="sr-only" id="globalPremiumQualityLabel">使用 Premium 強化畫質</span>
+          </label>
+        </div>
+
         <div class="toggle-setting theater-setting" id="globalTheaterSetting">
           <div>
             <strong id="globalTheaterTitle">自動開啟劇院模式</strong>
@@ -99,6 +111,18 @@
             <legend id="channelQualityLegend">這個頻道的影片畫質</legend>
             <div class="choice-grid" id="channelQuality" role="radiogroup" aria-label="頻道影片畫質"></div>
           </fieldset>
+
+          <div class="toggle-setting" id="channelPremiumQualitySetting">
+            <div>
+              <strong id="channelPremiumQualityTitle">使用 Premium 強化畫質</strong>
+              <span id="channelPremiumQualityDescription">只為這個頻道允許選擇 1080p Premium</span>
+            </div>
+            <label class="switch">
+              <input id="channelPremiumQualityEnabled" type="checkbox">
+              <span class="switch-ui" aria-hidden="true"></span>
+              <span class="sr-only" id="channelPremiumQualityLabel">使用 Premium 強化畫質</span>
+            </label>
+          </div>
 
           <fieldset id="channelTheaterFieldset">
             <legend id="channelTheaterLegend">這個頻道的劇院模式</legend>

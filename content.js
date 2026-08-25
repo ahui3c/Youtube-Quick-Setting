@@ -1,7 +1,7 @@
 const YTQS_DEFAULTS = {
   language: "system",
-  global: { speed: 1, quality: "hd1080", theaterModeEnabled: false },
-  shorts: { speed: 1, quality: "hd1080" },
+  global: { speed: 1, quality: "hd1080", premiumQualityEnabled: false, theaterModeEnabled: false },
+  shorts: { speed: 1, quality: "hd1080", premiumQualityEnabled: false },
   shortsControls: { seekSeconds: 5, arrowKeysEnabled: true },
   channels: {}
 };
@@ -29,7 +29,8 @@ const YTQS_MESSAGES = {
 function ytqsNormalizeProfile(value, fallback = YTQS_DEFAULTS.global) {
   return {
     speed: YTQS_SPEEDS.includes(Number(value?.speed)) ? Number(value.speed) : fallback.speed,
-    quality: Object.hasOwn(YTQS_QUALITY_LABELS, value?.quality) ? value.quality : fallback.quality
+    quality: Object.hasOwn(YTQS_QUALITY_LABELS, value?.quality) ? value.quality : fallback.quality,
+    premiumQualityEnabled: value?.premiumQualityEnabled === true
   };
 }
 

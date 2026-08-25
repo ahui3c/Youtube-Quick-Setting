@@ -111,18 +111,6 @@
     return new Promise((resolve) => setTimeout(resolve, milliseconds));
   }
 
-  function hasPremiumSubscription() {
-    try {
-      const iconType = window.ytInitialData?.topbar?.desktopTopbarRenderer
-        ?.logo?.topbarLogoRenderer?.iconImage?.iconType;
-      if (iconType === "YOUTUBE_PREMIUM_LOGO") return true;
-      const topbarMarkup = document.querySelector("ytd-topbar-logo-renderer")?.innerHTML || "";
-      return /YOUTUBE_PREMIUM_LOGO|YouTube Premium/i.test(topbarMarkup);
-    } catch {
-      return false;
-    }
-  }
-
   function chooseMenuQuality(rows, preference, allowPremium = false) {
     const options = rows.map((element) => {
       const text = element.textContent?.replace(/\s+/g, " ").trim() || "";
@@ -193,7 +181,7 @@
       const selected = chooseMenuQuality(
         qualityRows,
         currentSettings.quality,
-        hasPremiumSubscription()
+        currentSettings.premiumQualityEnabled === true
       );
       if (!selected) return;
       selected.element.click();

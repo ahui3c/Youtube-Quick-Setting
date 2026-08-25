@@ -11,7 +11,7 @@ A Chrome extension that automatically applies playback speed, video quality, and
 - Playback speeds: `0.7×`, `1×`, `1.25×`, `2×`, and `3×`
 - Quality preferences: Highest, 4K, and 1080p
 - Falls back to the highest available quality that does not exceed the target
-- Prefers enhanced-bitrate 1080p only when the account is clearly identified as a Premium subscriber
+- **Use Premium enhanced quality** is a separate opt-in switch that is off by default
 - Separate profiles for standard videos and Shorts
 - Channel-specific profiles override the matching global profile
 - Standard videos can open automatically in Theater mode, with per-channel follow-global, force-on, or force-off controls
@@ -75,7 +75,7 @@ The Shorts settings let you disable the arrow keys or select a `3`, `5` (default
 
 When the requested resolution is unavailable, the extension selects the highest available quality that does not exceed the target. If every available option is above the target, it selects the nearest higher option.
 
-`1080p Premium` is selected automatically only when the account is clearly identified as a YouTube Premium subscriber and the video offers it. Standard quality is used for non-subscribers or unknown eligibility so the extension does not trigger a Premium trial prompt.
+Highest, 4K, and 1080p exclude Premium quality by default. `1080p Premium` becomes eligible only after the user explicitly enables **Use Premium enhanced quality**. Non-subscribers should leave it off to avoid the Premium trial prompt. Channel profiles store this switch independently.
 
 The current desktop Shorts player does not expose a native quality menu or a usable quality API. The extension stores the Shorts quality preference independently and applies it whenever YouTube exposes a controllable option. Shorts playback-speed control is unaffected.
 

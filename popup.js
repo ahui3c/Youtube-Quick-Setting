@@ -25,7 +25,9 @@ const MESSAGES = {
     globalTheaterTitle: "自動開啟劇院模式", globalTheaterDescription: "進入一般影片時自動切換為劇院模式",
     channelTheater: "這個頻道的劇院模式", theaterInherit: "跟隨全局", theaterOn: "強制開啟", theaterOff: "強制關閉",
     connected: "已連線到目前影片", disconnected: "請開啟 YouTube 影片或 Shorts", languageLabel: "介面語言",
-    qualityHighest: "自動最高", quality4k: "4K", quality1080: "1080p", qualityPremiumHint: "已訂閱 Premium 時優先使用強化位元率",
+    qualityHighest: "自動最高", quality4k: "4K", quality1080: "1080p", qualityPremiumHint: "Premium 強化畫質由下方開關獨立控制",
+    premiumQualityTitle: "使用 Premium 強化畫質", premiumQualityDescription: "開啟後才會選擇 1080p Premium，僅適用已訂閱會員",
+    channelPremiumQualityDescription: "只為這個頻道允許選擇 1080p Premium",
     shortsQualityNote: "YouTube Shorts 提供畫質控制時才會套用此偏好。"
   },
   en: {
@@ -43,7 +45,9 @@ const MESSAGES = {
     globalTheaterTitle: "Automatically open Theater mode", globalTheaterDescription: "Switch standard videos to Theater mode when they open",
     channelTheater: "Theater mode for this channel", theaterInherit: "Follow global", theaterOn: "Force on", theaterOff: "Force off",
     connected: "Connected to the current video", disconnected: "Open a YouTube video or Short", languageLabel: "Interface language",
-    qualityHighest: "Highest", quality4k: "4K", quality1080: "1080p", qualityPremiumHint: "Prefer enhanced bitrate only for Premium subscribers",
+    qualityHighest: "Highest", quality4k: "4K", quality1080: "1080p", qualityPremiumHint: "Premium enhanced quality is controlled separately below",
+    premiumQualityTitle: "Use Premium enhanced quality", premiumQualityDescription: "Allows 1080p Premium only when enabled; requires a Premium subscription",
+    channelPremiumQualityDescription: "Allow 1080p Premium for this channel only",
     shortsQualityNote: "This preference applies when YouTube provides quality controls for Shorts."
   },
   ja: {
@@ -61,12 +65,14 @@ const MESSAGES = {
     globalTheaterTitle: "シアターモードを自動的に有効化", globalTheaterDescription: "通常動画を開いたときにシアターモードへ切り替えます",
     channelTheater: "このチャンネルのシアターモード", theaterInherit: "全体設定に従う", theaterOn: "常にオン", theaterOff: "常にオフ",
     connected: "現在の動画に接続しました", disconnected: "YouTube 動画またはショートを開いてください", languageLabel: "表示言語",
-    qualityHighest: "最高画質", quality4k: "4K", quality1080: "1080p", qualityPremiumHint: "Premium 登録済みの場合のみ高ビットレートを優先",
+    qualityHighest: "最高画質", quality4k: "4K", quality1080: "1080p", qualityPremiumHint: "Premium 高画質は下のスイッチで個別に設定",
+    premiumQualityTitle: "Premium 高画質を使用", premiumQualityDescription: "オンの場合のみ 1080p Premium を選択。Premium 登録が必要です",
+    channelPremiumQualityDescription: "このチャンネルだけ 1080p Premium を許可",
     shortsQualityNote: "YouTube がショートの画質設定を提供している場合に適用されます。"
   }
 };
 
-const DEFAULT_PROFILE = { speed: 1, quality: "hd1080" };
+const DEFAULT_PROFILE = { speed: 1, quality: "hd1080", premiumQualityEnabled: false };
 const DEFAULT_SETTINGS = {
   language: "system",
   global: { ...DEFAULT_PROFILE, theaterModeEnabled: false },
@@ -85,7 +91,8 @@ const $ = (selector) => document.querySelector(selector);
 function normalizeProfile(value, fallback = DEFAULT_PROFILE) {
   return {
     speed: SPEEDS.includes(Number(value?.speed)) ? Number(value.speed) : fallback.speed,
-    quality: QUALITIES.some((item) => item.value === value?.quality) ? value.quality : fallback.quality
+    quality: QUALITIES.some((item) => item.value === value?.quality) ? value.quality : fallback.quality,
+    premiumQualityEnabled: value?.premiumQualityEnabled === true
   };
 }
 
@@ -188,6 +195,12 @@ function applyTranslations() {
   $("#globalTheaterDescription").textContent = t("globalTheaterDescription");
   $("#globalTheaterLabel").textContent = t("globalTheaterTitle");
   $("#channelTheaterLegend").textContent = t("channelTheater");
+  $("#globalPremiumQualityTitle").textContent = t("premiumQualityTitle");
+  $("#globalPremiumQualityDescription").textContent = t("premiumQualityDescription");
+  $("#globalPremiumQualityLabel").textContent = t("premiumQualityTitle");
+  $("#channelPremiumQualityTitle").textContent = t("premiumQualityTitle");
+  $("#channelPremiumQualityDescription").textContent = t("channelPremiumQualityDescription");
+  $("#channelPremiumQualityLabel").textContent = t("premiumQualityTitle");
   $("#statusDot").title = context?.isVideo ? t("connected") : t("disconnected");
 }
 
@@ -273,6 +286,9 @@ function renderGlobal() {
   const theaterSetting = $("#globalTheaterSetting");
   theaterSetting.hidden = activeContentType === "shorts";
   $("#globalTheaterEnabled").checked = settings.global.theaterModeEnabled;
+  const premiumQualitySetting = $("#globalPremiumQualitySetting");
+  premiumQualitySetting.hidden = activeContentType === "shorts";
+  $("#globalPremiumQualityEnabled").checked = settings.global.premiumQualityEnabled;
   renderShortsControls();
 }
 
@@ -336,6 +352,9 @@ function renderChannel() {
     renderChannel();
     await persist();
   });
+  const premiumQualitySetting = $("#channelPremiumQualitySetting");
+  premiumQualitySetting.hidden = activeContentType === "shorts";
+  $("#channelPremiumQualityEnabled").checked = profile.premiumQualityEnabled;
   const theaterFieldset = $("#channelTheaterFieldset");
   theaterFieldset.hidden = activeContentType === "shorts";
   if (activeContentType === "regular") {
@@ -392,6 +411,19 @@ $("#globalTheaterEnabled").addEventListener("change", async (event) => {
   await persist();
 });
 
+$("#globalPremiumQualityEnabled").addEventListener("change", async (event) => {
+  settings.global.premiumQualityEnabled = event.target.checked;
+  await persist();
+});
+
+$("#channelPremiumQualityEnabled").addEventListener("change", async (event) => {
+  if (!context?.channelId || activeContentType !== "regular") return;
+  const profile = channelProfile(settings.channels[context.channelId], "regular");
+  if (!profile) return;
+  profile.premiumQualityEnabled = event.target.checked;
+  await persist();
+});
+
 $("#channelEnabled").addEventListener("change", async (event) => {
   if (!context?.channelId) return;
   if (event.target.checked) {
@@ -400,6 +432,7 @@ $("#channelEnabled").addEventListener("change", async (event) => {
       regular: {
         speed: settings.global.speed,
         quality: settings.global.quality,
+        premiumQualityEnabled: settings.global.premiumQualityEnabled,
         theaterModeOverride: "inherit"
       },
       shorts: { ...settings.shorts }

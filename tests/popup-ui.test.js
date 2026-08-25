@@ -14,7 +14,7 @@ const { chromium } = require("playwright");
           get: async () => ({
             ytQuickSettings: {
               language: "system",
-              global: { speed: 1, quality: "hd1080", theaterModeEnabled: true },
+              global: { speed: 1, quality: "hd1080", premiumQualityEnabled: false, theaterModeEnabled: true },
               shorts: { speed: 3, quality: "highest" },
               shortsControls: { seekSeconds: 10, arrowKeysEnabled: false },
               channels: {}
@@ -36,8 +36,16 @@ const { chromium } = require("playwright");
   assert.equal(await page.locator("#globalSpeed .selected").innerText(), "1×");
   assert.equal(await page.locator("#globalTheaterSetting").isVisible(), true);
   assert.equal(await page.locator("#globalTheaterEnabled").isChecked(), true);
+  assert.equal(await page.locator("#globalPremiumQualitySetting").isVisible(), true);
+  assert.equal(await page.locator("#globalPremiumQualityEnabled").isChecked(), false);
+  await page.locator("#globalPremiumQualityEnabled").check();
+  assert.equal(await page.evaluate(() => savedSettings.at(-1).ytQuickSettings.global.premiumQualityEnabled), true);
   await page.locator("#channelEnabled").check();
   assert.equal(await page.locator("#channelTheaterFieldset").isVisible(), true);
+  assert.equal(await page.locator("#channelPremiumQualitySetting").isVisible(), true);
+  assert.equal(await page.locator("#channelPremiumQualityEnabled").isChecked(), true);
+  await page.locator("#channelPremiumQualityEnabled").uncheck();
+  assert.equal(await page.evaluate(() => savedSettings.at(-1).ytQuickSettings.channels.channelA.regular.premiumQualityEnabled), false);
   await page.getByRole("radio", { name: "常にオフ" }).click();
   assert.equal(await page.locator("#channelTheaterMode .selected").innerText(), "常にオフ");
   assert.equal(await page.evaluate(() => savedSettings.at(-1).ytQuickSettings.channels.channelA.regular.theaterModeOverride), "off");
@@ -52,6 +60,8 @@ const { chromium } = require("playwright");
   assert.equal(await page.locator("#shortsControls").isVisible(), true);
   assert.equal(await page.locator("#globalTheaterSetting").isVisible(), false);
   assert.equal(await page.locator("#channelTheaterFieldset").isVisible(), false);
+  assert.equal(await page.locator("#globalPremiumQualitySetting").isVisible(), false);
+  assert.equal(await page.locator("#channelPremiumQualitySetting").isVisible(), false);
   assert.equal(await page.locator("#shortsSeekSeconds .selected").innerText(), "10 秒");
   assert.equal(await page.locator("#shortsArrowKeysEnabled").isChecked(), false);
   const shortsSettings = await page.locator(".settings-card").boundingBox();

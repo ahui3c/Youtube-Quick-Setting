@@ -62,18 +62,20 @@ assert.equal(messages.at(-1).speed, 1);
 assert.equal(video.playbackRate, 1);
 
 api.setSettings({
-  global: { speed: 1, quality: "hd1080", theaterModeEnabled: true },
+  global: { speed: 1, quality: "hd1080", premiumQualityEnabled: true, theaterModeEnabled: true },
   channels: {
     channelA: {
-      regular: { speed: 1.25, quality: "hd1080", theaterModeOverride: "off" },
+      regular: { speed: 1.25, quality: "hd1080", premiumQualityEnabled: false, theaterModeOverride: "off" },
       shorts: { speed: 2, quality: "highest" }
     }
   }
 });
 api.setContext({ isVideo: true, contentType: "regular", channelId: "channelA", channelName: "Channel A" });
 assert.equal(api.effectiveSettings().theaterMode, false);
+assert.equal(api.effectiveSettings().premiumQualityEnabled, false);
 api.setContext({ isVideo: true, contentType: "regular", channelId: "", channelName: "" });
 assert.equal(api.effectiveSettings().theaterMode, true);
+assert.equal(api.effectiveSettings().premiumQualityEnabled, true);
 api.setSettings({ global: { speed: 1, quality: "hd1080", theaterModeEnabled: false } });
 assert.equal(api.effectiveSettings().theaterMode, null);
 

@@ -27,7 +27,7 @@ const migrated = normalizeSettings({
 
 assert.deepEqual(
   JSON.parse(JSON.stringify(migrated.shorts)),
-  { speed: 1.25, quality: "hd2160" }
+  { speed: 1.25, quality: "hd2160", premiumQualityEnabled: false }
 );
 assert.deepEqual(
   JSON.parse(JSON.stringify(migrated.shortsControls)),
@@ -35,21 +35,21 @@ assert.deepEqual(
 );
 assert.deepEqual(
   JSON.parse(JSON.stringify(migrated.channels.channelA.regular)),
-  { speed: 2, quality: "highest", theaterModeOverride: "inherit" }
+  { speed: 2, quality: "highest", premiumQualityEnabled: false, theaterModeOverride: "inherit" }
 );
 assert.deepEqual(
   JSON.parse(JSON.stringify(migrated.channels.channelA.shorts)),
-  { speed: 2, quality: "highest" }
+  { speed: 2, quality: "highest", premiumQualityEnabled: false }
 );
 
 const independent = normalizeSettings({
   language: "ja",
-  global: { speed: 1, quality: "hd1080", theaterModeEnabled: true },
+  global: { speed: 1, quality: "hd1080", premiumQualityEnabled: true, theaterModeEnabled: true },
   shorts: { speed: 3, quality: "highest" },
   shortsControls: { seekSeconds: 10, arrowKeysEnabled: false },
   channels: {
     channelB: {
-      regular: { speed: 1.25, quality: "hd1080", theaterModeOverride: "off" },
+      regular: { speed: 1.25, quality: "hd1080", premiumQualityEnabled: true, theaterModeOverride: "off" },
       shorts: { speed: 0.7, quality: "highest" }
     }
   }
@@ -57,11 +57,13 @@ const independent = normalizeSettings({
 assert.equal(independent.language, "ja");
 assert.equal(independent.global.speed, 1);
 assert.equal(independent.global.theaterModeEnabled, true);
+assert.equal(independent.global.premiumQualityEnabled, true);
 assert.equal(independent.shorts.speed, 3);
 assert.equal(independent.shortsControls.seekSeconds, 10);
 assert.equal(independent.shortsControls.arrowKeysEnabled, false);
 assert.equal(channelProfile(independent.channels.channelB, "regular").speed, 1.25);
 assert.equal(channelProfile(independent.channels.channelB, "regular").theaterModeOverride, "off");
+assert.equal(channelProfile(independent.channels.channelB, "regular").premiumQualityEnabled, true);
 assert.equal(channelProfile(independent.channels.channelB, "shorts").speed, 0.7);
 assert.equal(profileKey("regular"), "global");
 assert.equal(profileKey("shorts"), "shorts");

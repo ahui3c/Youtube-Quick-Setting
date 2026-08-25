@@ -5,7 +5,7 @@ const vm = require("node:vm");
 let source = fs.readFileSync("page-bridge.js", "utf8");
 source = source.replace(
   /\n\}\)\(\);\s*$/,
-  "\nwindow.__qualityTest = { bestQuality, chooseMenuQuality, hasPremiumSubscription, applyTheaterMode, applyTheaterModeOnce };\n})();"
+  "\nwindow.__qualityTest = { bestQuality, chooseMenuQuality, applyTheaterMode, applyTheaterModeOnce };\n})();"
 );
 
 let theaterEnabled = false;
@@ -28,7 +28,7 @@ const sandbox = {
 vm.createContext(sandbox);
 vm.runInContext(source, sandbox, { filename: "page-bridge.js" });
 
-const { bestQuality, chooseMenuQuality, hasPremiumSubscription, applyTheaterMode, applyTheaterModeOnce } = sandbox.window.__qualityTest;
+const { bestQuality, chooseMenuQuality, applyTheaterMode, applyTheaterModeOnce } = sandbox.window.__qualityTest;
 
 assert.equal(applyTheaterMode(player, true), true);
 assert.equal(theaterEnabled, true);
@@ -83,11 +83,5 @@ assert.equal(chooseMenuQuality(qualityRows, "hd2160").element.id, "4k");
 assert.equal(chooseMenuQuality([row("720", "720p"), row("480", "480p")], "hd1080").element.id, "720");
 assert.equal(chooseMenuQuality([row("4k", "2160p 4K"), row("1440", "1440p")], "hd1080").element.id, "1440");
 assert.equal(chooseMenuQuality([row("1080-premium", "1080p Premium", true), row("720", "720p")], "hd1080").element.id, "720");
-
-assert.equal(hasPremiumSubscription(), false);
-sandbox.window.ytInitialData = {
-  topbar: { desktopTopbarRenderer: { logo: { topbarLogoRenderer: { iconImage: { iconType: "YOUTUBE_PREMIUM_LOGO" } } } } }
-};
-assert.equal(hasPremiumSubscription(), true);
 
 console.log("QUALITY_SELECTION_TESTS_OK");
