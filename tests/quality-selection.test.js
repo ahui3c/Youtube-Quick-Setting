@@ -5,7 +5,7 @@ const vm = require("node:vm");
 let source = fs.readFileSync("page-bridge.js", "utf8");
 source = source.replace(
   /\n\}\)\(\);\s*$/,
-  "\nwindow.__qualityTest = { bestQuality, chooseMenuQuality, applyTheaterMode, applyTheaterModeOnce, applyWithRetries };\n})();"
+  "\nwindow.__qualityTest = { bestQuality, chooseMenuQuality, applyTheaterMode, applyTheaterModeOnce, applyWithRetries, shouldRestoreQualityPosition };\n})();"
 );
 
 let theaterEnabled = false;
@@ -29,7 +29,7 @@ const sandbox = {
 vm.createContext(sandbox);
 vm.runInContext(source, sandbox, { filename: "page-bridge.js" });
 
-const { bestQuality, chooseMenuQuality, applyTheaterMode, applyTheaterModeOnce, applyWithRetries } = sandbox.window.__qualityTest;
+const { bestQuality, chooseMenuQuality, applyTheaterMode, applyTheaterModeOnce, applyWithRetries, shouldRestoreQualityPosition } = sandbox.window.__qualityTest;
 
 assert.equal(applyTheaterMode(player, true), true);
 assert.equal(theaterEnabled, true);
@@ -62,6 +62,9 @@ applyWithRetries({ speed: 1, quality: "hd1080", premiumQualityEnabled: false, th
 assert.equal(scheduledTasks, 5);
 applyWithRetries({ speed: 1, quality: "hd2160", premiumQualityEnabled: false, theaterMode: true });
 assert.equal(scheduledTasks, 10);
+assert.equal(shouldRestoreQualityPosition(0, 0.7), true);
+assert.equal(shouldRestoreQualityPosition(0.62, 0.7), false);
+assert.equal(shouldRestoreQualityPosition(2, 0.7), false);
 
 assert.equal(bestQuality(["hd1440", "hd1080", "hd720"], "hd2160"), "hd1440");
 assert.equal(bestQuality(["hd2160", "hd1440"], "hd1080"), "hd1440");

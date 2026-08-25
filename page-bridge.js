@@ -21,6 +21,8 @@
   let theaterVideoKey = "";
   let theaterHandledForVideo = false;
   let lastApplySignature = "";
+  let pendingQualityResume = null;
+  let pendingQualityResumeTimer = 0;
 
   function getActiveShortVideo() {
     const videos = [...document.querySelectorAll("ytd-reel-video-renderer video, ytd-shorts video")];
@@ -112,6 +114,50 @@
     return new Promise((resolve) => setTimeout(resolve, milliseconds));
   }
 
+  function rememberQualityPlaybackPosition() {
+    const player = getPlayer();
+    const video = /^\/shorts\/[^/]+/.test(location.pathname)
+      ? getActiveShortVideo()
+      : player?.querySelector("video.html5-main-video, video") || document.querySelector("video.html5-main-video, video");
+    const time = Number(video?.currentTime);
+    if (!video || !Number.isFinite(time) || time <= 0.05) return;
+    pendingQualityResume = {
+      videoKey: currentTheaterVideoKey(),
+      time,
+      wasPlaying: !video.paused
+    };
+    clearTimeout(pendingQualityResumeTimer);
+    pendingQualityResumeTimer = setTimeout(() => {
+      pendingQualityResume = null;
+    }, 5000);
+  }
+
+  function shouldRestoreQualityPosition(currentTime, resumeTime) {
+    return Number.isFinite(currentTime)
+      && Number.isFinite(resumeTime)
+      && currentTime + 0.15 < resumeTime;
+  }
+
+  function restoreQualityPlaybackPosition() {
+    const pending = pendingQualityResume;
+    if (!pending || pending.videoKey !== currentTheaterVideoKey()) return;
+    pendingQualityResume = null;
+    clearTimeout(pendingQualityResumeTimer);
+    setTimeout(() => {
+      const player = getPlayer();
+      const video = /^\/shorts\/[^/]+/.test(location.pathname)
+        ? getActiveShortVideo()
+        : player?.querySelector("video.html5-main-video, video") || document.querySelector("video.html5-main-video, video");
+      if (!video) return;
+      if (shouldRestoreQualityPosition(Number(video.currentTime), pending.time)) {
+        video.currentTime = pending.time;
+      }
+      if (pending.wasPlaying && video.paused) {
+        video.play().catch(() => {});
+      }
+    }, 0);
+  }
+
   function chooseMenuQuality(rows, preference, allowPremium = false) {
     const options = rows.map((element) => {
       const text = element.textContent?.replace(/\s+/g, " ").trim() || "";
@@ -187,7 +233,10 @@
         currentSettings.premiumQualityEnabled === true
       );
       if (!selected) return;
-      if (!selected.selected) selected.element.click();
+      if (!selected.selected) {
+        rememberQualityPlaybackPosition();
+        selected.element.click();
+      }
     } catch {
       // YouTube may rebuild the menu during SPA navigation; later navigation
       // or settings changes will try again with the new player tree.
@@ -227,8 +276,12 @@
       : null;
     if (currentQuality === quality) return;
     try {
-      player.setPlaybackQualityRange?.(quality, quality);
-      player.setPlaybackQuality?.(quality);
+      rememberQualityPlaybackPosition();
+      if (typeof player.setPlaybackQualityRange === "function") {
+        player.setPlaybackQualityRange(quality, quality);
+      } else {
+        player.setPlaybackQuality?.(quality);
+      }
     } catch {
       // YouTube may replace the player while navigating; the next retry applies it.
     }
@@ -263,5 +316,8 @@
   // Repeated metadata events can be caused by YouTube replacing the media
   // source after a quality change. applyWithRetries de-duplicates the same
   // video/settings signature so that replacement cannot become a reload loop.
-  document.addEventListener("loadedmetadata", () => currentSettings && applyWithRetries(currentSettings), true);
+  document.addEventListener("loadedmetadata", () => {
+    restoreQualityPlaybackPosition();
+    if (currentSettings) applyWithRetries(currentSettings);
+  }, true);
 })();
