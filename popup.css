@@ -314,6 +314,54 @@ legend {
 }
 .remove-button:hover { color: var(--red-soft); }
 
+.copy-card {
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: #1d1e21;
+  overflow: hidden;
+}
+
+.copy-video-button {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 25px;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 62px;
+  padding: 11px 13px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+}
+
+.copy-video-button:hover:not(:disabled) { background: #242529; }
+.copy-video-button:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+.copy-video-button:disabled { cursor: not-allowed; opacity: .45; }
+.copy-video-button.copied .copy-glyph { background: #214d3a; color: var(--green); }
+.copy-video-button.failed .copy-glyph { background: #552925; color: #ff8c85; }
+
+.copy-glyph {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: #2c2d31;
+  color: #d5d6da;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.copy-button-text { min-width: 0; }
+.copy-button-text strong, .copy-button-text span { display: block; }
+.copy-button-text strong { font-size: 12px; line-height: 1.35; }
+.copy-button-text span { margin-top: 3px; color: var(--muted); font-size: 10px; line-height: 1.35; }
+.copy-video-button kbd { width: 25px; height: 27px; }
+.copy-state { height: 0; margin: 0; overflow: hidden; }
+
 .shortcut-hint {
   display: flex;
   align-items: center;
@@ -322,7 +370,7 @@ legend {
 }
 
 .key-pair { display: flex; gap: 3px; }
-.key-pair.shorts { display: grid; grid-template-columns: repeat(3, 25px); gap: 3px; }
+.key-pair.shorts { display: grid; grid-template-columns: repeat(4, 25px); gap: 3px; }
 kbd {
   display: grid;
   place-items: center;

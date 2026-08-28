@@ -18,8 +18,9 @@ const MESSAGES = {
     currentChannel: "目前頻道", channelSpeed: "這個頻道的播放速度", channelQuality: "這個頻道的影片畫質",
     enableChannel: "啟用目前頻道專屬設定", removeChannel: "移除頻道專屬設定",
     channelEmpty: "請在 YouTube 影片或 Shorts 頁面開啟此面板，即可加入頻道專屬設定。",
-    shortcutTitle: "播放時直接調速", shortcutDescription: "按 −／+ 切換速度，按 * 恢復 1×",
-    shortsShortcutTitle: "Shorts 快速操作", shortsShortcutDescription: "←／→ 前後 {seconds} 秒，0 回片頭；−／+ 調速，* 回復 1×",
+    shortcutTitle: "播放時快速操作", shortcutDescription: "−／+ 調速，* 回復 1×，C 複製影片資訊",
+    shortsShortcutTitle: "Shorts 快速操作", shortsShortcutDescription: "←／→ {seconds} 秒，0 片頭；−／+ 調速，* 1×，C 複製",
+    copyVideoInfoTitle: "複製影片標題＋網址", copyVideoInfoDescription: "或在播放頁直接按 C", copiedVideoInfo: "已複製到剪貼簿", copyVideoInfoFailed: "複製失敗", copyVideoInfoUnavailable: "請先開啟 YouTube 影片",
     shortsSeekSeconds: "快進秒數", secondsUnit: "秒", shortsArrowKeysTitle: "啟用 Shorts 左右方向鍵",
     shortsArrowKeysDescription: "控制 ←／→ 快退快進，0 回片頭不受影響",
     shortsChannelNamesTitle: "首頁 Shorts 顯示頻道名稱", shortsChannelNamesDescription: "在 Shorts 卡片補上可點擊的頻道名稱",
@@ -39,8 +40,9 @@ const MESSAGES = {
     currentChannel: "Current channel", channelSpeed: "Playback speed for this channel", channelQuality: "Video quality for this channel",
     enableChannel: "Enable settings for the current channel", removeChannel: "Remove channel settings",
     channelEmpty: "Open this panel on a YouTube video or Short to add channel-specific settings.",
-    shortcutTitle: "Adjust speed while playing", shortcutDescription: "Press −/+ to change speed, or * to restore 1×",
-    shortsShortcutTitle: "Shorts quick controls", shortsShortcutDescription: "←/→ seek {seconds} sec, 0 restarts; −/+ changes speed, * restores 1×",
+    shortcutTitle: "Quick playback controls", shortcutDescription: "−/+ changes speed, * restores 1×, C copies video info",
+    shortsShortcutTitle: "Shorts quick controls", shortsShortcutDescription: "←/→ {seconds}s, 0 restarts; −/+ speed, * 1×, C copies",
+    copyVideoInfoTitle: "Copy video title + URL", copyVideoInfoDescription: "Or press C on the video page", copiedVideoInfo: "Copied to clipboard", copyVideoInfoFailed: "Copy failed", copyVideoInfoUnavailable: "Open a YouTube video first",
     shortsSeekSeconds: "Seek interval", secondsUnit: "sec", shortsArrowKeysTitle: "Enable Shorts arrow keys",
     shortsArrowKeysDescription: "Controls ←/→ seeking; 0 always returns to the start",
     shortsChannelNamesTitle: "Show channel names on Home Shorts", shortsChannelNamesDescription: "Add a clickable channel name to Shorts cards on the Home page",
@@ -60,8 +62,9 @@ const MESSAGES = {
     currentChannel: "現在のチャンネル", channelSpeed: "このチャンネルの再生速度", channelQuality: "このチャンネルの画質",
     enableChannel: "現在のチャンネル専用設定を有効にする", removeChannel: "チャンネル専用設定を削除",
     channelEmpty: "YouTube 動画またはショートのページでこのパネルを開くと、チャンネル専用設定を追加できます。",
-    shortcutTitle: "再生中に速度を変更", shortcutDescription: "−／+ で速度変更、* で 1× に戻す",
-    shortsShortcutTitle: "ショートのクイック操作", shortsShortcutDescription: "←／→ で {seconds} 秒移動、0 で先頭へ。−／+ で速度変更、* で 1×",
+    shortcutTitle: "再生中のクイック操作", shortcutDescription: "−／+ で速度変更、* で 1×、C で動画情報をコピー",
+    shortsShortcutTitle: "ショートのクイック操作", shortsShortcutDescription: "←／→ {seconds} 秒、0 先頭、−／+ 速度、* 1×、C コピー",
+    copyVideoInfoTitle: "動画タイトル＋URLをコピー", copyVideoInfoDescription: "動画ページで C キーでもコピーできます", copiedVideoInfo: "クリップボードにコピーしました", copyVideoInfoFailed: "コピーに失敗しました", copyVideoInfoUnavailable: "YouTube 動画を開いてください",
     shortsSeekSeconds: "移動秒数", secondsUnit: "秒", shortsArrowKeysTitle: "ショートの左右キーを有効化",
     shortsArrowKeysDescription: "←／→ の移動を制御。0 の先頭移動は常に有効",
     shortsChannelNamesTitle: "ホームのショートにチャンネル名を表示", shortsChannelNamesDescription: "ショートのカードにクリック可能なチャンネル名を追加します",
@@ -177,13 +180,15 @@ function applyTranslations() {
   $("#channelQualityLegend").textContent = t("channelQuality");
   $("#removeChannel").textContent = t("removeChannel");
   $("#channelEmpty").textContent = t("channelEmpty");
+  $("#copyVideoInfoTitle").textContent = t("copyVideoInfoTitle");
+  $("#copyVideoInfoDescription").textContent = t("copyVideoInfoDescription");
   const isShorts = activeContentType === "shorts";
   $("#shortcutTitle").textContent = t(isShorts ? "shortsShortcutTitle" : "shortcutTitle");
   $("#shortcutDescription").textContent = t(isShorts ? "shortsShortcutDescription" : "shortcutDescription")
     .replace("{seconds}", String(settings.shortsControls.seekSeconds));
   const shortcutKeys = $("#shortcutKeys");
   shortcutKeys.classList.toggle("shorts", isShorts);
-  shortcutKeys.replaceChildren(...(isShorts ? ["←", "→", "0", "−", "＋", "＊"] : ["−", "＋", "＊"]).map((key) => {
+  shortcutKeys.replaceChildren(...(isShorts ? ["←", "→", "0", "−", "＋", "＊", "C"] : ["−", "＋", "＊", "C"]).map((key) => {
     const element = document.createElement("kbd");
     element.textContent = key;
     return element;
@@ -395,6 +400,29 @@ async function getPageContext() {
   }
 }
 
+async function copyTextToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function showCopyButtonState(state) {
+  const button = $("#copyVideoInfo");
+  button.classList.toggle("copied", state === "copied");
+  button.classList.toggle("failed", state === "failed");
+  $("#copyVideoInfoState").textContent = state === "copied" ? t("copiedVideoInfo") : state === "failed" ? t("copyVideoInfoFailed") : "";
+  $("#copyVideoInfoDescription").textContent = state === "copied"
+    ? t("copiedVideoInfo")
+    : state === "failed"
+      ? t("copyVideoInfoFailed")
+      : t("copyVideoInfoDescription");
+  clearTimeout(showCopyButtonState.timer);
+  if (state) showCopyButtonState.timer = setTimeout(() => showCopyButtonState(""), 1800);
+}
+
 $("#typeSwitch").addEventListener("click", (event) => {
   const button = event.target.closest("[data-content-type]");
   if (!button || !PROFILE_KEYS.includes(button.dataset.contentType)) return;
@@ -417,6 +445,16 @@ $("#shortsArrowKeysEnabled").addEventListener("change", async (event) => {
 $("#shortsChannelNamesEnabled").addEventListener("change", async (event) => {
   settings.shortsControls.channelNamesEnabled = event.target.checked;
   await persist();
+});
+
+$("#copyVideoInfo").addEventListener("click", async () => {
+  if (!context?.videoTitle || !context?.videoUrl) {
+    showCopyButtonState("failed");
+    $("#copyVideoInfoDescription").textContent = t("copyVideoInfoUnavailable");
+    return;
+  }
+  const copied = await copyTextToClipboard(`${context.videoTitle}\n${context.videoUrl}`);
+  showCopyButtonState(copied ? "copied" : "failed");
 });
 
 $("#globalTheaterEnabled").addEventListener("change", async (event) => {
@@ -471,6 +509,7 @@ async function init() {
   context = await getPageContext();
   activeContentType = context?.contentType === "shorts" ? "shorts" : "regular";
   $("#statusDot").classList.toggle("online", Boolean(context?.isVideo));
+  $("#copyVideoInfo").disabled = !context?.isVideo;
   renderType();
 }
 

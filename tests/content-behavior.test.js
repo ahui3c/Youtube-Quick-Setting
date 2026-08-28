@@ -9,10 +9,12 @@ assert.match(source, /event\.key === "ArrowLeft"/);
 assert.match(source, /event\.key === "ArrowRight"/);
 assert.match(source, /event\.key === "0"/);
 assert.match(source, /event\.code === "Numpad0"/);
-source = source.replace(/^\s*show(?:Speed|Seek)Overlay\([^;]+;\r?$/gm, "");
-source = source.replace(/\ndocument\.addEventListener\("keydown"[\s\S]*$/, "\nthis.__contentTest = { contentType, isVideoPage, effectiveSettings, restoreNormalSpeed, seekShorts, handleKeyboardShortcut, ytqsNormalizeSettings, ytqsShortsVideoId, ytqsNormalizeShortsAuthor, ytqsDeduplicateShortsChannelNames, setSettings: (value) => { ytqsSettings = ytqsNormalizeSettings(value); }, setContext: (value) => { ytqsContext = value; } };" );
+assert.match(source, /event\.code === "KeyC"/);
+source = source.replace(/^\s*show(?:Speed|Seek|Copy)Overlay\([^;]+;\r?$/gm, "");
+source = source.replace(/\ndocument\.addEventListener\("keydown"[\s\S]*$/, "\nthis.__contentTest = { contentType, isVideoPage, effectiveSettings, restoreNormalSpeed, seekShorts, handleKeyboardShortcut, currentVideoInfo, copyCurrentVideoInfo, ytqsNormalizeSettings, ytqsShortsVideoId, ytqsNormalizeShortsAuthor, ytqsDeduplicateShortsChannelNames, setSettings: (value) => { ytqsSettings = ytqsNormalizeSettings(value); }, setContext: (value) => { ytqsContext = value; } };" );
 
 const messages = [];
+const clipboardWrites = [];
 const video = {
   playbackRate: 2,
   defaultPlaybackRate: 2,
@@ -32,9 +34,10 @@ class MockHTMLElement {
 }
 const sandbox = {
   location: { pathname: "/shorts/abc123", search: "", origin: "https://www.youtube.com" },
-  navigator: { language: "en" },
+  navigator: { language: "en", clipboard: { writeText: async (text) => clipboardWrites.push(text) } },
   chrome: { i18n: { getUILanguage: () => "en-US" } },
   document: {
+    title: "Test Video - YouTube",
     querySelectorAll() {
       return [video];
     },
@@ -161,11 +164,32 @@ const typingTarget = keyboardEvent("ArrowRight");
 typingTarget.target = new MockHTMLElement("INPUT");
 assert.equal(api.handleKeyboardShortcut(typingTarget), false);
 assert.equal(video.currentTime, 0);
+const typingCopy = keyboardEvent("c", "KeyC");
+typingCopy.target = new MockHTMLElement("TEXTAREA");
+assert.equal(api.handleKeyboardShortcut(typingCopy), false);
+
+sandbox.location.pathname = "/shorts/qRjSmLc2cOs";
+sandbox.location.search = "";
+assert.equal(api.currentVideoInfo().url, "https://www.youtube.com/shorts/qRjSmLc2cOs");
 
 sandbox.location.pathname = "/watch";
-sandbox.location.search = "?v=abc123";
+sandbox.location.search = "?v=qRjSmLc2cOs&list=PL123&t=90";
 const regularArrow = keyboardEvent("ArrowRight");
 assert.equal(api.handleKeyboardShortcut(regularArrow), false);
 assert.equal(video.currentTime, 0);
 
-console.log("CONTENT_BEHAVIOR_TESTS_OK");
+const info = api.currentVideoInfo();
+assert.deepEqual(JSON.parse(JSON.stringify(info)), {
+  title: "Test Video",
+  url: "https://www.youtube.com/watch?v=qRjSmLc2cOs",
+  text: "Test Video\nhttps://www.youtube.com/watch?v=qRjSmLc2cOs"
+});
+const copy = keyboardEvent("c", "KeyC");
+assert.equal(api.handleKeyboardShortcut(copy), true);
+assert.equal(copy.preventDefaultCalled, true);
+assert.equal(copy.stopImmediatePropagationCalled, true);
+
+setImmediate(() => {
+  assert.deepEqual(clipboardWrites, ["Test Video\nhttps://www.youtube.com/watch?v=qRjSmLc2cOs"]);
+  console.log("CONTENT_BEHAVIOR_TESTS_OK");
+});

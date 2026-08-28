@@ -7,6 +7,11 @@ const { chromium } = require("playwright");
   const page = await browser.newPage({ viewport: { width: 390, height: 900 } });
   await page.addInitScript(() => {
     globalThis.savedSettings = [];
+    globalThis.copiedTexts = [];
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText: async (text) => copiedTexts.push(text) }
+    });
     globalThis.chrome = {
       i18n: { getUILanguage: () => "ja-JP" },
       storage: {
@@ -25,7 +30,14 @@ const { chromium } = require("playwright");
       },
       tabs: {
         query: async () => [{ id: 1, url: "https://www.youtube.com/watch?v=abc123" }],
-        sendMessage: async () => ({ isVideo: true, contentType: "regular", channelId: "channelA", channelName: "Test Channel" })
+        sendMessage: async () => ({
+          isVideo: true,
+          contentType: "regular",
+          channelId: "channelA",
+          channelName: "Test Channel",
+          videoTitle: "Test Video",
+          videoUrl: "https://www.youtube.com/watch?v=qRjSmLc2cOs"
+        })
       },
     };
   });
@@ -38,6 +50,10 @@ const { chromium } = require("playwright");
   assert.equal(await page.locator("#globalTheaterEnabled").isChecked(), true);
   assert.equal(await page.locator("#globalPremiumQualitySetting").isVisible(), true);
   assert.equal(await page.locator("#globalPremiumQualityEnabled").isChecked(), false);
+  assert.equal(await page.locator("#copyVideoInfo").isEnabled(), true);
+  await page.locator("#copyVideoInfo").click();
+  assert.deepEqual(await page.evaluate(() => copiedTexts), ["Test Video\nhttps://www.youtube.com/watch?v=qRjSmLc2cOs"]);
+  assert.equal(await page.locator("#copyVideoInfoDescription").innerText(), "クリップボードにコピーしました");
   await page.locator("#globalPremiumQualityEnabled").check();
   assert.equal(await page.evaluate(() => savedSettings.at(-1).ytQuickSettings.global.premiumQualityEnabled), true);
   await page.locator("#channelEnabled").check();
@@ -75,13 +91,13 @@ const { chromium } = require("playwright");
   await page.locator("#languageSelect").selectOption("en");
   assert.equal(await page.locator("#appTitle").innerText(), "YouTube Quick Speed / Quality Settings");
   assert.match(await page.locator("#shortcutDescription").innerText(), /0 restarts/);
-  assert.match(await page.locator("#shortcutDescription").innerText(), /10 sec/);
-  assert.equal(await page.locator("#shortcutKeys kbd").count(), 6);
-  assert.deepEqual(await page.locator("#shortcutKeys kbd").allTextContents(), ["←", "→", "0", "−", "＋", "＊"]);
+  assert.match(await page.locator("#shortcutDescription").innerText(), /10s/);
+  assert.equal(await page.locator("#shortcutKeys kbd").count(), 7);
+  assert.deepEqual(await page.locator("#shortcutKeys kbd").allTextContents(), ["←", "→", "0", "−", "＋", "＊", "C"]);
 
   await page.getByRole("radio", { name: "3 sec" }).click();
   assert.equal(await page.locator("#shortsSeekSeconds .selected").innerText(), "3 sec");
-  assert.match(await page.locator("#shortcutDescription").innerText(), /3 sec/);
+  assert.match(await page.locator("#shortcutDescription").innerText(), /3s/);
   await page.locator("#shortsArrowKeysEnabled").check();
   const saved = await page.evaluate(() => savedSettings.at(-1).ytQuickSettings.shortsControls);
   assert.deepEqual(saved, { seekSeconds: 3, arrowKeysEnabled: true, channelNamesEnabled: true });

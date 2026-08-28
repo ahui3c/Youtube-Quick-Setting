@@ -28,9 +28,9 @@ const YTQS_QUALITY_LABELS = {
 };
 
 const YTQS_MESSAGES = {
-  "zh-Hant": { channelSettings: "頻道指定設定", speed: "速度", quality: "解析度", playbackSpeed: "播放速度", seconds: "秒", backToStart: "回到片頭" },
-  en: { channelSettings: "Channel settings", speed: "Speed", quality: "Quality", playbackSpeed: "Playback speed", seconds: "sec", backToStart: "Back to start" },
-  ja: { channelSettings: "チャンネル設定", speed: "速度", quality: "画質", playbackSpeed: "再生速度", seconds: "秒", backToStart: "先頭に戻る" }
+  "zh-Hant": { channelSettings: "頻道指定設定", speed: "速度", quality: "解析度", playbackSpeed: "播放速度", seconds: "秒", backToStart: "回到片頭", copiedVideoInfo: "已複製影片資訊", copyFailed: "複製失敗" },
+  en: { channelSettings: "Channel settings", speed: "Speed", quality: "Quality", playbackSpeed: "Playback speed", seconds: "sec", backToStart: "Back to start", copiedVideoInfo: "Video info copied", copyFailed: "Copy failed" },
+  ja: { channelSettings: "チャンネル設定", speed: "速度", quality: "画質", playbackSpeed: "再生速度", seconds: "秒", backToStart: "先頭に戻る", copiedVideoInfo: "動画情報をコピーしました", copyFailed: "コピーに失敗しました" }
 };
 
 function ytqsNormalizeProfile(value, fallback = YTQS_DEFAULTS.global) {
@@ -107,7 +107,7 @@ function isVideoPage() {
 
 function readChannelContext() {
   const type = contentType();
-  if (!isVideoPage()) return { isVideo: false, contentType: type, channelId: "", channelName: "" };
+  if (!isVideoPage()) return { isVideo: false, contentType: type, channelId: "", channelName: "", videoTitle: "", videoUrl: "" };
   const activeReel = type === "shorts" ? activeShortVideo()?.closest("ytd-reel-video-renderer") : null;
   const channelLink = type === "shorts"
     ? activeReel?.querySelector("#channel-name a, a[href^='/@'], a[href^='/channel/']")
@@ -118,7 +118,8 @@ function readChannelContext() {
   const channelPath = href.match(/^\/(?:channel\/[^/?]+|@[^/?]+)/)?.[0] || "";
   const channelId = href.match(/\/channel\/([^/?]+)/)?.[1] || channelPath || channelIdMeta;
   const channelName = channelLink?.textContent?.trim() || document.querySelector('link[itemprop="name"]')?.getAttribute("content") || "";
-  return { isVideo: true, contentType: type, channelId, channelName };
+  const videoInfo = currentVideoInfo();
+  return { isVideo: true, contentType: type, channelId, channelName, videoTitle: videoInfo?.title || "", videoUrl: videoInfo?.url || "" };
 }
 
 function effectiveSettings() {
@@ -138,6 +139,26 @@ function effectiveSettings() {
 
 function currentVideoId() {
   return new URLSearchParams(location.search).get("v") || location.pathname;
+}
+
+function currentVideoInfo() {
+  if (!isVideoPage()) return null;
+  const type = contentType();
+  const videoId = type === "shorts"
+    ? location.pathname.match(/^\/shorts\/([A-Za-z0-9_-]{11})/)?.[1] || ""
+    : new URLSearchParams(location.search).get("v") || "";
+  if (!/^[A-Za-z0-9_-]{11}$/.test(videoId)) return null;
+  const activeReel = type === "shorts" ? activeShortVideo()?.closest("ytd-reel-video-renderer") : null;
+  const visibleTitle = type === "shorts"
+    ? activeReel?.querySelector("#overlay #description, #video-title, h2")?.textContent?.trim()
+    : document.querySelector("ytd-watch-metadata h1 yt-formatted-string, ytd-watch-metadata h1")?.textContent?.trim();
+  const metadataTitle = document.querySelector('meta[name="title"], meta[property="og:title"]')?.getAttribute("content")?.trim();
+  const documentTitle = document.title?.replace(/\s+-\s+YouTube\s*$/i, "").trim();
+  const title = visibleTitle || metadataTitle || documentTitle || videoId;
+  const url = type === "shorts"
+    ? `https://www.youtube.com/shorts/${videoId}`
+    : `https://www.youtube.com/watch?v=${videoId}`;
+  return { title, url, text: `${title}\n${url}` };
 }
 
 function activeShortVideo() {
@@ -470,6 +491,70 @@ function showSeekOverlay(deltaSeconds, currentTime, duration) {
   showSpeedOverlay.timer = setTimeout(() => overlay.classList.remove("ytqs-show"), 1050);
 }
 
+function showCopyOverlay(success, title = "") {
+  let overlay = document.querySelector("#ytqs-copy-overlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "ytqs-copy-overlay";
+    overlay.innerHTML = '<span class="ytqs-copy-icon"></span><span class="ytqs-copy-value"></span><span class="ytqs-copy-title"></span>';
+    const style = document.createElement("style");
+    style.textContent = `
+      #ytqs-copy-overlay{position:fixed;z-index:2147483647;left:50%;top:24%;transform:translate(-50%,-8px);display:grid;grid-template-columns:28px minmax(0,1fr);align-items:center;column-gap:10px;min-width:230px;max-width:min(440px,calc(100vw - 32px));padding:13px 17px;border:1px solid rgba(255,255,255,.2);border-radius:12px;background:rgba(16,16,18,.92);box-shadow:0 14px 45px rgba(0,0,0,.4);color:#fff;font-family:Roboto,"Microsoft JhengHei UI",sans-serif;opacity:0;pointer-events:none;transition:opacity .15s ease,transform .15s ease;backdrop-filter:blur(8px)}
+      #ytqs-copy-overlay.ytqs-show{opacity:1;transform:translate(-50%,0)}
+      #ytqs-copy-overlay .ytqs-copy-icon{grid-row:1/3;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#31b879;color:#fff;font-size:16px;font-weight:800}
+      #ytqs-copy-overlay.ytqs-copy-error .ytqs-copy-icon{background:#ff3b30}
+      #ytqs-copy-overlay .ytqs-copy-value{font-size:14px;font-weight:700;line-height:1.3}
+      #ytqs-copy-overlay .ytqs-copy-title{overflow:hidden;color:#b7b7ba;font-size:11px;line-height:1.35;text-overflow:ellipsis;white-space:nowrap}
+      @media(prefers-reduced-motion:reduce){#ytqs-copy-overlay{transition:none}}
+    `;
+    document.documentElement.append(style, overlay);
+  }
+  overlay.classList.toggle("ytqs-copy-error", !success);
+  overlay.querySelector(".ytqs-copy-icon").textContent = success ? "✓" : "!";
+  overlay.querySelector(".ytqs-copy-value").textContent = ytqsText(success ? "copiedVideoInfo" : "copyFailed");
+  overlay.querySelector(".ytqs-copy-title").textContent = title;
+  overlay.classList.remove("ytqs-show");
+  void overlay.offsetWidth;
+  overlay.classList.add("ytqs-show");
+  clearTimeout(showCopyOverlay.timer);
+  showCopyOverlay.timer = setTimeout(() => overlay.classList.remove("ytqs-show"), 1600);
+}
+
+async function writeClipboardText(text) {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // Fall through to the legacy copy path for older Chromium versions.
+  }
+  try {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.cssText = "position:fixed;left:-9999px;top:0;opacity:0";
+    document.documentElement.append(textarea);
+    textarea.select();
+    const copied = document.execCommand("copy");
+    textarea.remove();
+    return copied;
+  } catch {
+    return false;
+  }
+}
+
+async function copyCurrentVideoInfo() {
+  const info = currentVideoInfo();
+  if (!info) {
+    showCopyOverlay(false);
+    return false;
+  }
+  const copied = await writeClipboardText(info.text);
+  showCopyOverlay(copied, info.title);
+  return copied;
+}
+
 function seekShorts(deltaSeconds) {
   if (contentType() !== "shorts") return false;
   const video = currentVideo();
@@ -546,10 +631,13 @@ function handleKeyboardShortcut(event) {
   const isPlus = event.key === "+" || event.code === "NumpadAdd";
   const isMinus = event.key === "-" || event.key === "−" || event.code === "NumpadSubtract";
   const isReset = event.key === "*" || event.code === "NumpadMultiply";
-  if (!isSeekBackward && !isSeekForward && !isSeekStart && !isPlus && !isMinus && !isReset) return false;
+  const isCopy = event.code === "KeyC" || event.key?.toLowerCase() === "c";
+  if (!isSeekBackward && !isSeekForward && !isSeekStart && !isPlus && !isMinus && !isReset && !isCopy) return false;
   if (event.repeat && !isSeekBackward && !isSeekForward) return false;
   if ((isSeekBackward || isSeekForward || isSeekStart) && isSeekBlockedTarget(event.target)) return false;
-  const handled = isSeekStart
+  const handled = isCopy
+    ? (copyCurrentVideoInfo(), true)
+    : isSeekStart
     ? seekShorts(0)
     : isSeekBackward
       ? seekShorts(-shortsControls.seekSeconds)

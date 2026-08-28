@@ -18,6 +18,7 @@ A Chrome extension that automatically applies playback speed, video quality, and
 - Standard videos can open automatically in Theater mode, with per-channel follow-global, force-on, or force-off controls
 - A two-second player notice shows the active channel speed and quality
 - Press `+` or `-` to change speed, and `*` to return immediately to `1×`
+- Press `C` or use the popup button to copy the current video title and clean URL
 - Keeps YouTube's native speed and quality menus in sync whenever the player permits it
 - De-duplicates identical per-video quality applications to prevent repeated loading at the beginning
 - Traditional Chinese, English, and Japanese interfaces, with system or manual language selection
@@ -69,11 +70,13 @@ Priority order:
 | `+` | Select the next faster speed |
 | `-` | Select the next slower speed |
 | `*` | Reset the current playback session to `1×` |
+| `C` | Copy the current video title and URL with on-screen feedback |
 | `←` / `→` | Seek backward/forward 5 seconds in Shorts |
 | `0` | Return a Short to the beginning |
 
 Shortcuts are ignored while typing in search, comment, and other text fields.
 The Shorts settings let you disable the arrow keys or select a `3`, `5` (default), or `10` second seek interval. The `0` shortcut remains available when the arrow keys are disabled.
+YouTube normally uses `C` to toggle captions. With this extension installed, a plain `C` on a video page runs the copy action first; captions remain available from the player's CC button.
 
 ## Quality behavior
 
