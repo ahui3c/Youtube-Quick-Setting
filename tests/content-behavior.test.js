@@ -3,6 +3,7 @@ const fs = require("node:fs");
 const vm = require("node:vm");
 
 let source = fs.readFileSync("content.js", "utf8");
+const copySource = fs.readFileSync("copy-utils.js", "utf8");
 assert.match(source, /event\.key === "\*"/);
 assert.match(source, /event\.code === "NumpadMultiply"/);
 assert.match(source, /event\.key === "ArrowLeft"/);
@@ -56,6 +57,7 @@ const sandbox = {
   URLSearchParams
 };
 vm.createContext(sandbox);
+vm.runInContext(copySource, sandbox, { filename: "copy-utils.js" });
 vm.runInContext(source, sandbox, { filename: "content.js" });
 
 const api = sandbox.__contentTest;
@@ -116,6 +118,7 @@ function keyboardEvent(key, code = "") {
     ctrlKey: false,
     altKey: false,
     metaKey: false,
+    shiftKey: false,
     preventDefaultCalled: false,
     stopImmediatePropagationCalled: false,
     preventDefault() { this.preventDefaultCalled = true; },
@@ -182,6 +185,7 @@ const info = api.currentVideoInfo();
 assert.deepEqual(JSON.parse(JSON.stringify(info)), {
   title: "Test Video",
   url: "https://www.youtube.com/watch?v=qRjSmLc2cOs",
+  currentTime: 0,
   text: "Test Video\nhttps://www.youtube.com/watch?v=qRjSmLc2cOs"
 });
 const copy = keyboardEvent("s", "KeyS");
@@ -189,7 +193,15 @@ assert.equal(api.handleKeyboardShortcut(copy), true);
 assert.equal(copy.preventDefaultCalled, true);
 assert.equal(copy.stopImmediatePropagationCalled, true);
 
+video.currentTime = 125.9;
+const timestampCopy = keyboardEvent("S", "KeyS");
+timestampCopy.shiftKey = true;
+assert.equal(api.handleKeyboardShortcut(timestampCopy), true);
+
 setImmediate(() => {
-  assert.deepEqual(clipboardWrites, ["Test Video\nhttps://www.youtube.com/watch?v=qRjSmLc2cOs"]);
+  assert.deepEqual(clipboardWrites, [
+    "Test Video\nhttps://www.youtube.com/watch?v=qRjSmLc2cOs",
+    "https://www.youtube.com/watch?v=qRjSmLc2cOs&t=125s"
+  ]);
   console.log("CONTENT_BEHAVIOR_TESTS_OK");
 });

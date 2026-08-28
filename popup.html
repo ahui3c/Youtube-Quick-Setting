@@ -98,15 +98,22 @@
       </section>
 
       <section class="copy-card" aria-labelledby="copyVideoInfoTitle">
-        <button class="copy-video-button" id="copyVideoInfo" type="button">
-          <span class="copy-glyph" aria-hidden="true">⧉</span>
-          <span class="copy-button-text">
-            <strong id="copyVideoInfoTitle">複製影片標題＋網址</strong>
-            <span id="copyVideoInfoDescription">或在播放頁直接按 S</span>
-          </span>
-          <kbd aria-hidden="true">S</kbd>
-        </button>
-        <p class="copy-state" id="copyVideoInfoState" aria-live="polite"></p>
+        <div class="copy-action-row">
+          <button class="copy-video-button" id="copyVideoInfo" type="button">
+            <span class="copy-glyph" aria-hidden="true">⧉</span>
+            <span class="copy-button-text">
+              <strong id="copyVideoInfoTitle">複製影片標題＋網址</strong>
+              <span id="copyVideoInfoDescription">或在播放頁直接按 S</span>
+            </span>
+            <kbd aria-hidden="true">S</kbd>
+          </button>
+          <button class="copy-format-toggle" id="copyFormatToggle" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="copyFormatMenu">
+            <span aria-hidden="true">⌄</span>
+            <span class="sr-only" id="copyFormatToggleLabel">選擇複製格式</span>
+          </button>
+        </div>
+        <div class="copy-format-menu" id="copyFormatMenu" role="menu" hidden></div>
+        <p class="copy-state" id="copyVideoInfoState" aria-live="polite" hidden></p>
       </section>
 
       <section class="channel-card" id="channelCard" aria-labelledby="channelHeading">
@@ -163,6 +170,29 @@
         <p><strong id="shortcutTitle">播放時直接調速</strong><span id="shortcutDescription">按 −／+ 切換速度，按 * 恢復 1×</span></p>
       </footer>
 
+      <details class="transfer-card" id="settingsTransfer">
+        <summary>
+          <span class="transfer-summary-copy">
+            <strong id="settingsTransferTitle">設定備份與還原</strong>
+            <span id="settingsTransferDescription">匯出、匯入或回復上次設定</span>
+          </span>
+          <span class="version-badge" id="settingsVersionBadge">v2</span>
+        </summary>
+        <div class="transfer-content">
+          <div class="transfer-actions">
+            <button type="button" id="exportSettings"><span aria-hidden="true">⇩</span><span id="exportSettingsLabel">匯出 JSON</span></button>
+            <button type="button" id="importSettings"><span aria-hidden="true">⇧</span><span id="importSettingsLabel">匯入 JSON</span></button>
+          </div>
+          <button class="restore-button" id="restoreSettings" type="button" hidden>
+            <span id="restoreSettingsLabel">還原上次匯入前設定</span>
+            <small id="restoreSettingsTime"></small>
+          </button>
+          <p class="transfer-note" id="settingsTransferNote">設定檔只在你的裝置上處理。</p>
+          <p class="transfer-status" id="settingsTransferStatus" aria-live="polite"></p>
+          <input id="importSettingsFile" type="file" accept="application/json,.json" hidden>
+        </div>
+      </details>
+
       <div class="language-settings">
         <div class="language-label">
           <span class="language-glyph" aria-hidden="true">文</span>
@@ -177,7 +207,39 @@
           </select>
         </label>
       </div>
+
+      <dialog class="import-dialog" id="importDialog" aria-labelledby="importDialogTitle">
+        <form method="dialog">
+          <div class="dialog-heading">
+            <div>
+              <p class="section-kicker" id="importDialogKicker">匯入預覽</p>
+              <h2 id="importDialogTitle">確認設定變更</h2>
+            </div>
+            <span class="version-badge" id="importVersionBadge">v2</span>
+          </div>
+          <fieldset class="import-mode">
+            <legend id="importModeLegend">匯入方式</legend>
+            <label><input type="radio" name="importMode" value="merge" checked><span id="importModeMerge">合併設定</span></label>
+            <label><input type="radio" name="importMode" value="replace"><span id="importModeReplace">完全取代</span></label>
+          </fieldset>
+          <dl class="import-preview">
+            <div><dt id="previewSectionsLabel">一般設定變更</dt><dd id="previewSections">0</dd></div>
+            <div><dt id="previewAddedLabel">新增頻道</dt><dd id="previewAdded">0</dd></div>
+            <div><dt id="previewUpdatedLabel">更新頻道</dt><dd id="previewUpdated">0</dd></div>
+            <div><dt id="previewRemovedLabel">移除頻道</dt><dd id="previewRemoved">0</dd></div>
+            <div><dt id="previewTotalLabel">匯入後頻道總數</dt><dd id="previewTotal">0</dd></div>
+          </dl>
+          <p class="dialog-note" id="importRestoreNote">套用前會自動建立可還原的本機備份。</p>
+          <p class="dialog-error" id="importDialogError" aria-live="assertive"></p>
+          <div class="dialog-actions">
+            <button type="button" class="secondary-button" id="cancelImport">取消</button>
+            <button type="button" class="primary-button" id="applyImport">套用匯入</button>
+          </div>
+        </form>
+      </dialog>
     </main>
+    <script src="copy-utils.js"></script>
+    <script src="settings-transfer.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

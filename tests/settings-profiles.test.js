@@ -3,6 +3,8 @@ const fs = require("node:fs");
 const vm = require("node:vm");
 
 let source = fs.readFileSync("popup.js", "utf8");
+const copySource = fs.readFileSync("copy-utils.js", "utf8");
+const transferSource = fs.readFileSync("settings-transfer.js", "utf8");
 source = source.replace(
   /\n\$\("#typeSwitch"\)[\s\S]*$/,
   "\nthis.__settingsTest = { normalizeSettings, profileKey, channelProfile };"
@@ -15,6 +17,8 @@ const sandbox = {
   document: { querySelector() {} }
 };
 vm.createContext(sandbox);
+vm.runInContext(copySource, sandbox, { filename: "copy-utils.js" });
+vm.runInContext(transferSource, sandbox, { filename: "settings-transfer.js" });
 vm.runInContext(source, sandbox, { filename: "popup.js" });
 
 const { normalizeSettings, profileKey, channelProfile } = sandbox.__settingsTest;
@@ -24,6 +28,8 @@ const migrated = normalizeSettings({
     channelA: { name: "Channel A", speed: 2, quality: "highest" }
   }
 });
+assert.equal(migrated.schemaVersion, 2);
+assert.equal(migrated.copy.defaultFormat, "title-url");
 assert.deepEqual(
   JSON.parse(JSON.stringify(migrated.shorts)),
   { speed: 1.25, quality: "hd2160", premiumQualityEnabled: false }
@@ -43,6 +49,7 @@ assert.deepEqual(
 
 const independent = normalizeSettings({
   language: "ja",
+  copy: { defaultFormat: "markdown" },
   global: { speed: 1, quality: "hd1080", premiumQualityEnabled: true, theaterModeEnabled: true },
   shorts: { speed: 3, quality: "highest" },
   shortsControls: { seekSeconds: 10, arrowKeysEnabled: false, channelNamesEnabled: false },
@@ -54,6 +61,8 @@ const independent = normalizeSettings({
   }
 });
 assert.equal(independent.language, "ja");
+assert.equal(independent.schemaVersion, 2);
+assert.equal(independent.copy.defaultFormat, "markdown");
 assert.equal(independent.global.speed, 1);
 assert.equal(independent.global.theaterModeEnabled, true);
 assert.equal(independent.global.premiumQualityEnabled, true);

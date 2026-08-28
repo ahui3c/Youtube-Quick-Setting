@@ -1,8 +1,10 @@
 const YTQS_DEFAULTS = {
+  schemaVersion: 2,
   language: "system",
   global: { speed: 1, quality: "hd1080", premiumQualityEnabled: false, theaterModeEnabled: false },
   shorts: { speed: 1, quality: "hd1080", premiumQualityEnabled: false },
   shortsControls: { seekSeconds: 5, arrowKeysEnabled: true, channelNamesEnabled: true },
+  copy: { defaultFormat: "title-url" },
   channels: {}
 };
 const YTQS_SPEEDS = [0.7, 1, 1.25, 2, 3];
@@ -64,6 +66,7 @@ function ytqsNormalizeSettings(value) {
     });
   }
   return {
+    schemaVersion: 2,
     language: ["system", "zh-Hant", "en", "ja"].includes(value?.language) ? value.language : "system",
     global,
     shorts,
@@ -71,6 +74,9 @@ function ytqsNormalizeSettings(value) {
       seekSeconds: YTQS_SEEK_SECONDS.includes(Number(value?.shortsControls?.seekSeconds)) ? Number(value.shortsControls.seekSeconds) : 5,
       arrowKeysEnabled: value?.shortsControls?.arrowKeysEnabled !== false,
       channelNamesEnabled: value?.shortsControls?.channelNamesEnabled !== false
+    },
+    copy: {
+      defaultFormat: YTQSCopy.FORMATS.includes(value?.copy?.defaultFormat) ? value.copy.defaultFormat : YTQSCopy.DEFAULT_FORMAT
     },
     channels
   };
@@ -107,7 +113,7 @@ function isVideoPage() {
 
 function readChannelContext() {
   const type = contentType();
-  if (!isVideoPage()) return { isVideo: false, contentType: type, channelId: "", channelName: "", videoTitle: "", videoUrl: "" };
+  if (!isVideoPage()) return { isVideo: false, contentType: type, channelId: "", channelName: "", videoTitle: "", videoUrl: "", currentTime: 0 };
   const activeReel = type === "shorts" ? activeShortVideo()?.closest("ytd-reel-video-renderer") : null;
   const channelLink = type === "shorts"
     ? activeReel?.querySelector("#channel-name a, a[href^='/@'], a[href^='/channel/']")
@@ -119,7 +125,7 @@ function readChannelContext() {
   const channelId = href.match(/\/channel\/([^/?]+)/)?.[1] || channelPath || channelIdMeta;
   const channelName = channelLink?.textContent?.trim() || document.querySelector('link[itemprop="name"]')?.getAttribute("content") || "";
   const videoInfo = currentVideoInfo();
-  return { isVideo: true, contentType: type, channelId, channelName, videoTitle: videoInfo?.title || "", videoUrl: videoInfo?.url || "" };
+  return { isVideo: true, contentType: type, channelId, channelName, videoTitle: videoInfo?.title || "", videoUrl: videoInfo?.url || "", currentTime: videoInfo?.currentTime || 0 };
 }
 
 function effectiveSettings() {
@@ -158,7 +164,8 @@ function currentVideoInfo() {
   const url = type === "shorts"
     ? `https://www.youtube.com/shorts/${videoId}`
     : `https://www.youtube.com/watch?v=${videoId}`;
-  return { title, url, text: `${title}\n${url}` };
+  const currentTime = Math.max(0, Number(currentVideo()?.currentTime) || 0);
+  return { title, url, currentTime, text: `${title}\n${url}` };
 }
 
 function activeShortVideo() {
@@ -544,14 +551,18 @@ async function writeClipboardText(text) {
   }
 }
 
-async function copyCurrentVideoInfo() {
+async function copyCurrentVideoInfo(formatOverride = "") {
   const info = currentVideoInfo();
   if (!info) {
     showCopyOverlay(false);
     return false;
   }
-  const copied = await writeClipboardText(info.text);
-  showCopyOverlay(copied, info.title);
+  const format = YTQSCopy.FORMATS.includes(formatOverride)
+    ? formatOverride
+    : ytqsSettings.copy?.defaultFormat || YTQSCopy.DEFAULT_FORMAT;
+  const text = YTQSCopy.formatVideoInfo({ ...info, channelName: ytqsContext.channelName }, format);
+  const copied = Boolean(text) && await writeClipboardText(text);
+  showCopyOverlay(copied, YTQSCopy.summarize(text));
   return copied;
 }
 
@@ -636,7 +647,7 @@ function handleKeyboardShortcut(event) {
   if (event.repeat && !isSeekBackward && !isSeekForward) return false;
   if ((isSeekBackward || isSeekForward || isSeekStart) && isSeekBlockedTarget(event.target)) return false;
   const handled = isCopy
-    ? (copyCurrentVideoInfo(), true)
+    ? (copyCurrentVideoInfo(event.shiftKey ? "timestamp-url" : ""), true)
     : isSeekStart
     ? seekShorts(0)
     : isSeekBackward

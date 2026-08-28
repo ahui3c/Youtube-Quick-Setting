@@ -18,7 +18,9 @@ A Chrome extension that automatically applies playback speed, video quality, and
 - Standard videos can open automatically in Theater mode, with per-channel follow-global, force-on, or force-off controls
 - A two-second player notice shows the active channel speed and quality
 - Press `+` or `-` to change speed, and `*` to return immediately to `1×`
-- Press `S` or use the popup button to copy the current video title and clean URL
+- Press `S` or the main popup button to copy video info in the current default format; use the arrow for seven formats
+- Supports timestamp URLs, Markdown, HTML, URL only, title only, and channel + title + URL
+- Export or import JSON settings with merge/replace preview and an automatic pre-import restore point
 - Keeps YouTube's native speed and quality menus in sync whenever the player permits it
 - De-duplicates identical per-video quality applications to prevent repeated loading at the beginning
 - Traditional Chinese, English, and Japanese interfaces, with system or manual language selection
@@ -70,13 +72,20 @@ Priority order:
 | `+` | Select the next faster speed |
 | `-` | Select the next slower speed |
 | `*` | Reset the current playback session to `1×` |
-| `S` | Copy the current video title and URL with on-screen feedback |
+| `S` | Copy video info in the current default format with a visible summary |
+| `Shift` + `S` | Copy a URL for the current playback time |
 | `←` / `→` | Seek backward/forward 5 seconds in Shorts |
 | `0` | Return a Short to the beginning |
 
 Shortcuts are ignored while typing in search, comment, and other text fields.
 The Shorts settings let you disable the arrow keys or select a `3`, `5` (default), or `10` second seek interval. The `0` shortcut remains available when the arrow keys are disabled.
 `S` is not listed in YouTube's current official keyboard shortcuts, so the native `C` caption shortcut remains available.
+
+### Copy formats and settings backup
+
+The main copy button uses the current default format. Choosing another format from the arrow menu copies it immediately and makes it the new default. Every copy shows a success state and a compact content preview in the popup or on the video.
+
+“Backup and restore settings” exports a format-version `v2` JSON file. Before import, the extension previews general changes and channel additions, updates, and removals. Users can merge settings or replace everything. A local pre-import restore point is created automatically and is never sent to the developer.
 
 ## Quality behavior
 

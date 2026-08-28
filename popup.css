@@ -23,7 +23,7 @@ body {
   font-family: "Noto Sans TC", "Microsoft JhengHei UI", system-ui, sans-serif;
 }
 
-button, input { font: inherit; }
+button, input, select { font: inherit; }
 
 .panel { padding: 20px; }
 
@@ -322,6 +322,11 @@ legend {
   overflow: hidden;
 }
 
+.copy-action-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 42px;
+}
+
 .copy-video-button {
   display: grid;
   grid-template-columns: 32px minmax(0, 1fr) 25px;
@@ -336,6 +341,23 @@ legend {
   cursor: pointer;
   text-align: left;
 }
+
+.copy-format-toggle {
+  display: grid;
+  place-items: center;
+  min-width: 42px;
+  border: 0;
+  border-left: 1px solid var(--line);
+  background: transparent;
+  color: #c9cacf;
+  cursor: pointer;
+  font-size: 20px;
+}
+
+.copy-format-toggle:hover:not(:disabled),
+.copy-format-toggle[aria-expanded="true"] { background: #292a2e; color: white; }
+.copy-format-toggle:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+.copy-format-toggle:disabled { cursor: not-allowed; opacity: .4; }
 
 .copy-video-button:hover:not(:disabled) { background: #242529; }
 .copy-video-button:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
@@ -360,7 +382,43 @@ legend {
 .copy-button-text strong { font-size: 12px; line-height: 1.35; }
 .copy-button-text span { margin-top: 3px; color: var(--muted); font-size: 10px; line-height: 1.35; }
 .copy-video-button kbd { width: 25px; height: 27px; }
-.copy-state { height: 0; margin: 0; overflow: hidden; }
+.copy-state {
+  margin: 0;
+  padding: 8px 13px 10px 55px;
+  border-top: 1px solid var(--line);
+  color: #b9bbc0;
+  font-size: 10px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.copy-format-menu {
+  padding: 5px;
+  border-top: 1px solid var(--line);
+  background: #18191b;
+}
+
+.copy-format-menu button {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 9px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #d7d8dc;
+  cursor: pointer;
+  font-size: 11px;
+  text-align: left;
+}
+
+.copy-format-menu button:hover,
+.copy-format-menu button:focus-visible { background: #292a2e; outline: 0; }
+.copy-format-menu button[aria-checked="true"] { color: white; font-weight: 700; }
+.copy-format-check { color: var(--green); text-align: center; }
 
 .shortcut-hint {
   display: flex;
@@ -388,6 +446,107 @@ kbd {
 .shortcut-hint strong, .shortcut-hint span { display: block; }
 .shortcut-hint strong { font-size: 12px; }
 .shortcut-hint span { color: var(--muted); font-size: 10px; margin-top: 2px; }
+
+.transfer-card {
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: #1b1c1f;
+  overflow: hidden;
+}
+
+.transfer-card summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 54px;
+  padding: 10px 13px;
+  cursor: pointer;
+  list-style: none;
+}
+.transfer-card summary::-webkit-details-marker { display: none; }
+.transfer-card summary:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+.transfer-card[open] summary { border-bottom: 1px solid var(--line); }
+.transfer-summary-copy { min-width: 0; }
+.transfer-summary-copy strong, .transfer-summary-copy span { display: block; }
+.transfer-summary-copy strong { font-size: 12px; }
+.transfer-summary-copy span { margin-top: 3px; color: var(--muted); font-size: 10px; }
+
+.version-badge {
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border: 1px solid #42444a;
+  border-radius: 999px;
+  background: #26272b;
+  color: #bfc1c6;
+  font: 700 9px/1.2 "Segoe UI", sans-serif;
+}
+
+.transfer-content { padding: 11px 13px 13px; }
+.transfer-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.transfer-actions button,
+.restore-button,
+.secondary-button,
+.primary-button {
+  border: 1px solid #44464c;
+  border-radius: 8px;
+  background: #292a2e;
+  color: #e2e3e6;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 650;
+}
+.transfer-actions button { min-height: 36px; }
+.transfer-actions button span[aria-hidden] { margin-right: 5px; color: var(--green); }
+.transfer-actions button:hover, .restore-button:hover, .secondary-button:hover { background: #313238; }
+.transfer-actions button:focus-visible, .restore-button:focus-visible, .secondary-button:focus-visible, .primary-button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.restore-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 38px;
+  margin-top: 8px;
+  padding: 7px 9px;
+  text-align: left;
+}
+.restore-button small { color: var(--muted); font-size: 9px; font-weight: 400; }
+.transfer-note, .transfer-status { margin: 8px 1px 0; color: var(--muted); font-size: 9px; line-height: 1.45; }
+.transfer-status { color: var(--green); }
+.transfer-status.error { color: #ff8c85; }
+
+.import-dialog {
+  width: calc(100% - 32px);
+  max-width: 358px;
+  max-height: calc(100% - 32px);
+  padding: 0;
+  border: 1px solid #46484e;
+  border-radius: 15px;
+  background: #202124;
+  color: var(--ink);
+  box-shadow: 0 24px 70px rgb(0 0 0 / 60%);
+}
+.import-dialog::backdrop { background: rgb(5 6 8 / 72%); backdrop-filter: blur(2px); }
+.import-dialog form { padding: 16px; }
+.dialog-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.dialog-heading h2 { font-size: 15px; }
+.import-mode { margin-top: 14px; }
+.import-mode legend { margin-bottom: 7px; }
+.import-mode label { display: inline-flex; align-items: center; gap: 5px; margin-right: 12px; color: #d3d4d7; font-size: 11px; cursor: pointer; }
+.import-mode input { accent-color: var(--red); }
+.import-preview { display: grid; gap: 1px; margin: 14px 0 0; overflow: hidden; border: 1px solid var(--line); border-radius: 9px; background: var(--line); }
+.import-preview div { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 7px 9px; background: #28292d; }
+.import-preview dt { color: #b8b9bd; font-size: 10px; }
+.import-preview dd { margin: 0; color: white; font: 750 12px/1 "Segoe UI", sans-serif; }
+.dialog-note, .dialog-error { margin: 10px 0 0; color: var(--muted); font-size: 9px; line-height: 1.45; }
+.dialog-error { min-height: 13px; color: #ff8c85; }
+.dialog-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 11px; }
+.dialog-actions button { min-height: 36px; }
+.primary-button { border-color: var(--red); background: #40211f; color: white; }
+.primary-button:hover { background: #552724; }
 
 .language-settings {
   display: flex;

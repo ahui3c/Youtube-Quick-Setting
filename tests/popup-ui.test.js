@@ -8,6 +8,7 @@ const { chromium } = require("playwright");
   await page.addInitScript(() => {
     globalThis.savedSettings = [];
     globalThis.copiedTexts = [];
+    globalThis.localStore = {};
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
       value: { writeText: async (text) => copiedTexts.push(text) }
@@ -26,8 +27,13 @@ const { chromium } = require("playwright");
             }
           }),
           set: async (value) => savedSettings.push(value)
+        },
+        local: {
+          get: async (key) => ({ [key]: localStore[key] }),
+          set: async (value) => Object.assign(localStore, value)
         }
       },
+      runtime: { getManifest: () => ({ version: "1.6.0" }) },
       tabs: {
         query: async () => [{ id: 1, url: "https://www.youtube.com/watch?v=abc123" }],
         sendMessage: async () => ({
@@ -36,7 +42,8 @@ const { chromium } = require("playwright");
           channelId: "channelA",
           channelName: "Test Channel",
           videoTitle: "Test Video",
-          videoUrl: "https://www.youtube.com/watch?v=qRjSmLc2cOs"
+          videoUrl: "https://www.youtube.com/watch?v=qRjSmLc2cOs",
+          currentTime: 125.9
         })
       },
     };
@@ -54,6 +61,14 @@ const { chromium } = require("playwright");
   await page.locator("#copyVideoInfo").click();
   assert.deepEqual(await page.evaluate(() => copiedTexts), ["Test Video\nhttps://www.youtube.com/watch?v=qRjSmLc2cOs"]);
   assert.equal(await page.locator("#copyVideoInfoDescription").innerText(), "クリップボードにコピーしました");
+  assert.match(await page.locator("#copyVideoInfoState").innerText(), /Test Video/);
+  await page.locator("#copyFormatToggle").click();
+  assert.equal(await page.locator("#copyFormatMenu [role='menuitemradio']").count(), 7);
+  await page.getByRole("menuitemradio", { name: "Markdown リンク" }).click();
+  assert.equal(await page.evaluate(() => copiedTexts.at(-1)), "[Test Video](https://www.youtube.com/watch?v=qRjSmLc2cOs)");
+  assert.equal(await page.evaluate(() => savedSettings.at(-1).ytQuickSettings.copy.defaultFormat), "markdown");
+  await page.locator("#copyVideoInfo").click();
+  assert.equal(await page.evaluate(() => copiedTexts.at(-1)), "[Test Video](https://www.youtube.com/watch?v=qRjSmLc2cOs)");
   await page.locator("#globalPremiumQualityEnabled").check();
   assert.equal(await page.evaluate(() => savedSettings.at(-1).ytQuickSettings.global.premiumQualityEnabled), true);
   await page.locator("#channelEnabled").check();
@@ -65,6 +80,58 @@ const { chromium } = require("playwright");
   await page.getByRole("radio", { name: "常にオフ" }).click();
   assert.equal(await page.locator("#channelTheaterMode .selected").innerText(), "常にオフ");
   assert.equal(await page.evaluate(() => savedSettings.at(-1).ytQuickSettings.channels.channelA.regular.theaterModeOverride), "off");
+
+  await page.locator("#settingsTransfer").evaluate((element) => { element.open = true; });
+  assert.equal(await page.locator("#settingsVersionBadge").innerText(), "v2");
+  const downloadPromise = page.waitForEvent("download");
+  await page.locator("#exportSettings").click();
+  const download = await downloadPromise;
+  assert.match(download.suggestedFilename(), /^youtube-quick-setting-backup-\d{4}-\d{2}-\d{2}\.json$/);
+
+  const importPayload = {
+    schema: "youtube-quick-setting-settings",
+    formatVersion: 2,
+    settings: {
+      schemaVersion: 2,
+      language: "en",
+      global: { speed: 2, quality: "highest", premiumQualityEnabled: false, theaterModeEnabled: false },
+      shorts: { speed: 1, quality: "hd1080", premiumQualityEnabled: false },
+      shortsControls: { seekSeconds: 5, arrowKeysEnabled: true, channelNamesEnabled: true },
+      copy: { defaultFormat: "url-only" },
+      channels: {
+        channelB: {
+          name: "Imported Channel",
+          regular: { speed: 1.25, quality: "hd1080", premiumQualityEnabled: false, theaterModeOverride: "inherit" },
+          shorts: { speed: 1, quality: "hd1080", premiumQualityEnabled: false }
+        }
+      }
+    }
+  };
+  await page.locator("#importSettingsFile").setInputFiles({
+    name: "settings.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(importPayload))
+  });
+  await page.locator("#importDialog").waitFor({ state: "visible" });
+  assert.equal(
+    await page.locator("#importDialog").evaluate((dialog) => dialog.open),
+    true,
+    await page.locator("#settingsTransferStatus").innerText()
+  );
+  assert.equal(await page.locator("#previewAdded").innerText(), "1");
+  assert.equal(await page.locator("#previewRemoved").innerText(), "0");
+  await page.locator('input[name="importMode"][value="replace"]').check();
+  assert.equal(await page.locator("#previewRemoved").innerText(), "1");
+  await page.locator('input[name="importMode"][value="merge"]').check();
+  await page.locator("#applyImport").click();
+  assert.equal(await page.locator("#importDialog").evaluate((dialog) => dialog.open), false);
+  assert.equal(await page.evaluate(() => savedSettings.at(-1).ytQuickSettings.global.speed), 2);
+  assert.deepEqual(await page.evaluate(() => Object.keys(savedSettings.at(-1).ytQuickSettings.channels).sort()), ["channelA", "channelB"]);
+  assert.equal(await page.evaluate(() => Boolean(localStore.ytQuickSettingsRestorePoint?.settings)), true);
+  assert.equal(await page.locator("#restoreSettings").isVisible(), true);
+  await page.locator("#restoreSettings").click();
+  assert.equal(await page.evaluate(() => savedSettings.at(-1).ytQuickSettings.global.speed), 1);
+  assert.deepEqual(await page.evaluate(() => Object.keys(savedSettings.at(-1).ytQuickSettings.channels)), ["channelA"]);
   const regularSettings = await page.locator(".settings-card").boundingBox();
   const regularCopy = await page.locator(".copy-card").boundingBox();
   const regularChannel = await page.locator("#channelCard").boundingBox();
