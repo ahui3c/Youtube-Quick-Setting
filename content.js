@@ -332,24 +332,40 @@ function ytqsInstallShortsChannelStyle() {
   document.documentElement.append(style);
 }
 
+function ytqsDeduplicateShortsChannelNames(card, videoId) {
+  const markers = [...card.querySelectorAll(".ytqs-shorts-channel-name")];
+  const current = markers.find((marker) => marker.dataset.videoId === videoId) || null;
+  markers.forEach((marker) => {
+    if (marker !== current) marker.remove();
+  });
+  return current;
+}
+
 async function ytqsRenderShortsChannelName(card) {
   if (!card?.isConnected || location.pathname !== "/" || ytqsSettings.shortsControls.channelNamesEnabled === false) return;
   const videoId = ytqsShortsVideoId(card);
   if (!videoId) return;
-  const current = card.querySelector(".ytqs-shorts-channel-name");
-  if (current?.dataset.videoId === videoId) return;
-  current?.remove();
-  const author = await ytqsGetShortsAuthor(videoId);
-  if (!author || !card.isConnected || ytqsShortsVideoId(card) !== videoId || ytqsSettings.shortsControls.channelNamesEnabled === false) return;
-  const subhead = card.querySelector(".shortsLockupViewModelHostOutsideMetadataSubhead");
-  if (!subhead?.parentElement) return;
-  const link = document.createElement("a");
-  link.className = "ytqs-shorts-channel-name";
-  link.dataset.videoId = videoId;
-  link.href = author.href;
-  link.textContent = author.name;
-  link.title = author.name;
-  subhead.parentElement.insertBefore(link, subhead);
+  if (ytqsDeduplicateShortsChannelNames(card, videoId)) return;
+  if (card.dataset.ytqsChannelRequest === videoId) return;
+  card.dataset.ytqsChannelRequest = videoId;
+  try {
+    const author = await ytqsGetShortsAuthor(videoId);
+    if (!author || !card.isConnected || ytqsShortsVideoId(card) !== videoId || ytqsSettings.shortsControls.channelNamesEnabled === false) return;
+    // YouTube can rerender and rescan the same card while metadata is pending.
+    // Recheck after the await so only one of those asynchronous paths inserts.
+    if (ytqsDeduplicateShortsChannelNames(card, videoId)) return;
+    const subhead = card.querySelector(".shortsLockupViewModelHostOutsideMetadataSubhead");
+    if (!subhead?.parentElement) return;
+    const link = document.createElement("a");
+    link.className = "ytqs-shorts-channel-name";
+    link.dataset.videoId = videoId;
+    link.href = author.href;
+    link.textContent = author.name;
+    link.title = author.name;
+    subhead.parentElement.insertBefore(link, subhead);
+  } finally {
+    if (card.dataset.ytqsChannelRequest === videoId) delete card.dataset.ytqsChannelRequest;
+  }
 }
 
 function ytqsScanShortsCards() {
