@@ -10,7 +10,7 @@ assert.match(source, /event\.key === "ArrowRight"/);
 assert.match(source, /event\.key === "0"/);
 assert.match(source, /event\.code === "Numpad0"/);
 source = source.replace(/^\s*show(?:Speed|Seek)Overlay\([^;]+;\r?$/gm, "");
-source = source.replace(/\ndocument\.addEventListener\("keydown"[\s\S]*$/, "\nthis.__contentTest = { contentType, isVideoPage, effectiveSettings, restoreNormalSpeed, seekShorts, handleKeyboardShortcut, ytqsNormalizeSettings, setSettings: (value) => { ytqsSettings = ytqsNormalizeSettings(value); }, setContext: (value) => { ytqsContext = value; } };" );
+source = source.replace(/\ndocument\.addEventListener\("keydown"[\s\S]*$/, "\nthis.__contentTest = { contentType, isVideoPage, effectiveSettings, restoreNormalSpeed, seekShorts, handleKeyboardShortcut, ytqsNormalizeSettings, ytqsShortsVideoId, ytqsNormalizeShortsAuthor, setSettings: (value) => { ytqsSettings = ytqsNormalizeSettings(value); }, setContext: (value) => { ytqsContext = value; } };" );
 
 const messages = [];
 const video = {
@@ -48,6 +48,7 @@ const sandbox = {
   HTMLElement: MockHTMLElement,
   Object,
   Number,
+  URL,
   URLSearchParams
 };
 vm.createContext(sandbox);
@@ -60,6 +61,12 @@ assert.equal(api.restoreNormalSpeed(), true);
 assert.equal(messages.at(-1).type, "SET_SESSION_SPEED");
 assert.equal(messages.at(-1).speed, 1);
 assert.equal(video.playbackRate, 1);
+assert.deepEqual(
+  JSON.parse(JSON.stringify(api.ytqsNormalizeShortsAuthor({ author_name: "Channel A", author_url: "https://www.youtube.com/@channelA" }))),
+  { name: "Channel A", href: "/@channelA" }
+);
+assert.equal(api.ytqsNormalizeShortsAuthor({ author_name: "Channel A", author_url: "https://example.com/@channelA" }), null);
+assert.equal(api.ytqsShortsVideoId({ querySelector: () => ({ getAttribute: () => "/shorts/abc123?feature=share" }) }), "abc123");
 
 api.setSettings({
   global: { speed: 1, quality: "hd1080", premiumQualityEnabled: true, theaterModeEnabled: true },

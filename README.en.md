@@ -13,6 +13,7 @@ A Chrome extension that automatically applies playback speed, video quality, and
 - Falls back to the highest available quality that does not exceed the target
 - **Use Premium enhanced quality** is a separate opt-in switch that is off by default
 - Separate profiles for standard videos and Shorts
+- Adds clickable channel names to Shorts cards on the YouTube Home page
 - Channel-specific profiles override the matching global profile
 - Standard videos can open automatically in Theater mode, with per-channel follow-global, force-on, or force-off controls
 - A two-second player notice shows the active channel speed and quality
@@ -47,6 +48,8 @@ After updating the files, click **Reload** for the extension on `chrome://extens
 ## Usage
 
 Use the **Videos / Shorts** selector to configure each content type independently. When the popup is opened from a Short, it automatically selects the Shorts profile.
+
+**Show channel names on Home Shorts** is enabled by default. The extension requests public channel metadata from YouTube only for cards currently being displayed, adds a clickable channel name below the title, and caches the result for the current page. No third-party server is involved.
 
 To create a channel override, open the popup on that channel's video or Short and enable **Current channel override**. Each channel stores independent standard-video and Shorts profiles.
 

@@ -2,7 +2,7 @@ const YTQS_DEFAULTS = {
   language: "system",
   global: { speed: 1, quality: "hd1080", premiumQualityEnabled: false, theaterModeEnabled: false },
   shorts: { speed: 1, quality: "hd1080", premiumQualityEnabled: false },
-  shortsControls: { seekSeconds: 5, arrowKeysEnabled: true },
+  shortsControls: { seekSeconds: 5, arrowKeysEnabled: true, channelNamesEnabled: true },
   channels: {}
 };
 const YTQS_SPEEDS = [0.7, 1, 1.25, 2, 3];
@@ -13,6 +13,13 @@ let ytqsContext = { isVideo: false, contentType: "regular", channelId: "", chann
 let ytqsRefreshTimer = 0;
 let ytqsLastChannelNoticeKey = "";
 let ytqsLastNavigationVideoId = "";
+let ytqsShortsScanTimer = 0;
+let ytqsShortsMutationObserver = null;
+let ytqsShortsIntersectionObserver = null;
+let ytqsShortsMetadataRequests = 0;
+const ytqsShortsMetadataCache = new Map();
+const ytqsShortsMetadataPending = new Map();
+const ytqsShortsMetadataQueue = [];
 
 const YTQS_QUALITY_LABELS = {
   highest: "自動最高",
@@ -62,7 +69,8 @@ function ytqsNormalizeSettings(value) {
     shorts,
     shortsControls: {
       seekSeconds: YTQS_SEEK_SECONDS.includes(Number(value?.shortsControls?.seekSeconds)) ? Number(value.shortsControls.seekSeconds) : 5,
-      arrowKeysEnabled: value?.shortsControls?.arrowKeysEnabled !== false
+      arrowKeysEnabled: value?.shortsControls?.arrowKeysEnabled !== false,
+      channelNamesEnabled: value?.shortsControls?.channelNamesEnabled !== false
     },
     channels
   };
@@ -256,6 +264,129 @@ function scheduleRefresh() {
   ytqsRefreshTimer = setTimeout(() => refreshContextAndApply(0), 250);
 }
 
+function ytqsShortsVideoId(card) {
+  const href = card?.querySelector?.('a[href^="/shorts/"]')?.getAttribute("href") || "";
+  return href.match(/^\/shorts\/([^/?]+)/)?.[1] || "";
+}
+
+function ytqsNormalizeShortsAuthor(value) {
+  const name = typeof value?.author_name === "string" ? value.author_name.trim() : "";
+  if (!name || typeof value?.author_url !== "string") return null;
+  try {
+    const url = new URL(value.author_url, location.origin);
+    const validHost = url.hostname === "youtube.com" || url.hostname === "www.youtube.com";
+    const validPath = /^\/(?:@|channel\/|c\/|user\/)/.test(url.pathname);
+    if (url.protocol !== "https:" || !validHost || !validPath) return null;
+    return { name, href: `${url.pathname}${url.search}` };
+  } catch {
+    return null;
+  }
+}
+
+async function ytqsLoadShortsAuthor(videoId) {
+  const response = await fetch(`/oembed?url=${encodeURIComponent(`https://www.youtube.com/shorts/${videoId}`)}&format=json`, {
+    credentials: "omit",
+    headers: { Accept: "application/json" }
+  });
+  if (!response.ok) return null;
+  return ytqsNormalizeShortsAuthor(await response.json());
+}
+
+function ytqsPumpShortsMetadataQueue() {
+  while (ytqsShortsMetadataRequests < 4 && ytqsShortsMetadataQueue.length) {
+    const task = ytqsShortsMetadataQueue.shift();
+    ytqsShortsMetadataRequests += 1;
+    ytqsLoadShortsAuthor(task.videoId)
+      .catch(() => null)
+      .then((author) => {
+        ytqsShortsMetadataCache.set(task.videoId, author);
+        task.resolve(author);
+      })
+      .finally(() => {
+        ytqsShortsMetadataRequests -= 1;
+        ytqsShortsMetadataPending.delete(task.videoId);
+        ytqsPumpShortsMetadataQueue();
+      });
+  }
+}
+
+function ytqsGetShortsAuthor(videoId) {
+  if (ytqsShortsMetadataCache.has(videoId)) return Promise.resolve(ytqsShortsMetadataCache.get(videoId));
+  if (ytqsShortsMetadataPending.has(videoId)) return ytqsShortsMetadataPending.get(videoId);
+  const request = new Promise((resolve) => {
+    ytqsShortsMetadataQueue.push({ videoId, resolve });
+    ytqsPumpShortsMetadataQueue();
+  });
+  ytqsShortsMetadataPending.set(videoId, request);
+  return request;
+}
+
+function ytqsInstallShortsChannelStyle() {
+  if (document.querySelector("#ytqs-shorts-channel-style")) return;
+  const style = document.createElement("style");
+  style.id = "ytqs-shorts-channel-style";
+  style.textContent = `
+    .ytqs-shorts-channel-name{display:block;max-width:calc(100% - 36px);margin:3px 36px 0 0;color:var(--yt-spec-text-secondary,#606060);font-family:Roboto,Arial,sans-serif;font-size:1.4rem;font-weight:400;line-height:2rem;overflow:hidden;text-decoration:none;text-overflow:ellipsis;white-space:nowrap}
+    .ytqs-shorts-channel-name:hover{color:var(--yt-spec-text-primary,#0f0f0f);text-decoration:none}
+  `;
+  document.documentElement.append(style);
+}
+
+async function ytqsRenderShortsChannelName(card) {
+  if (!card?.isConnected || location.pathname !== "/" || ytqsSettings.shortsControls.channelNamesEnabled === false) return;
+  const videoId = ytqsShortsVideoId(card);
+  if (!videoId) return;
+  const current = card.querySelector(".ytqs-shorts-channel-name");
+  if (current?.dataset.videoId === videoId) return;
+  current?.remove();
+  const author = await ytqsGetShortsAuthor(videoId);
+  if (!author || !card.isConnected || ytqsShortsVideoId(card) !== videoId || ytqsSettings.shortsControls.channelNamesEnabled === false) return;
+  const subhead = card.querySelector(".shortsLockupViewModelHostOutsideMetadataSubhead");
+  if (!subhead?.parentElement) return;
+  const link = document.createElement("a");
+  link.className = "ytqs-shorts-channel-name";
+  link.dataset.videoId = videoId;
+  link.href = author.href;
+  link.textContent = author.name;
+  link.title = author.name;
+  subhead.parentElement.insertBefore(link, subhead);
+}
+
+function ytqsScanShortsCards() {
+  const enabled = location.pathname === "/" && ytqsSettings.shortsControls.channelNamesEnabled !== false;
+  if (!enabled) {
+    document.querySelectorAll(".ytqs-shorts-channel-name").forEach((element) => element.remove());
+    return;
+  }
+  ytqsInstallShortsChannelStyle();
+  document.querySelectorAll("ytm-shorts-lockup-view-model-v2").forEach((card) => {
+    ytqsShortsIntersectionObserver?.observe(card);
+    const rect = card.getBoundingClientRect();
+    if (rect.bottom >= -600 && rect.top <= innerHeight + 600) ytqsRenderShortsChannelName(card);
+  });
+}
+
+function ytqsScheduleShortsCardScan() {
+  clearTimeout(ytqsShortsScanTimer);
+  ytqsShortsScanTimer = setTimeout(ytqsScanShortsCards, 180);
+}
+
+function ytqsInstallShortsCardObservers() {
+  if (ytqsShortsMutationObserver) return;
+  if (!document.documentElement) {
+    document.addEventListener("DOMContentLoaded", ytqsInstallShortsCardObservers, { once: true });
+    return;
+  }
+  ytqsShortsIntersectionObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) ytqsRenderShortsChannelName(entry.target);
+    });
+  }, { rootMargin: "600px 0px" });
+  ytqsShortsMutationObserver = new MutationObserver(ytqsScheduleShortsCardScan);
+  ytqsShortsMutationObserver.observe(document.documentElement, { childList: true, subtree: true });
+  ytqsScheduleShortsCardScan();
+}
+
 function isTypingTarget(target) {
   return target instanceof HTMLElement && (
     target.isContentEditable ||
@@ -433,14 +564,19 @@ chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== "sync" || !changes.ytQuickSettings) return;
   ytqsSettings = ytqsNormalizeSettings(changes.ytQuickSettings.newValue);
   refreshContextAndApply();
+  ytqsScheduleShortsCardScan();
 });
 
 injectPageBridge();
 chrome.storage.sync.get("ytQuickSettings", (stored) => {
   ytqsSettings = ytqsNormalizeSettings(stored.ytQuickSettings);
   scheduleRefresh();
+  ytqsInstallShortsCardObservers();
 });
 
 document.addEventListener("yt-navigate-finish", scheduleRefresh, true);
 document.addEventListener("yt-page-data-updated", scheduleRefresh, true);
+document.addEventListener("yt-navigate-finish", ytqsScheduleShortsCardScan, true);
+document.addEventListener("yt-page-data-updated", ytqsScheduleShortsCardScan, true);
 window.addEventListener("popstate", scheduleRefresh);
+window.addEventListener("popstate", ytqsScheduleShortsCardScan);

@@ -22,6 +22,7 @@ const MESSAGES = {
     shortsShortcutTitle: "Shorts 快速操作", shortsShortcutDescription: "←／→ 前後 {seconds} 秒，0 回片頭；−／+ 調速，* 回復 1×",
     shortsSeekSeconds: "快進秒數", secondsUnit: "秒", shortsArrowKeysTitle: "啟用 Shorts 左右方向鍵",
     shortsArrowKeysDescription: "控制 ←／→ 快退快進，0 回片頭不受影響",
+    shortsChannelNamesTitle: "首頁 Shorts 顯示頻道名稱", shortsChannelNamesDescription: "在 Shorts 卡片補上可點擊的頻道名稱",
     globalTheaterTitle: "自動開啟劇院模式", globalTheaterDescription: "進入一般影片時自動切換為劇院模式",
     channelTheater: "這個頻道的劇院模式", theaterInherit: "跟隨全局", theaterOn: "強制開啟", theaterOff: "強制關閉",
     connected: "已連線到目前影片", disconnected: "請開啟 YouTube 影片或 Shorts", languageLabel: "介面語言",
@@ -42,6 +43,7 @@ const MESSAGES = {
     shortsShortcutTitle: "Shorts quick controls", shortsShortcutDescription: "←/→ seek {seconds} sec, 0 restarts; −/+ changes speed, * restores 1×",
     shortsSeekSeconds: "Seek interval", secondsUnit: "sec", shortsArrowKeysTitle: "Enable Shorts arrow keys",
     shortsArrowKeysDescription: "Controls ←/→ seeking; 0 always returns to the start",
+    shortsChannelNamesTitle: "Show channel names on Home Shorts", shortsChannelNamesDescription: "Add a clickable channel name to Shorts cards on the Home page",
     globalTheaterTitle: "Automatically open Theater mode", globalTheaterDescription: "Switch standard videos to Theater mode when they open",
     channelTheater: "Theater mode for this channel", theaterInherit: "Follow global", theaterOn: "Force on", theaterOff: "Force off",
     connected: "Connected to the current video", disconnected: "Open a YouTube video or Short", languageLabel: "Interface language",
@@ -62,6 +64,7 @@ const MESSAGES = {
     shortsShortcutTitle: "ショートのクイック操作", shortsShortcutDescription: "←／→ で {seconds} 秒移動、0 で先頭へ。−／+ で速度変更、* で 1×",
     shortsSeekSeconds: "移動秒数", secondsUnit: "秒", shortsArrowKeysTitle: "ショートの左右キーを有効化",
     shortsArrowKeysDescription: "←／→ の移動を制御。0 の先頭移動は常に有効",
+    shortsChannelNamesTitle: "ホームのショートにチャンネル名を表示", shortsChannelNamesDescription: "ショートのカードにクリック可能なチャンネル名を追加します",
     globalTheaterTitle: "シアターモードを自動的に有効化", globalTheaterDescription: "通常動画を開いたときにシアターモードへ切り替えます",
     channelTheater: "このチャンネルのシアターモード", theaterInherit: "全体設定に従う", theaterOn: "常にオン", theaterOff: "常にオフ",
     connected: "現在の動画に接続しました", disconnected: "YouTube 動画またはショートを開いてください", languageLabel: "表示言語",
@@ -77,7 +80,7 @@ const DEFAULT_SETTINGS = {
   language: "system",
   global: { ...DEFAULT_PROFILE, theaterModeEnabled: false },
   shorts: { ...DEFAULT_PROFILE },
-  shortsControls: { seekSeconds: 5, arrowKeysEnabled: true },
+  shortsControls: { seekSeconds: 5, arrowKeysEnabled: true, channelNamesEnabled: true },
   channels: {}
 };
 
@@ -124,7 +127,8 @@ function normalizeSettings(value) {
     shorts,
     shortsControls: {
       seekSeconds: SHORTS_SEEK_SECONDS.includes(Number(value?.shortsControls?.seekSeconds)) ? Number(value.shortsControls.seekSeconds) : 5,
-      arrowKeysEnabled: value?.shortsControls?.arrowKeysEnabled !== false
+      arrowKeysEnabled: value?.shortsControls?.arrowKeysEnabled !== false,
+      channelNamesEnabled: value?.shortsControls?.channelNamesEnabled !== false
     },
     channels
   };
@@ -191,6 +195,9 @@ function applyTranslations() {
   $("#shortsArrowKeysTitle").textContent = t("shortsArrowKeysTitle");
   $("#shortsArrowKeysDescription").textContent = t("shortsArrowKeysDescription");
   $("#shortsArrowKeysLabel").textContent = t("shortsArrowKeysTitle");
+  $("#shortsChannelNamesTitle").textContent = t("shortsChannelNamesTitle");
+  $("#shortsChannelNamesDescription").textContent = t("shortsChannelNamesDescription");
+  $("#shortsChannelNamesLabel").textContent = t("shortsChannelNamesTitle");
   $("#globalTheaterTitle").textContent = t("globalTheaterTitle");
   $("#globalTheaterDescription").textContent = t("globalTheaterDescription");
   $("#globalTheaterLabel").textContent = t("globalTheaterTitle");
@@ -315,6 +322,7 @@ function renderShortsControls() {
     choices.append(button);
   });
   $("#shortsArrowKeysEnabled").checked = settings.shortsControls.arrowKeysEnabled;
+  $("#shortsChannelNamesEnabled").checked = settings.shortsControls.channelNamesEnabled;
 }
 
 function channelInitial(name) {
@@ -403,6 +411,11 @@ $("#languageSelect").addEventListener("change", async (event) => {
 $("#shortsArrowKeysEnabled").addEventListener("change", async (event) => {
   settings.shortsControls.arrowKeysEnabled = event.target.checked;
   applyTranslations();
+  await persist();
+});
+
+$("#shortsChannelNamesEnabled").addEventListener("change", async (event) => {
+  settings.shortsControls.channelNamesEnabled = event.target.checked;
   await persist();
 });
 

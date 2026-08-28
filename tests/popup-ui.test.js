@@ -16,7 +16,7 @@ const { chromium } = require("playwright");
               language: "system",
               global: { speed: 1, quality: "hd1080", premiumQualityEnabled: false, theaterModeEnabled: true },
               shorts: { speed: 3, quality: "highest" },
-              shortsControls: { seekSeconds: 10, arrowKeysEnabled: false },
+              shortsControls: { seekSeconds: 10, arrowKeysEnabled: false, channelNamesEnabled: true },
               channels: {}
             }
           }),
@@ -64,6 +64,7 @@ const { chromium } = require("playwright");
   assert.equal(await page.locator("#channelPremiumQualitySetting").isVisible(), false);
   assert.equal(await page.locator("#shortsSeekSeconds .selected").innerText(), "10 秒");
   assert.equal(await page.locator("#shortsArrowKeysEnabled").isChecked(), false);
+  assert.equal(await page.locator("#shortsChannelNamesEnabled").isChecked(), true);
   const shortsSettings = await page.locator(".settings-card").boundingBox();
   const shortsShortcut = await page.locator("#shortcutHint").boundingBox();
   const shortsChannel = await page.locator("#channelCard").boundingBox();
@@ -83,7 +84,9 @@ const { chromium } = require("playwright");
   assert.match(await page.locator("#shortcutDescription").innerText(), /3 sec/);
   await page.locator("#shortsArrowKeysEnabled").check();
   const saved = await page.evaluate(() => savedSettings.at(-1).ytQuickSettings.shortsControls);
-  assert.deepEqual(saved, { seekSeconds: 3, arrowKeysEnabled: true });
+  assert.deepEqual(saved, { seekSeconds: 3, arrowKeysEnabled: true, channelNamesEnabled: true });
+  await page.locator("#shortsChannelNamesEnabled").uncheck();
+  assert.equal(await page.evaluate(() => savedSettings.at(-1).ytQuickSettings.shortsControls.channelNamesEnabled), false);
 
   const masthead = await page.locator(".masthead").boundingBox();
   const title = await page.locator("#appTitle").boundingBox();
