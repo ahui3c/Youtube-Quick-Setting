@@ -10,7 +10,7 @@ assert.match(source, /event\.key === "ArrowRight"/);
 assert.match(source, /event\.key === "0"/);
 assert.match(source, /event\.code === "Numpad0"/);
 source = source.replace(/^\s*show(?:Speed|Seek)Overlay\([^;]+;\r?$/gm, "");
-source = source.replace(/\ndocument\.addEventListener\("keydown"[\s\S]*$/, "\nthis.__contentTest = { contentType, isVideoPage, effectiveSettings, restoreNormalSpeed, seekShorts, handleKeyboardShortcut, ytqsNormalizeSettings, ytqsShortsVideoId, ytqsNormalizeShortsAuthor, ytqsDeduplicateShortsChannelNames, ytqsDislikeVideoId, ytqsFormatDislikeCount, setSettings: (value) => { ytqsSettings = ytqsNormalizeSettings(value); }, setContext: (value) => { ytqsContext = value; } };" );
+source = source.replace(/\ndocument\.addEventListener\("keydown"[\s\S]*$/, "\nthis.__contentTest = { contentType, isVideoPage, effectiveSettings, restoreNormalSpeed, seekShorts, handleKeyboardShortcut, ytqsNormalizeSettings, ytqsShortsVideoId, ytqsNormalizeShortsAuthor, ytqsDeduplicateShortsChannelNames, setSettings: (value) => { ytqsSettings = ytqsNormalizeSettings(value); }, setContext: (value) => { ytqsContext = value; } };" );
 
 const messages = [];
 const video = {
@@ -68,9 +68,6 @@ assert.deepEqual(
 );
 assert.equal(api.ytqsNormalizeShortsAuthor({ author_name: "Channel A", author_url: "https://example.com/@channelA" }), null);
 assert.equal(api.ytqsShortsVideoId({ querySelector: () => ({ getAttribute: () => "/shorts/abc123?feature=share" }) }), "abc123");
-sandbox.location.pathname = "/shorts/qRjSmLc2cOs";
-assert.equal(api.ytqsDislikeVideoId(), "qRjSmLc2cOs");
-assert.match(api.ytqsFormatDislikeCount(12850), /1[.\u3002]?3|1\.3|萬|万|K/i);
 const firstChannelMarker = { dataset: { videoId: "abc123" }, removed: false, remove() { this.removed = true; } };
 const duplicateChannelMarker = { dataset: { videoId: "abc123" }, removed: false, remove() { this.removed = true; } };
 const staleChannelMarker = { dataset: { videoId: "old456" }, removed: false, remove() { this.removed = true; } };

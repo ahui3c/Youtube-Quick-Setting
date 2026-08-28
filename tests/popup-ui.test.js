@@ -14,7 +14,6 @@ const { chromium } = require("playwright");
           get: async () => ({
             ytQuickSettings: {
               language: "system",
-              estimatedDislikesEnabled: false,
               global: { speed: 1, quality: "hd1080", premiumQualityEnabled: false, theaterModeEnabled: true },
               shorts: { speed: 3, quality: "highest" },
               shortsControls: { seekSeconds: 10, arrowKeysEnabled: false, channelNamesEnabled: true },
@@ -28,11 +27,6 @@ const { chromium } = require("playwright");
         query: async () => [{ id: 1, url: "https://www.youtube.com/watch?v=abc123" }],
         sendMessage: async () => ({ isVideo: true, contentType: "regular", channelId: "channelA", channelName: "Test Channel" })
       },
-      permissions: {
-        contains: async () => false,
-        request: async () => true,
-        remove: async () => true
-      }
     };
   });
 
@@ -44,9 +38,6 @@ const { chromium } = require("playwright");
   assert.equal(await page.locator("#globalTheaterEnabled").isChecked(), true);
   assert.equal(await page.locator("#globalPremiumQualitySetting").isVisible(), true);
   assert.equal(await page.locator("#globalPremiumQualityEnabled").isChecked(), false);
-  assert.equal(await page.locator("#estimatedDislikesEnabled").isChecked(), false);
-  await page.locator("#estimatedDislikesEnabled").check();
-  assert.equal(await page.evaluate(() => savedSettings.at(-1).ytQuickSettings.estimatedDislikesEnabled), true);
   await page.locator("#globalPremiumQualityEnabled").check();
   assert.equal(await page.evaluate(() => savedSettings.at(-1).ytQuickSettings.global.premiumQualityEnabled), true);
   await page.locator("#channelEnabled").check();

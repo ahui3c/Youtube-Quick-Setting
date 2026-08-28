@@ -11,12 +11,6 @@
   "host_permissions": [
     "https://www.youtube.com/*"
   ],
-  "optional_host_permissions": [
-    "https://returnyoutubedislikeapi.com/*"
-  ],
-  "background": {
-    "service_worker": "background.js"
-  },
   "action": {
     "default_title": "__MSG_extensionName__",
     "default_popup": "popup.html",

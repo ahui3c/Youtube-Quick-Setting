@@ -24,10 +24,9 @@ Key features:
 - Use + / − to change speed and * to return instantly to 1×
 - In Shorts, use ← / → to seek 3, 5 (default), or 10 seconds, optionally disable the arrow keys, and press 0 to return to the beginning
 - Adds clickable channel names to Shorts cards on the Home page
-- Optionally displays an ≈-marked estimate from Return YouTube Dislike
 - On-screen speed feedback and synchronized YouTube settings-menu values
 - Traditional Chinese, English, and Japanese UI; follow the system language or choose manually
 
-The extension contains no ads, trackers, analytics, remote code, or developer-operated data collection. Estimated dislikes are off by default; enabling them requests optional Return YouTube Dislike API access and sends only the public video ID, not user identity or rating actions.
+The extension contains no ads, trackers, analytics, remote code, or developer-operated data collection.
 
 YouTube is a trademark of Google LLC. This independent extension is not affiliated with, endorsed by, or sponsored by Google or YouTube.

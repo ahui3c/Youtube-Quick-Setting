@@ -14,7 +14,6 @@ A Chrome extension that automatically applies playback speed, video quality, and
 - **Use Premium enhanced quality** is a separate opt-in switch that is off by default
 - Separate profiles for standard videos and Shorts
 - Adds clickable channel names to Shorts cards on the YouTube Home page
-- Optionally displays estimated dislike counts from Return YouTube Dislike (off by default)
 - Channel-specific profiles override the matching global profile
 - Standard videos can open automatically in Theater mode, with per-channel follow-global, force-on, or force-off controls
 - A two-second player notice shows the active channel speed and quality
@@ -57,10 +56,6 @@ To create a channel override, open the popup on that channel's video or Short an
 ### Theater mode
 
 Enable **Automatically open Theater mode** under **Videos** to switch through YouTube's native Theater mode control whenever a standard video opens. It is applied only once per video load; if you leave Theater mode manually afterward, the extension will not force it on again. Channel profiles can **Follow global**, **Force on**, or **Force off**. This setting is hidden for Shorts.
-
-### Estimated dislikes
-
-**Show estimated dislikes** is off by default. Enabling it requests optional access to `returnyoutubedislikeapi.com` and displays an `≈`-marked third-party estimate beside YouTube's native dislike button. Data is provided by [Return YouTube Dislike](https://returnyoutubedislike.com/) and is not an official exact YouTube count. This extension reads the estimate only and does not submit the user's like or dislike actions. Disabling the feature removes the optional permission.
 
 Priority order:
 

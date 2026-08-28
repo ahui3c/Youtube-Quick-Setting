@@ -1,6 +1,5 @@
 const YTQS_DEFAULTS = {
   language: "system",
-  estimatedDislikesEnabled: false,
   global: { speed: 1, quality: "hd1080", premiumQualityEnabled: false, theaterModeEnabled: false },
   shorts: { speed: 1, quality: "hd1080", premiumQualityEnabled: false },
   shortsControls: { seekSeconds: 5, arrowKeysEnabled: true, channelNamesEnabled: true },
@@ -14,10 +13,6 @@ let ytqsContext = { isVideo: false, contentType: "regular", channelId: "", chann
 let ytqsRefreshTimer = 0;
 let ytqsLastChannelNoticeKey = "";
 let ytqsLastNavigationVideoId = "";
-let ytqsDislikeScanTimer = 0;
-const ytqsDislikeCache = new Map();
-const ytqsDislikePending = new Map();
-const ytqsDislikeFailureUntil = new Map();
 let ytqsShortsScanTimer = 0;
 let ytqsShortsMutationObserver = null;
 let ytqsShortsIntersectionObserver = null;
@@ -70,7 +65,6 @@ function ytqsNormalizeSettings(value) {
   }
   return {
     language: ["system", "zh-Hant", "en", "ja"].includes(value?.language) ? value.language : "system",
-    estimatedDislikesEnabled: value?.estimatedDislikesEnabled === true,
     global,
     shorts,
     shortsControls: {
@@ -270,104 +264,6 @@ function scheduleRefresh() {
   ytqsRefreshTimer = setTimeout(() => refreshContextAndApply(0), 250);
 }
 
-function ytqsDislikeVideoId() {
-  const regularId = new URLSearchParams(location.search).get("v") || "";
-  if (/^[A-Za-z0-9_-]{11}$/.test(regularId)) return regularId;
-  return location.pathname.match(/^\/shorts\/([A-Za-z0-9_-]{11})/)?.[1] || "";
-}
-
-function ytqsFormatDislikeCount(value) {
-  const locale = ytqsLanguage() === "zh-Hant" ? "zh-TW" : ytqsLanguage();
-  return new Intl.NumberFormat(locale, {
-    notation: "compact",
-    compactDisplay: "short",
-    maximumFractionDigits: 1
-  }).format(Math.max(0, Math.round(Number(value) || 0)));
-}
-
-function ytqsFindDislikeControl() {
-  const hosts = [...document.querySelectorAll("dislike-button-view-model, ytd-segmented-like-dislike-button-renderer #segmented-dislike-button")];
-  for (const host of hosts) {
-    const button = host.querySelector("button");
-    const rect = button?.getBoundingClientRect();
-    if (button && rect && rect.width > 0 && rect.height > 0) return { host, button };
-  }
-  return null;
-}
-
-function ytqsRemoveEstimatedDislikes() {
-  document.querySelectorAll(".ytqs-estimated-dislikes").forEach((element) => {
-    element.closest("button")?.classList.remove("ytqs-has-dislike-count");
-    element.remove();
-  });
-}
-
-function ytqsInstallDislikeStyle() {
-  if (document.querySelector("#ytqs-dislike-style")) return;
-  const style = document.createElement("style");
-  style.id = "ytqs-dislike-style";
-  style.textContent = `
-    button.ytqs-has-dislike-count.ytSpecButtonShapeNextIconButton{width:auto;min-width:68px;gap:8px;padding-right:16px}
-    .ytqs-estimated-dislikes{display:inline-block;color:inherit;font-family:Roboto,Arial,sans-serif;font-size:1.4rem;font-weight:500;line-height:2rem;pointer-events:none;white-space:nowrap}
-  `;
-  document.documentElement.append(style);
-}
-
-async function ytqsGetEstimatedDislikes(videoId) {
-  if (ytqsDislikeCache.has(videoId)) return ytqsDislikeCache.get(videoId);
-  if ((ytqsDislikeFailureUntil.get(videoId) || 0) > Date.now()) return { ok: false, reason: "temporary-backoff" };
-  if (ytqsDislikePending.has(videoId)) return ytqsDislikePending.get(videoId);
-  const request = chrome.runtime.sendMessage({ type: "YTQS_GET_ESTIMATED_DISLIKES", videoId })
-    .catch(() => ({ ok: false, reason: "message-error" }));
-  ytqsDislikePending.set(videoId, request);
-  try {
-    const response = await request;
-    if (response?.ok) ytqsDislikeCache.set(videoId, response);
-    else ytqsDislikeFailureUntil.set(videoId, Date.now() + 5 * 60 * 1000);
-    return response;
-  } finally {
-    ytqsDislikePending.delete(videoId);
-  }
-}
-
-async function ytqsRenderEstimatedDislikes() {
-  if (!ytqsSettings.estimatedDislikesEnabled || !isVideoPage()) {
-    ytqsRemoveEstimatedDislikes();
-    return;
-  }
-  const videoId = ytqsDislikeVideoId();
-  const control = ytqsFindDislikeControl();
-  if (!videoId || !control) {
-    ytqsRemoveEstimatedDislikes();
-    return;
-  }
-  const current = control.host.querySelector(".ytqs-estimated-dislikes");
-  if (current?.dataset.videoId === videoId) return;
-  current?.remove();
-  control.button.classList.remove("ytqs-has-dislike-count");
-  // Respect YouTube's future native count and other dislike-count extensions.
-  if (/\d/.test(control.host.innerText || "") || control.host.querySelector("[id*='ryd'],[class*='ryd'],[id*='dislike-count'],[class*='dislike-count']")) return;
-
-  const response = await ytqsGetEstimatedDislikes(videoId);
-  if (!response?.ok || ytqsDislikeVideoId() !== videoId || !control.button.isConnected || !ytqsSettings.estimatedDislikesEnabled) return;
-  const latest = ytqsFindDislikeControl();
-  if (!latest || latest.host.querySelector(".ytqs-estimated-dislikes") || /\d/.test(latest.host.innerText || "")) return;
-  ytqsInstallDislikeStyle();
-  const count = document.createElement("span");
-  count.className = "ytqs-estimated-dislikes";
-  count.dataset.videoId = videoId;
-  count.textContent = `≈${ytqsFormatDislikeCount(response.dislikes)}`;
-  count.title = `Estimated dislikes · Return YouTube Dislike: ${Number(response.dislikes).toLocaleString()}`;
-  count.setAttribute("aria-hidden", "true");
-  latest.button.classList.add("ytqs-has-dislike-count");
-  latest.button.firstElementChild?.after(count);
-}
-
-function ytqsScheduleDislikeScan() {
-  clearTimeout(ytqsDislikeScanTimer);
-  ytqsDislikeScanTimer = setTimeout(ytqsRenderEstimatedDislikes, 220);
-}
-
 function ytqsShortsVideoId(card) {
   const href = card?.querySelector?.('a[href^="/shorts/"]')?.getAttribute("href") || "";
   return href.match(/^\/shorts\/([^/?]+)/)?.[1] || "";
@@ -502,13 +398,9 @@ function ytqsInstallShortsCardObservers() {
       if (entry.isIntersecting) ytqsRenderShortsChannelName(entry.target);
     });
   }, { rootMargin: "600px 0px" });
-  ytqsShortsMutationObserver = new MutationObserver(() => {
-    ytqsScheduleShortsCardScan();
-    ytqsScheduleDislikeScan();
-  });
+  ytqsShortsMutationObserver = new MutationObserver(ytqsScheduleShortsCardScan);
   ytqsShortsMutationObserver.observe(document.documentElement, { childList: true, subtree: true });
   ytqsScheduleShortsCardScan();
-  ytqsScheduleDislikeScan();
 }
 
 function isTypingTarget(target) {
@@ -689,7 +581,6 @@ chrome.storage.onChanged.addListener((changes, area) => {
   ytqsSettings = ytqsNormalizeSettings(changes.ytQuickSettings.newValue);
   refreshContextAndApply();
   ytqsScheduleShortsCardScan();
-  ytqsScheduleDislikeScan();
 });
 
 injectPageBridge();
@@ -703,8 +594,5 @@ document.addEventListener("yt-navigate-finish", scheduleRefresh, true);
 document.addEventListener("yt-page-data-updated", scheduleRefresh, true);
 document.addEventListener("yt-navigate-finish", ytqsScheduleShortsCardScan, true);
 document.addEventListener("yt-page-data-updated", ytqsScheduleShortsCardScan, true);
-document.addEventListener("yt-navigate-finish", ytqsScheduleDislikeScan, true);
-document.addEventListener("yt-page-data-updated", ytqsScheduleDislikeScan, true);
 window.addEventListener("popstate", scheduleRefresh);
 window.addEventListener("popstate", ytqsScheduleShortsCardScan);
-window.addEventListener("popstate", ytqsScheduleDislikeScan);
