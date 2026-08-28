@@ -65,8 +65,13 @@ const { chromium } = require("playwright");
   await page.getByRole("radio", { name: "常にオフ" }).click();
   assert.equal(await page.locator("#channelTheaterMode .selected").innerText(), "常にオフ");
   assert.equal(await page.evaluate(() => savedSettings.at(-1).ytQuickSettings.channels.channelA.regular.theaterModeOverride), "off");
+  const regularSettings = await page.locator(".settings-card").boundingBox();
+  const regularCopy = await page.locator(".copy-card").boundingBox();
   const regularChannel = await page.locator("#channelCard").boundingBox();
   const regularShortcut = await page.locator("#shortcutHint").boundingBox();
+  assert.ok(regularSettings && regularCopy && regularChannel, "regular-video settings, copy action, and channel settings should render");
+  assert.ok(regularCopy.y >= regularSettings.y + regularSettings.height - 1, "copy action should stay below regular-video settings");
+  assert.ok(regularChannel.y >= regularCopy.y + regularCopy.height - 1, "channel settings should stay below the copy action");
   assert.ok(regularChannel && regularShortcut && regularShortcut.y >= regularChannel.y + regularChannel.height - 1, "regular-video shortcuts should stay below channel settings");
 
   await page.locator("[data-content-type='shorts']").click();
@@ -82,9 +87,12 @@ const { chromium } = require("playwright");
   assert.equal(await page.locator("#shortsArrowKeysEnabled").isChecked(), false);
   assert.equal(await page.locator("#shortsChannelNamesEnabled").isChecked(), true);
   const shortsSettings = await page.locator(".settings-card").boundingBox();
+  const shortsCopy = await page.locator(".copy-card").boundingBox();
   const shortsShortcut = await page.locator("#shortcutHint").boundingBox();
   const shortsChannel = await page.locator("#channelCard").boundingBox();
-  assert.ok(shortsSettings && shortsShortcut && shortsChannel, "Shorts layout regions should render");
+  assert.ok(shortsSettings && shortsCopy && shortsShortcut && shortsChannel, "Shorts layout regions should render");
+  assert.ok(shortsCopy.y >= shortsSettings.y + shortsSettings.height - 1, "copy action should stay below Shorts settings");
+  assert.ok(shortsChannel.y >= shortsCopy.y + shortsCopy.height - 1, "Shorts channel settings should stay below the copy action");
   assert.ok(shortsChannel.y >= shortsSettings.y + shortsSettings.height - 1, "Shorts channel settings should follow the global settings");
   assert.ok(shortsShortcut.y >= shortsChannel.y + shortsChannel.height - 1, "Shorts shortcuts should stay below channel settings");
 
