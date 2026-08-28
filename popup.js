@@ -8,6 +8,7 @@ const PROFILE_KEYS = ["regular", "shorts"];
 const LANGUAGES = ["system", "zh-Hant", "en", "ja"];
 const SHORTS_SEEK_SECONDS = [3, 5, 10];
 const THEATER_OVERRIDES = ["inherit", "on", "off"];
+const DISLIKE_API_ORIGIN = "https://returnyoutubedislikeapi.com/*";
 
 const MESSAGES = {
   "zh-Hant": {
@@ -23,6 +24,7 @@ const MESSAGES = {
     shortsSeekSeconds: "快進秒數", secondsUnit: "秒", shortsArrowKeysTitle: "啟用 Shorts 左右方向鍵",
     shortsArrowKeysDescription: "控制 ←／→ 快退快進，0 回片頭不受影響",
     shortsChannelNamesTitle: "首頁 Shorts 顯示頻道名稱", shortsChannelNamesDescription: "在 Shorts 卡片補上可點擊的頻道名稱",
+    estimatedDislikesTitle: "顯示預估踩數", estimatedDislikesDescription: "在倒讚按鈕旁顯示第三方推算數字", estimatedDislikesDenied: "未授予第三方資料權限，功能維持關閉",
     globalTheaterTitle: "自動開啟劇院模式", globalTheaterDescription: "進入一般影片時自動切換為劇院模式",
     channelTheater: "這個頻道的劇院模式", theaterInherit: "跟隨全局", theaterOn: "強制開啟", theaterOff: "強制關閉",
     connected: "已連線到目前影片", disconnected: "請開啟 YouTube 影片或 Shorts", languageLabel: "介面語言",
@@ -44,6 +46,7 @@ const MESSAGES = {
     shortsSeekSeconds: "Seek interval", secondsUnit: "sec", shortsArrowKeysTitle: "Enable Shorts arrow keys",
     shortsArrowKeysDescription: "Controls ←/→ seeking; 0 always returns to the start",
     shortsChannelNamesTitle: "Show channel names on Home Shorts", shortsChannelNamesDescription: "Add a clickable channel name to Shorts cards on the Home page",
+    estimatedDislikesTitle: "Show estimated dislikes", estimatedDislikesDescription: "Show a third-party estimate beside the dislike button", estimatedDislikesDenied: "Third-party data permission was not granted",
     globalTheaterTitle: "Automatically open Theater mode", globalTheaterDescription: "Switch standard videos to Theater mode when they open",
     channelTheater: "Theater mode for this channel", theaterInherit: "Follow global", theaterOn: "Force on", theaterOff: "Force off",
     connected: "Connected to the current video", disconnected: "Open a YouTube video or Short", languageLabel: "Interface language",
@@ -65,6 +68,7 @@ const MESSAGES = {
     shortsSeekSeconds: "移動秒数", secondsUnit: "秒", shortsArrowKeysTitle: "ショートの左右キーを有効化",
     shortsArrowKeysDescription: "←／→ の移動を制御。0 の先頭移動は常に有効",
     shortsChannelNamesTitle: "ホームのショートにチャンネル名を表示", shortsChannelNamesDescription: "ショートのカードにクリック可能なチャンネル名を追加します",
+    estimatedDislikesTitle: "低評価の推定数を表示", estimatedDislikesDescription: "低評価ボタンの横に第三者による推定数を表示します", estimatedDislikesDenied: "外部データの権限が許可されなかったためオフのままです",
     globalTheaterTitle: "シアターモードを自動的に有効化", globalTheaterDescription: "通常動画を開いたときにシアターモードへ切り替えます",
     channelTheater: "このチャンネルのシアターモード", theaterInherit: "全体設定に従う", theaterOn: "常にオン", theaterOff: "常にオフ",
     connected: "現在の動画に接続しました", disconnected: "YouTube 動画またはショートを開いてください", languageLabel: "表示言語",
@@ -78,6 +82,7 @@ const MESSAGES = {
 const DEFAULT_PROFILE = { speed: 1, quality: "hd1080", premiumQualityEnabled: false };
 const DEFAULT_SETTINGS = {
   language: "system",
+  estimatedDislikesEnabled: false,
   global: { ...DEFAULT_PROFILE, theaterModeEnabled: false },
   shorts: { ...DEFAULT_PROFILE },
   shortsControls: { seekSeconds: 5, arrowKeysEnabled: true, channelNamesEnabled: true },
@@ -123,6 +128,7 @@ function normalizeSettings(value) {
   }
   return {
     language: LANGUAGES.includes(value?.language) ? value.language : "system",
+    estimatedDislikesEnabled: value?.estimatedDislikesEnabled === true,
     global,
     shorts,
     shortsControls: {
@@ -198,6 +204,9 @@ function applyTranslations() {
   $("#shortsChannelNamesTitle").textContent = t("shortsChannelNamesTitle");
   $("#shortsChannelNamesDescription").textContent = t("shortsChannelNamesDescription");
   $("#shortsChannelNamesLabel").textContent = t("shortsChannelNamesTitle");
+  $("#estimatedDislikesTitle").textContent = t("estimatedDislikesTitle");
+  $("#estimatedDislikesDescription").textContent = t("estimatedDislikesDescription");
+  $("#estimatedDislikesLabel").textContent = t("estimatedDislikesTitle");
   $("#globalTheaterTitle").textContent = t("globalTheaterTitle");
   $("#globalTheaterDescription").textContent = t("globalTheaterDescription");
   $("#globalTheaterLabel").textContent = t("globalTheaterTitle");
@@ -323,6 +332,7 @@ function renderShortsControls() {
   });
   $("#shortsArrowKeysEnabled").checked = settings.shortsControls.arrowKeysEnabled;
   $("#shortsChannelNamesEnabled").checked = settings.shortsControls.channelNamesEnabled;
+  $("#estimatedDislikesEnabled").checked = settings.estimatedDislikesEnabled;
 }
 
 function channelInitial(name) {
@@ -419,6 +429,37 @@ $("#shortsChannelNamesEnabled").addEventListener("change", async (event) => {
   await persist();
 });
 
+$("#estimatedDislikesEnabled").addEventListener("change", async (event) => {
+  const toggle = event.currentTarget;
+  toggle.disabled = true;
+  try {
+    if (toggle.checked) {
+      let granted = false;
+      try {
+        granted = await chrome.permissions.request({ origins: [DISLIKE_API_ORIGIN] });
+      } catch {
+        granted = false;
+      }
+      if (!granted) {
+        toggle.checked = false;
+        $("#estimatedDislikesDescription").textContent = t("estimatedDislikesDenied");
+        setTimeout(() => {
+          $("#estimatedDislikesDescription").textContent = t("estimatedDislikesDescription");
+        }, 2400);
+        return;
+      }
+      settings.estimatedDislikesEnabled = true;
+      await persist();
+      return;
+    }
+    settings.estimatedDislikesEnabled = false;
+    await persist();
+    await chrome.permissions.remove({ origins: [DISLIKE_API_ORIGIN] });
+  } finally {
+    toggle.disabled = false;
+  }
+});
+
 $("#globalTheaterEnabled").addEventListener("change", async (event) => {
   settings.global.theaterModeEnabled = event.target.checked;
   await persist();
@@ -467,6 +508,13 @@ $("#removeChannel").addEventListener("click", async () => {
 async function init() {
   const stored = await chrome.storage.sync.get("ytQuickSettings");
   settings = normalizeSettings(stored.ytQuickSettings);
+  if (settings.estimatedDislikesEnabled) {
+    const granted = await chrome.permissions.contains({ origins: [DISLIKE_API_ORIGIN] });
+    if (!granted) {
+      settings.estimatedDislikesEnabled = false;
+      await chrome.storage.sync.set({ ytQuickSettings: settings });
+    }
+  }
   $("#languageSelect").value = settings.language;
   context = await getPageContext();
   activeContentType = context?.contentType === "shorts" ? "shorts" : "regular";

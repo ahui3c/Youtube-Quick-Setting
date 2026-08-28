@@ -18,14 +18,16 @@ Key features:
 - Playback speeds: 0.7×, 1×, 1.25×, 2×, and 3×
 - Quality targets: Highest available, 4K, and 1080p
 - Falls back to the highest available quality that does not exceed your target
-- Prefers 1080p Premium when it is available
+- Premium enhanced quality is a separate opt-in and is never selected by default
 - Per-channel profiles override global defaults
 - A two-second on-video notice confirms applied channel settings
 - Use + / − to change speed and * to return instantly to 1×
 - In Shorts, use ← / → to seek 3, 5 (default), or 10 seconds, optionally disable the arrow keys, and press 0 to return to the beginning
+- Adds clickable channel names to Shorts cards on the Home page
+- Optionally displays an ≈-marked estimate from Return YouTube Dislike
 - On-screen speed feedback and synchronized YouTube settings-menu values
 - Traditional Chinese, English, and Japanese UI; follow the system language or choose manually
 
-The extension works only on YouTube. It contains no ads, trackers, analytics, remote code, or developer-operated data collection.
+The extension contains no ads, trackers, analytics, remote code, or developer-operated data collection. Estimated dislikes are off by default; enabling them requests optional Return YouTube Dislike API access and sends only the public video ID, not user identity or rating actions.
 
 YouTube is a trademark of Google LLC. This independent extension is not affiliated with, endorsed by, or sponsored by Google or YouTube.

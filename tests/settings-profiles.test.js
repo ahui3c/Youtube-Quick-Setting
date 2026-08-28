@@ -24,6 +24,7 @@ const migrated = normalizeSettings({
     channelA: { name: "Channel A", speed: 2, quality: "highest" }
   }
 });
+assert.equal(migrated.estimatedDislikesEnabled, false);
 
 assert.deepEqual(
   JSON.parse(JSON.stringify(migrated.shorts)),
@@ -44,6 +45,7 @@ assert.deepEqual(
 
 const independent = normalizeSettings({
   language: "ja",
+  estimatedDislikesEnabled: true,
   global: { speed: 1, quality: "hd1080", premiumQualityEnabled: true, theaterModeEnabled: true },
   shorts: { speed: 3, quality: "highest" },
   shortsControls: { seekSeconds: 10, arrowKeysEnabled: false, channelNamesEnabled: false },
@@ -55,6 +57,7 @@ const independent = normalizeSettings({
   }
 });
 assert.equal(independent.language, "ja");
+assert.equal(independent.estimatedDislikesEnabled, true);
 assert.equal(independent.global.speed, 1);
 assert.equal(independent.global.theaterModeEnabled, true);
 assert.equal(independent.global.premiumQualityEnabled, true);
