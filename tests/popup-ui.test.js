@@ -93,7 +93,7 @@ const { chromium } = require("playwright");
   assert.match(await page.locator("#shortcutDescription").innerText(), /0 restarts/);
   assert.match(await page.locator("#shortcutDescription").innerText(), /10s/);
   assert.equal(await page.locator("#shortcutKeys kbd").count(), 7);
-  assert.deepEqual(await page.locator("#shortcutKeys kbd").allTextContents(), ["←", "→", "0", "−", "＋", "＊", "C"]);
+  assert.deepEqual(await page.locator("#shortcutKeys kbd").allTextContents(), ["←", "→", "0", "−", "＋", "＊", "S"]);
 
   await page.getByRole("radio", { name: "3 sec" }).click();
   assert.equal(await page.locator("#shortsSeekSeconds .selected").innerText(), "3 sec");

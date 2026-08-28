@@ -9,7 +9,7 @@ assert.match(source, /event\.key === "ArrowLeft"/);
 assert.match(source, /event\.key === "ArrowRight"/);
 assert.match(source, /event\.key === "0"/);
 assert.match(source, /event\.code === "Numpad0"/);
-assert.match(source, /event\.code === "KeyC"/);
+assert.match(source, /event\.code === "KeyS"/);
 source = source.replace(/^\s*show(?:Speed|Seek|Copy)Overlay\([^;]+;\r?$/gm, "");
 source = source.replace(/\ndocument\.addEventListener\("keydown"[\s\S]*$/, "\nthis.__contentTest = { contentType, isVideoPage, effectiveSettings, restoreNormalSpeed, seekShorts, handleKeyboardShortcut, currentVideoInfo, copyCurrentVideoInfo, ytqsNormalizeSettings, ytqsShortsVideoId, ytqsNormalizeShortsAuthor, ytqsDeduplicateShortsChannelNames, setSettings: (value) => { ytqsSettings = ytqsNormalizeSettings(value); }, setContext: (value) => { ytqsContext = value; } };" );
 
@@ -164,7 +164,7 @@ const typingTarget = keyboardEvent("ArrowRight");
 typingTarget.target = new MockHTMLElement("INPUT");
 assert.equal(api.handleKeyboardShortcut(typingTarget), false);
 assert.equal(video.currentTime, 0);
-const typingCopy = keyboardEvent("c", "KeyC");
+const typingCopy = keyboardEvent("s", "KeyS");
 typingCopy.target = new MockHTMLElement("TEXTAREA");
 assert.equal(api.handleKeyboardShortcut(typingCopy), false);
 
@@ -184,7 +184,7 @@ assert.deepEqual(JSON.parse(JSON.stringify(info)), {
   url: "https://www.youtube.com/watch?v=qRjSmLc2cOs",
   text: "Test Video\nhttps://www.youtube.com/watch?v=qRjSmLc2cOs"
 });
-const copy = keyboardEvent("c", "KeyC");
+const copy = keyboardEvent("s", "KeyS");
 assert.equal(api.handleKeyboardShortcut(copy), true);
 assert.equal(copy.preventDefaultCalled, true);
 assert.equal(copy.stopImmediatePropagationCalled, true);

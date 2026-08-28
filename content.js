@@ -631,7 +631,7 @@ function handleKeyboardShortcut(event) {
   const isPlus = event.key === "+" || event.code === "NumpadAdd";
   const isMinus = event.key === "-" || event.key === "−" || event.code === "NumpadSubtract";
   const isReset = event.key === "*" || event.code === "NumpadMultiply";
-  const isCopy = event.code === "KeyC" || event.key?.toLowerCase() === "c";
+  const isCopy = event.code === "KeyS" || event.key?.toLowerCase() === "s";
   if (!isSeekBackward && !isSeekForward && !isSeekStart && !isPlus && !isMinus && !isReset && !isCopy) return false;
   if (event.repeat && !isSeekBackward && !isSeekForward) return false;
   if ((isSeekBackward || isSeekForward || isSeekStart) && isSeekBlockedTarget(event.target)) return false;
