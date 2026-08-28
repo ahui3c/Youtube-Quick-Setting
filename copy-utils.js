@@ -5,8 +5,6 @@
     "timestamp-url",
     "markdown",
     "html",
-    "url-only",
-    "title-only",
     "channel-title-url"
   ];
 
@@ -35,11 +33,9 @@
     const url = String(info?.url || "").trim();
     const channelName = String(info?.channelName || "").trim();
     if (!title || !url) return "";
-    if (format === "timestamp-url") return timestampUrl(url, info?.currentTime);
+    if (format === "timestamp-url") return `${title}\n${timestampUrl(url, info?.currentTime)}`;
     if (format === "markdown") return `[${escapeMarkdown(title)}](${url})`;
     if (format === "html") return `<a href="${escapeHtml(url)}">${escapeHtml(title)}</a>`;
-    if (format === "url-only") return url;
-    if (format === "title-only") return title;
     if (format === "channel-title-url") return [channelName, title, url].filter(Boolean).join("\n");
     return `${title}\n${url}`;
   }

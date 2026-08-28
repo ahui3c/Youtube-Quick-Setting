@@ -11,11 +11,12 @@ const info = {
 };
 
 assert.equal(YTQSCopy.formatVideoInfo(info, "title-url"), 'A <Useful> "Video"\nhttps://www.youtube.com/watch?v=qRjSmLc2cOs');
-assert.equal(YTQSCopy.formatVideoInfo(info, "timestamp-url"), "https://www.youtube.com/watch?v=qRjSmLc2cOs&t=125s");
+assert.equal(YTQSCopy.formatVideoInfo(info, "timestamp-url"), 'A <Useful> "Video"\nhttps://www.youtube.com/watch?v=qRjSmLc2cOs&t=125s');
 assert.equal(YTQSCopy.formatVideoInfo(info, "markdown"), '[A <Useful> "Video"](https://www.youtube.com/watch?v=qRjSmLc2cOs)');
 assert.equal(YTQSCopy.formatVideoInfo(info, "html"), '<a href="https://www.youtube.com/watch?v=qRjSmLc2cOs">A &lt;Useful&gt; &quot;Video&quot;</a>');
-assert.equal(YTQSCopy.formatVideoInfo(info, "url-only"), info.url);
-assert.equal(YTQSCopy.formatVideoInfo(info, "title-only"), info.title);
+assert.equal(YTQSCopy.FORMATS.includes("url-only"), false);
+assert.equal(YTQSCopy.FORMATS.includes("title-only"), false);
+assert.equal(YTQSCopy.formatVideoInfo(info, "url-only"), 'A <Useful> "Video"\nhttps://www.youtube.com/watch?v=qRjSmLc2cOs');
 assert.equal(YTQSCopy.formatVideoInfo(info, "channel-title-url"), `Test Channel\n${info.title}\n${info.url}`);
 assert.equal(YTQSCopy.timestampUrl("https://www.youtube.com/shorts/qRjSmLc2cOs", 12), "https://www.youtube.com/shorts/qRjSmLc2cOs?t=12s");
 assert.match(YTQSCopy.summarize("x".repeat(120)), /…$/);

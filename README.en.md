@@ -18,8 +18,8 @@ A Chrome extension that automatically applies playback speed, video quality, and
 - Standard videos can open automatically in Theater mode, with per-channel follow-global, force-on, or force-off controls
 - A two-second player notice shows the active channel speed and quality
 - Press `+` or `-` to change speed, and `*` to return immediately to `1×`
-- Press `S` or the main popup button to copy video info in the current default format; use the arrow for seven formats
-- Supports timestamp URLs, Markdown, HTML, URL only, title only, and channel + title + URL
+- Press `S` or the main popup button to copy video info in the current default format; use the arrow for five formats
+- Supports title + timestamp URL, Markdown, HTML, and channel + title + URL; `Shift+S` copies title + current timestamp URL directly
 - Export or import JSON settings with merge/replace preview and an automatic pre-import restore point
 - Keeps YouTube's native speed and quality menus in sync whenever the player permits it
 - De-duplicates identical per-video quality applications to prevent repeated loading at the beginning

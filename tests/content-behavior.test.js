@@ -201,7 +201,7 @@ assert.equal(api.handleKeyboardShortcut(timestampCopy), true);
 setImmediate(() => {
   assert.deepEqual(clipboardWrites, [
     "Test Video\nhttps://www.youtube.com/watch?v=qRjSmLc2cOs",
-    "https://www.youtube.com/watch?v=qRjSmLc2cOs&t=125s"
+    "Test Video\nhttps://www.youtube.com/watch?v=qRjSmLc2cOs&t=125s"
   ]);
   console.log("CONTENT_BEHAVIOR_TESTS_OK");
 });
