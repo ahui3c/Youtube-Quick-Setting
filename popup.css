@@ -343,15 +343,26 @@ legend {
 }
 
 .copy-format-toggle {
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   min-width: 42px;
+  padding: 0;
   border: 0;
   border-left: 1px solid var(--line);
   background: transparent;
   color: #c9cacf;
   cursor: pointer;
   font-size: 20px;
+}
+
+.copy-format-chevron {
+  display: block;
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
 }
 
 .copy-format-toggle:hover:not(:disabled),
