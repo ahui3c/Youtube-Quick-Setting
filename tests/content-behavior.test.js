@@ -12,7 +12,7 @@ assert.match(source, /event\.key === "0"/);
 assert.match(source, /event\.code === "Numpad0"/);
 assert.match(source, /event\.code === "KeyS"/);
 source = source.replace(/^\s*show(?:Speed|Seek|Copy)Overlay\([^;]+;\r?$/gm, "");
-source = source.replace(/\ndocument\.addEventListener\("keydown"[\s\S]*$/, "\nthis.__contentTest = { contentType, isVideoPage, effectiveSettings, restoreNormalSpeed, seekShorts, handleKeyboardShortcut, currentVideoInfo, copyCurrentVideoInfo, ytqsNormalizeSettings, ytqsShortsVideoId, ytqsNormalizeShortsAuthor, ytqsDeduplicateShortsChannelNames, setSettings: (value) => { ytqsSettings = ytqsNormalizeSettings(value); }, setContext: (value) => { ytqsContext = value; } };" );
+source = source.replace(/\ndocument\.addEventListener\("keydown"[\s\S]*$/, "\nthis.__contentTest = { contentType, isVideoPage, effectiveSettings, restoreNormalSpeed, seekShorts, handleKeyboardShortcut, currentVideoInfo, copyCurrentVideoInfo, ytqsNormalizeSettings, ytqsShortsVideoId, ytqsNormalizeShortsAuthor, ytqsExtractShortsPublishDate, ytqsFormatShortsPublishTime, ytqsDeduplicateShortsChannelNames, ytqsDeduplicateShortsPublishTimes, setSettings: (value) => { ytqsSettings = ytqsNormalizeSettings(value); }, setContext: (value) => { ytqsContext = value; } };" );
 
 const messages = [];
 const clipboardWrites = [];
@@ -82,6 +82,20 @@ assert.equal(api.ytqsDeduplicateShortsChannelNames({
 assert.equal(firstChannelMarker.removed, false);
 assert.equal(duplicateChannelMarker.removed, true);
 assert.equal(staleChannelMarker.removed, true);
+assert.equal(api.ytqsExtractShortsPublishDate('{"publishDate":"2026-08-27T00:00:00Z"}'), "2026-08-27T00:00:00Z");
+assert.equal(api.ytqsExtractShortsPublishDate('{"uploadDate":"2026-08-26"}'), "2026-08-26");
+assert.equal(api.ytqsExtractShortsPublishDate('{"publishDate":"not-a-date"}'), "");
+assert.equal(api.ytqsFormatShortsPublishTime("2026-08-27T00:00:00Z", Date.parse("2026-08-29T00:00:00Z")), "2 days ago");
+assert.equal(api.ytqsFormatShortsPublishTime("2026-08-29", Date.parse("2026-08-29T08:00:00Z")), "today");
+const firstPublishMarker = { dataset: { videoId: "abc123" }, removed: false, remove() { this.removed = true; } };
+const duplicatePublishMarker = { dataset: { videoId: "abc123" }, removed: false, remove() { this.removed = true; } };
+const stalePublishMarker = { dataset: { videoId: "old456" }, removed: false, remove() { this.removed = true; } };
+assert.equal(api.ytqsDeduplicateShortsPublishTimes({
+  querySelectorAll: () => [firstPublishMarker, duplicatePublishMarker, stalePublishMarker]
+}, "abc123"), firstPublishMarker);
+assert.equal(firstPublishMarker.removed, false);
+assert.equal(duplicatePublishMarker.removed, true);
+assert.equal(stalePublishMarker.removed, true);
 
 api.setSettings({
   global: { speed: 1, quality: "hd1080", premiumQualityEnabled: true, theaterModeEnabled: true },

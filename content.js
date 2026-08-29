@@ -3,7 +3,7 @@ const YTQS_DEFAULTS = {
   language: "system",
   global: { speed: 1, quality: "hd1080", premiumQualityEnabled: false, theaterModeEnabled: false },
   shorts: { speed: 1, quality: "hd1080", premiumQualityEnabled: false },
-  shortsControls: { seekSeconds: 5, arrowKeysEnabled: true, channelNamesEnabled: true },
+  shortsControls: { seekSeconds: 5, arrowKeysEnabled: true, channelNamesEnabled: true, publishTimeEnabled: true },
   copy: { defaultFormat: "title-url" },
   channels: {}
 };
@@ -30,9 +30,9 @@ const YTQS_QUALITY_LABELS = {
 };
 
 const YTQS_MESSAGES = {
-  "zh-Hant": { channelSettings: "頻道指定設定", speed: "速度", quality: "解析度", playbackSpeed: "播放速度", seconds: "秒", backToStart: "回到片頭", copiedVideoInfo: "已複製影片資訊", copyFailed: "複製失敗" },
-  en: { channelSettings: "Channel settings", speed: "Speed", quality: "Quality", playbackSpeed: "Playback speed", seconds: "sec", backToStart: "Back to start", copiedVideoInfo: "Video info copied", copyFailed: "Copy failed" },
-  ja: { channelSettings: "チャンネル設定", speed: "速度", quality: "画質", playbackSpeed: "再生速度", seconds: "秒", backToStart: "先頭に戻る", copiedVideoInfo: "動画情報をコピーしました", copyFailed: "コピーに失敗しました" }
+  "zh-Hant": { channelSettings: "頻道指定設定", speed: "速度", quality: "解析度", playbackSpeed: "播放速度", seconds: "秒", backToStart: "回到片頭", copiedVideoInfo: "已複製影片資訊", copyFailed: "複製失敗", today: "今天" },
+  en: { channelSettings: "Channel settings", speed: "Speed", quality: "Quality", playbackSpeed: "Playback speed", seconds: "sec", backToStart: "Back to start", copiedVideoInfo: "Video info copied", copyFailed: "Copy failed", today: "today" },
+  ja: { channelSettings: "チャンネル設定", speed: "速度", quality: "画質", playbackSpeed: "再生速度", seconds: "秒", backToStart: "先頭に戻る", copiedVideoInfo: "動画情報をコピーしました", copyFailed: "コピーに失敗しました", today: "今日" }
 };
 
 function ytqsNormalizeProfile(value, fallback = YTQS_DEFAULTS.global) {
@@ -73,7 +73,8 @@ function ytqsNormalizeSettings(value) {
     shortsControls: {
       seekSeconds: YTQS_SEEK_SECONDS.includes(Number(value?.shortsControls?.seekSeconds)) ? Number(value.shortsControls.seekSeconds) : 5,
       arrowKeysEnabled: value?.shortsControls?.arrowKeysEnabled !== false,
-      channelNamesEnabled: value?.shortsControls?.channelNamesEnabled !== false
+      channelNamesEnabled: value?.shortsControls?.channelNamesEnabled !== false,
+      publishTimeEnabled: value?.shortsControls?.publishTimeEnabled !== false
     },
     copy: {
       defaultFormat: YTQSCopy.FORMATS.includes(value?.copy?.defaultFormat) ? value.copy.defaultFormat : YTQSCopy.DEFAULT_FORMAT
@@ -320,33 +321,81 @@ async function ytqsLoadShortsAuthor(videoId) {
   return ytqsNormalizeShortsAuthor(await response.json());
 }
 
+function ytqsExtractShortsPublishDate(source) {
+  const html = typeof source === "string" ? source : "";
+  const match = html.match(/"publishDate"\s*:\s*"([^"]+)"/)
+    || html.match(/"uploadDate"\s*:\s*"([^"]+)"/)
+    || html.match(/itemprop="uploadDate"\s+content="([^"]+)"/);
+  if (!match) return "";
+  const value = match[1].replaceAll("\\u0026", "&");
+  return Number.isFinite(Date.parse(value)) ? value : "";
+}
+
+async function ytqsLoadShortsPublishDate(videoId) {
+  const response = await fetch(`/watch?v=${encodeURIComponent(videoId)}`, {
+    credentials: "omit",
+    headers: { Accept: "text/html" }
+  });
+  if (!response.ok) return "";
+  return ytqsExtractShortsPublishDate(await response.text());
+}
+
+function ytqsFormatShortsPublishTime(value, now = Date.now()) {
+  const timestamp = Date.parse(value);
+  if (!Number.isFinite(timestamp)) return "";
+  const elapsed = Math.max(0, Number(now) - timestamp);
+  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(value);
+  if (dateOnly && elapsed < 86400000) return ytqsText("today");
+  const choices = [
+    [3600000, 60000, "minute"],
+    [86400000, 3600000, "hour"],
+    [604800000, 86400000, "day"],
+    [2629800000, 604800000, "week"],
+    [31557600000, 2629800000, "month"],
+    [Infinity, 31557600000, "year"]
+  ];
+  const [, divisor, unit] = choices.find(([limit]) => elapsed < limit);
+  const amount = Math.max(1, Math.floor(elapsed / divisor));
+  const language = ytqsLanguage();
+  const locale = language === "zh-Hant" ? "zh-TW" : language;
+  return new Intl.RelativeTimeFormat(locale, { numeric: "always" }).format(-amount, unit);
+}
+
 function ytqsPumpShortsMetadataQueue() {
   while (ytqsShortsMetadataRequests < 4 && ytqsShortsMetadataQueue.length) {
     const task = ytqsShortsMetadataQueue.shift();
     ytqsShortsMetadataRequests += 1;
-    ytqsLoadShortsAuthor(task.videoId)
+    task.load()
       .catch(() => null)
-      .then((author) => {
-        ytqsShortsMetadataCache.set(task.videoId, author);
-        task.resolve(author);
+      .then((value) => {
+        ytqsShortsMetadataCache.set(task.key, value);
+        task.resolve(value);
       })
       .finally(() => {
         ytqsShortsMetadataRequests -= 1;
-        ytqsShortsMetadataPending.delete(task.videoId);
+        ytqsShortsMetadataPending.delete(task.key);
         ytqsPumpShortsMetadataQueue();
       });
   }
 }
 
-function ytqsGetShortsAuthor(videoId) {
-  if (ytqsShortsMetadataCache.has(videoId)) return Promise.resolve(ytqsShortsMetadataCache.get(videoId));
-  if (ytqsShortsMetadataPending.has(videoId)) return ytqsShortsMetadataPending.get(videoId);
+function ytqsGetShortsMetadata(key, load) {
+  if (ytqsShortsMetadataCache.has(key)) return Promise.resolve(ytqsShortsMetadataCache.get(key));
+  if (ytqsShortsMetadataPending.has(key)) return ytqsShortsMetadataPending.get(key);
   const request = new Promise((resolve) => {
-    ytqsShortsMetadataQueue.push({ videoId, resolve });
+    ytqsShortsMetadataQueue.push({ key, load, resolve });
     ytqsPumpShortsMetadataQueue();
   });
-  ytqsShortsMetadataPending.set(videoId, request);
+  ytqsShortsMetadataPending.set(key, request);
   return request;
+}
+
+function ytqsGetShortsAuthor(videoId) {
+  return ytqsGetShortsMetadata(`author:${videoId}`, () => ytqsLoadShortsAuthor(videoId));
+}
+
+function ytqsGetShortsPublishDate(videoId) {
+  return ytqsGetShortsMetadata(`publish:${videoId}`, () => ytqsLoadShortsPublishDate(videoId));
 }
 
 function ytqsInstallShortsChannelStyle() {
@@ -356,12 +405,22 @@ function ytqsInstallShortsChannelStyle() {
   style.textContent = `
     .ytqs-shorts-channel-name{display:block;max-width:calc(100% - 36px);margin:3px 36px 0 0;color:var(--yt-spec-text-secondary,#606060);font-family:Roboto,Arial,sans-serif;font-size:1.4rem;font-weight:400;line-height:2rem;overflow:hidden;text-decoration:none;text-overflow:ellipsis;white-space:nowrap}
     .ytqs-shorts-channel-name:hover{color:var(--yt-spec-text-primary,#0f0f0f);text-decoration:none}
+    .ytqs-shorts-publish-time{white-space:nowrap}
   `;
   document.documentElement.append(style);
 }
 
 function ytqsDeduplicateShortsChannelNames(card, videoId) {
   const markers = [...card.querySelectorAll(".ytqs-shorts-channel-name")];
+  const current = markers.find((marker) => marker.dataset.videoId === videoId) || null;
+  markers.forEach((marker) => {
+    if (marker !== current) marker.remove();
+  });
+  return current;
+}
+
+function ytqsDeduplicateShortsPublishTimes(card, videoId) {
+  const markers = [...card.querySelectorAll(".ytqs-shorts-publish-time")];
   const current = markers.find((marker) => marker.dataset.videoId === videoId) || null;
   markers.forEach((marker) => {
     if (marker !== current) marker.remove();
@@ -396,17 +455,47 @@ async function ytqsRenderShortsChannelName(card) {
   }
 }
 
+async function ytqsRenderShortsPublishTime(card) {
+  if (!card?.isConnected || location.pathname !== "/" || ytqsSettings.shortsControls.publishTimeEnabled === false) return;
+  const videoId = ytqsShortsVideoId(card);
+  if (!videoId) return;
+  if (ytqsDeduplicateShortsPublishTimes(card, videoId)) return;
+  if (card.dataset.ytqsPublishRequest === videoId) return;
+  card.dataset.ytqsPublishRequest = videoId;
+  try {
+    const publishDate = await ytqsGetShortsPublishDate(videoId);
+    const label = ytqsFormatShortsPublishTime(publishDate);
+    if (!label || !card.isConnected || ytqsShortsVideoId(card) !== videoId || ytqsSettings.shortsControls.publishTimeEnabled === false) return;
+    if (ytqsDeduplicateShortsPublishTimes(card, videoId)) return;
+    const subhead = card.querySelector(".shortsLockupViewModelHostOutsideMetadataSubhead");
+    if (!subhead) return;
+    const marker = document.createElement("span");
+    marker.className = "ytqs-shorts-publish-time";
+    marker.dataset.videoId = videoId;
+    marker.textContent = ` · ${label}`;
+    subhead.append(marker);
+  } finally {
+    if (card.dataset.ytqsPublishRequest === videoId) delete card.dataset.ytqsPublishRequest;
+  }
+}
+
 function ytqsScanShortsCards() {
-  const enabled = location.pathname === "/" && ytqsSettings.shortsControls.channelNamesEnabled !== false;
-  if (!enabled) {
-    document.querySelectorAll(".ytqs-shorts-channel-name").forEach((element) => element.remove());
+  const onHome = location.pathname === "/";
+  const channelNamesEnabled = onHome && ytqsSettings.shortsControls.channelNamesEnabled !== false;
+  const publishTimeEnabled = onHome && ytqsSettings.shortsControls.publishTimeEnabled !== false;
+  if (!channelNamesEnabled) document.querySelectorAll(".ytqs-shorts-channel-name").forEach((element) => element.remove());
+  if (!publishTimeEnabled) document.querySelectorAll(".ytqs-shorts-publish-time").forEach((element) => element.remove());
+  if (!channelNamesEnabled && !publishTimeEnabled) {
     return;
   }
   ytqsInstallShortsChannelStyle();
   document.querySelectorAll("ytm-shorts-lockup-view-model-v2").forEach((card) => {
     ytqsShortsIntersectionObserver?.observe(card);
     const rect = card.getBoundingClientRect();
-    if (rect.bottom >= -600 && rect.top <= innerHeight + 600) ytqsRenderShortsChannelName(card);
+    if (rect.bottom >= -600 && rect.top <= innerHeight + 600) {
+      if (channelNamesEnabled) ytqsRenderShortsChannelName(card);
+      if (publishTimeEnabled) ytqsRenderShortsPublishTime(card);
+    }
   });
 }
 
@@ -423,7 +512,9 @@ function ytqsInstallShortsCardObservers() {
   }
   ytqsShortsIntersectionObserver = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
-      if (entry.isIntersecting) ytqsRenderShortsChannelName(entry.target);
+      if (!entry.isIntersecting) return;
+      if (ytqsSettings.shortsControls.channelNamesEnabled !== false) ytqsRenderShortsChannelName(entry.target);
+      if (ytqsSettings.shortsControls.publishTimeEnabled !== false) ytqsRenderShortsPublishTime(entry.target);
     });
   }, { rootMargin: "600px 0px" });
   ytqsShortsMutationObserver = new MutationObserver(ytqsScheduleShortsCardScan);

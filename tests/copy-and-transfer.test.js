@@ -40,10 +40,10 @@ const imported = {
   channels: { channelB: { name: "B" } }
 };
 
-const exported = YTQSSettingsTransfer.createExport(current, "1.6.0");
+const exported = YTQSSettingsTransfer.createExport(current, "1.7.0");
 assert.equal(exported.schema, "youtube-quick-setting-settings");
 assert.equal(exported.formatVersion, 2);
-assert.equal(exported.extensionVersion, "1.6.0");
+assert.equal(exported.extensionVersion, "1.7.0");
 assert.deepEqual(YTQSSettingsTransfer.extractImport(exported).rawSettings, current);
 assert.equal(YTQSSettingsTransfer.extractImport(current).formatVersion, 2);
 assert.throws(() => YTQSSettingsTransfer.extractImport({ schema: "other", settings: {} }), /invalid-schema/);

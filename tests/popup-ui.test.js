@@ -22,7 +22,7 @@ const { chromium } = require("playwright");
               language: "system",
               global: { speed: 1, quality: "hd1080", premiumQualityEnabled: false, theaterModeEnabled: true },
               shorts: { speed: 3, quality: "highest" },
-              shortsControls: { seekSeconds: 10, arrowKeysEnabled: false, channelNamesEnabled: true },
+              shortsControls: { seekSeconds: 10, arrowKeysEnabled: false, channelNamesEnabled: true, publishTimeEnabled: true },
               channels: {}
             }
           }),
@@ -33,7 +33,7 @@ const { chromium } = require("playwright");
           set: async (value) => Object.assign(localStore, value)
         }
       },
-      runtime: { getManifest: () => ({ version: "1.6.0" }) },
+      runtime: { getManifest: () => ({ version: "1.7.0" }) },
       tabs: {
         query: async () => [{ id: 1, url: "https://www.youtube.com/watch?v=abc123" }],
         sendMessage: async () => ({
@@ -96,7 +96,7 @@ const { chromium } = require("playwright");
       language: "en",
       global: { speed: 2, quality: "highest", premiumQualityEnabled: false, theaterModeEnabled: false },
       shorts: { speed: 1, quality: "hd1080", premiumQualityEnabled: false },
-      shortsControls: { seekSeconds: 5, arrowKeysEnabled: true, channelNamesEnabled: true },
+      shortsControls: { seekSeconds: 5, arrowKeysEnabled: true, channelNamesEnabled: true, publishTimeEnabled: true },
       copy: { defaultFormat: "url-only" },
       channels: {
         channelB: {
@@ -154,6 +154,7 @@ const { chromium } = require("playwright");
   assert.equal(await page.locator("#shortsSeekSeconds .selected").innerText(), "10 秒");
   assert.equal(await page.locator("#shortsArrowKeysEnabled").isChecked(), false);
   assert.equal(await page.locator("#shortsChannelNamesEnabled").isChecked(), true);
+  assert.equal(await page.locator("#shortsPublishTimeEnabled").isChecked(), true);
   const shortsSettings = await page.locator(".settings-card").boundingBox();
   const shortsCopy = await page.locator(".copy-card").boundingBox();
   const shortsShortcut = await page.locator("#shortcutHint").boundingBox();
@@ -176,9 +177,11 @@ const { chromium } = require("playwright");
   assert.match(await page.locator("#shortcutDescription").innerText(), /3s/);
   await page.locator("#shortsArrowKeysEnabled").check();
   const saved = await page.evaluate(() => savedSettings.at(-1).ytQuickSettings.shortsControls);
-  assert.deepEqual(saved, { seekSeconds: 3, arrowKeysEnabled: true, channelNamesEnabled: true });
+  assert.deepEqual(saved, { seekSeconds: 3, arrowKeysEnabled: true, channelNamesEnabled: true, publishTimeEnabled: true });
   await page.locator("#shortsChannelNamesEnabled").uncheck();
   assert.equal(await page.evaluate(() => savedSettings.at(-1).ytQuickSettings.shortsControls.channelNamesEnabled), false);
+  await page.locator("#shortsPublishTimeEnabled").uncheck();
+  assert.equal(await page.evaluate(() => savedSettings.at(-1).ytQuickSettings.shortsControls.publishTimeEnabled), false);
 
   const masthead = await page.locator(".masthead").boundingBox();
   const title = await page.locator("#appTitle").boundingBox();
