@@ -155,6 +155,7 @@ const { chromium } = require("playwright");
   assert.equal(await page.locator("#shortsArrowKeysEnabled").isChecked(), false);
   assert.equal(await page.locator("#shortsChannelNamesEnabled").isChecked(), true);
   assert.equal(await page.locator("#shortsPublishTimeEnabled").isChecked(), true);
+  assert.equal(await page.locator("#shortsPublishTimeTitle").innerText(), "ショートの公開時刻情報を表示");
   const shortsSettings = await page.locator(".settings-card").boundingBox();
   const shortsCopy = await page.locator(".copy-card").boundingBox();
   const shortsShortcut = await page.locator("#shortcutHint").boundingBox();
@@ -167,6 +168,7 @@ const { chromium } = require("playwright");
 
   await page.locator("#languageSelect").selectOption("en");
   assert.equal(await page.locator("#appTitle").innerText(), "YouTube Quick Speed / Quality Settings");
+  assert.equal(await page.locator("#shortsPublishTimeTitle").innerText(), "Show Shorts publish time");
   assert.match(await page.locator("#shortcutDescription").innerText(), /0 restarts/);
   assert.match(await page.locator("#shortcutDescription").innerText(), /10s/);
   assert.equal(await page.locator("#shortcutKeys kbd").count(), 7);
@@ -202,6 +204,7 @@ const { chromium } = require("playwright");
 
   await page.locator("#languageSelect").selectOption("zh-Hant");
   assert.equal(await page.locator("#appTitle").innerText(), "YouTube 快速設定速度 / 畫質");
+  assert.equal(await page.locator("#shortsPublishTimeTitle").innerText(), "Shorts 顯示發布時間資訊");
 
   const panel = await page.locator(".panel").boundingBox();
   assert.ok(panel && panel.width <= 390, "popup panel should fit the extension width");

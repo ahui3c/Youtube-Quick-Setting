@@ -11,8 +11,9 @@ assert.match(source, /event\.key === "ArrowRight"/);
 assert.match(source, /event\.key === "0"/);
 assert.match(source, /event\.code === "Numpad0"/);
 assert.match(source, /event\.code === "KeyS"/);
+assert.match(source, /ytReelPlayerOverlayViewModelMetadataContainerMetapanel/);
 source = source.replace(/^\s*show(?:Speed|Seek|Copy)Overlay\([^;]+;\r?$/gm, "");
-source = source.replace(/\ndocument\.addEventListener\("keydown"[\s\S]*$/, "\nthis.__contentTest = { contentType, isVideoPage, effectiveSettings, restoreNormalSpeed, seekShorts, handleKeyboardShortcut, currentVideoInfo, copyCurrentVideoInfo, ytqsNormalizeSettings, ytqsShortsVideoId, ytqsNormalizeShortsAuthor, ytqsExtractShortsPublishDate, ytqsFormatShortsPublishTime, ytqsDeduplicateShortsChannelNames, ytqsDeduplicateShortsPublishTimes, setSettings: (value) => { ytqsSettings = ytqsNormalizeSettings(value); }, setContext: (value) => { ytqsContext = value; } };" );
+source = source.replace(/\ndocument\.addEventListener\("keydown"[\s\S]*$/, "\nthis.__contentTest = { contentType, isVideoPage, effectiveSettings, restoreNormalSpeed, seekShorts, handleKeyboardShortcut, currentVideoInfo, copyCurrentVideoInfo, ytqsNormalizeSettings, ytqsShortsVideoId, ytqsNormalizeShortsAuthor, ytqsExtractShortsPublishDate, ytqsNormalizePublishDate, ytqsCurrentShortsPagePublishDate, ytqsFormatShortsPublishTime, ytqsDeduplicateShortsChannelNames, ytqsDeduplicateShortsPublishTimes, ytqsDeduplicateShortsPagePublishTimes, setSettings: (value) => { ytqsSettings = ytqsNormalizeSettings(value); }, setContext: (value) => { ytqsContext = value; } };" );
 
 const messages = [];
 const clipboardWrites = [];
@@ -26,6 +27,8 @@ const video = {
   closest: () => ({ querySelector: () => player })
 };
 const player = { querySelector: () => video, classList: { contains: () => false } };
+const pageMetadata = { canonical: "", publishDate: "" };
+let pagePublishMarkers = [];
 class MockHTMLElement {
   constructor(tagName = "BODY") {
     this.tagName = tagName;
@@ -39,10 +42,13 @@ const sandbox = {
   chrome: { i18n: { getUILanguage: () => "en-US" } },
   document: {
     title: "Test Video - YouTube",
-    querySelectorAll() {
+    querySelectorAll(selector) {
+      if (selector === ".ytqs-shorts-page-publish-time") return pagePublishMarkers;
       return [video];
     },
     querySelector(selector) {
+      if (selector === 'link[rel="canonical"]') return pageMetadata.canonical ? { href: pageMetadata.canonical } : null;
+      if (selector === 'meta[itemprop="uploadDate"], meta[itemprop="datePublished"]') return pageMetadata.publishDate ? { content: pageMetadata.publishDate } : null;
       return selector.includes("#movie_player") ? player : null;
     }
   },
@@ -85,6 +91,10 @@ assert.equal(staleChannelMarker.removed, true);
 assert.equal(api.ytqsExtractShortsPublishDate('{"publishDate":"2026-08-27T00:00:00Z"}'), "2026-08-27T00:00:00Z");
 assert.equal(api.ytqsExtractShortsPublishDate('{"uploadDate":"2026-08-26"}'), "2026-08-26");
 assert.equal(api.ytqsExtractShortsPublishDate('{"publishDate":"not-a-date"}'), "");
+pageMetadata.canonical = "https://www.youtube.com/shorts/qRjSmLc2cOs";
+pageMetadata.publishDate = "2026-08-25T05:00:31-07:00";
+assert.equal(api.ytqsCurrentShortsPagePublishDate("qRjSmLc2cOs"), "2026-08-25T05:00:31-07:00");
+assert.equal(api.ytqsCurrentShortsPagePublishDate("abcdefghijk"), "");
 assert.equal(api.ytqsFormatShortsPublishTime("2026-08-27T00:00:00Z", Date.parse("2026-08-29T00:00:00Z")), "2 days ago");
 assert.equal(api.ytqsFormatShortsPublishTime("2026-08-29", Date.parse("2026-08-29T08:00:00Z")), "today");
 const firstPublishMarker = { dataset: { videoId: "abc123" }, removed: false, remove() { this.removed = true; } };
@@ -96,6 +106,15 @@ assert.equal(api.ytqsDeduplicateShortsPublishTimes({
 assert.equal(firstPublishMarker.removed, false);
 assert.equal(duplicatePublishMarker.removed, true);
 assert.equal(stalePublishMarker.removed, true);
+const firstPagePublishMarker = { dataset: { videoId: "qRjSmLc2cOs" }, removed: false, remove() { this.removed = true; } };
+const duplicatePagePublishMarker = { dataset: { videoId: "qRjSmLc2cOs" }, removed: false, remove() { this.removed = true; } };
+const stalePagePublishMarker = { dataset: { videoId: "abcdefghijk" }, removed: false, remove() { this.removed = true; } };
+const activeReel = { contains: (marker) => marker === firstPagePublishMarker || marker === duplicatePagePublishMarker };
+pagePublishMarkers = [firstPagePublishMarker, duplicatePagePublishMarker, stalePagePublishMarker];
+assert.equal(api.ytqsDeduplicateShortsPagePublishTimes(activeReel, "qRjSmLc2cOs"), firstPagePublishMarker);
+assert.equal(firstPagePublishMarker.removed, false);
+assert.equal(duplicatePagePublishMarker.removed, true);
+assert.equal(stalePagePublishMarker.removed, true);
 
 api.setSettings({
   global: { speed: 1, quality: "hd1080", premiumQualityEnabled: true, theaterModeEnabled: true },

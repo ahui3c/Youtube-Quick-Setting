@@ -30,9 +30,9 @@ const YTQS_QUALITY_LABELS = {
 };
 
 const YTQS_MESSAGES = {
-  "zh-Hant": { channelSettings: "頻道指定設定", speed: "速度", quality: "解析度", playbackSpeed: "播放速度", seconds: "秒", backToStart: "回到片頭", copiedVideoInfo: "已複製影片資訊", copyFailed: "複製失敗", today: "今天" },
-  en: { channelSettings: "Channel settings", speed: "Speed", quality: "Quality", playbackSpeed: "Playback speed", seconds: "sec", backToStart: "Back to start", copiedVideoInfo: "Video info copied", copyFailed: "Copy failed", today: "today" },
-  ja: { channelSettings: "チャンネル設定", speed: "速度", quality: "画質", playbackSpeed: "再生速度", seconds: "秒", backToStart: "先頭に戻る", copiedVideoInfo: "動画情報をコピーしました", copyFailed: "コピーに失敗しました", today: "今日" }
+  "zh-Hant": { channelSettings: "頻道指定設定", speed: "速度", quality: "解析度", playbackSpeed: "播放速度", seconds: "秒", backToStart: "回到片頭", copiedVideoInfo: "已複製影片資訊", copyFailed: "複製失敗", today: "今天", published: "發布時間" },
+  en: { channelSettings: "Channel settings", speed: "Speed", quality: "Quality", playbackSpeed: "Playback speed", seconds: "sec", backToStart: "Back to start", copiedVideoInfo: "Video info copied", copyFailed: "Copy failed", today: "today", published: "Published" },
+  ja: { channelSettings: "チャンネル設定", speed: "速度", quality: "画質", playbackSpeed: "再生速度", seconds: "秒", backToStart: "先頭に戻る", copiedVideoInfo: "動画情報をコピーしました", copyFailed: "コピーに失敗しました", today: "今日", published: "公開時刻" }
 };
 
 function ytqsNormalizeProfile(value, fallback = YTQS_DEFAULTS.global) {
@@ -327,8 +327,24 @@ function ytqsExtractShortsPublishDate(source) {
     || html.match(/"uploadDate"\s*:\s*"([^"]+)"/)
     || html.match(/itemprop="uploadDate"\s+content="([^"]+)"/);
   if (!match) return "";
-  const value = match[1].replaceAll("\\u0026", "&");
-  return Number.isFinite(Date.parse(value)) ? value : "";
+  return ytqsNormalizePublishDate(match[1].replaceAll("\\u0026", "&"));
+}
+
+function ytqsNormalizePublishDate(value) {
+  const date = typeof value === "string" ? value.trim() : "";
+  return Number.isFinite(Date.parse(date)) ? date : "";
+}
+
+function ytqsCurrentShortsPagePublishDate(videoId) {
+  if (!videoId) return "";
+  const canonical = document.querySelector('link[rel="canonical"]')?.href
+    || document.querySelector('meta[property="og:url"]')?.content
+    || document.querySelector('link[itemprop="url"]')?.href
+    || "";
+  const canonicalVideoId = canonical.match(/\/shorts\/([A-Za-z0-9_-]{11})/)?.[1] || "";
+  if (canonicalVideoId !== videoId) return "";
+  const value = document.querySelector('meta[itemprop="uploadDate"], meta[itemprop="datePublished"]')?.content || "";
+  return ytqsNormalizePublishDate(value);
 }
 
 async function ytqsLoadShortsPublishDate(videoId) {
@@ -406,6 +422,8 @@ function ytqsInstallShortsChannelStyle() {
     .ytqs-shorts-channel-name{display:block;max-width:calc(100% - 36px);margin:3px 36px 0 0;color:var(--yt-spec-text-secondary,#606060);font-family:Roboto,Arial,sans-serif;font-size:1.4rem;font-weight:400;line-height:2rem;overflow:hidden;text-decoration:none;text-overflow:ellipsis;white-space:nowrap}
     .ytqs-shorts-channel-name:hover{color:var(--yt-spec-text-primary,#0f0f0f);text-decoration:none}
     .ytqs-shorts-publish-time{white-space:nowrap}
+    .ytqs-shorts-page-publish-time{display:inline-flex!important;align-items:center;align-self:flex-start;gap:5px;width:max-content;max-width:100%;margin:3px 0 2px;padding:2px 8px;border-radius:999px;background:rgba(127,127,127,.16);color:inherit;font-family:Roboto,"Microsoft JhengHei UI",sans-serif;font-size:12px;font-weight:500;line-height:18px;opacity:.86;pointer-events:none;white-space:nowrap}
+    .ytqs-shorts-page-publish-time svg{width:13px;height:13px;flex:none;fill:currentColor}
   `;
   document.documentElement.append(style);
 }
@@ -422,6 +440,15 @@ function ytqsDeduplicateShortsChannelNames(card, videoId) {
 function ytqsDeduplicateShortsPublishTimes(card, videoId) {
   const markers = [...card.querySelectorAll(".ytqs-shorts-publish-time")];
   const current = markers.find((marker) => marker.dataset.videoId === videoId) || null;
+  markers.forEach((marker) => {
+    if (marker !== current) marker.remove();
+  });
+  return current;
+}
+
+function ytqsDeduplicateShortsPagePublishTimes(reel, videoId) {
+  const markers = [...document.querySelectorAll(".ytqs-shorts-page-publish-time")];
+  const current = markers.find((marker) => marker.dataset.videoId === videoId && reel?.contains(marker)) || null;
   markers.forEach((marker) => {
     if (marker !== current) marker.remove();
   });
@@ -479,12 +506,53 @@ async function ytqsRenderShortsPublishTime(card) {
   }
 }
 
+async function ytqsRenderShortsPagePublishTime() {
+  if (contentType() !== "shorts" || ytqsSettings.shortsControls.publishTimeEnabled === false) return;
+  const videoId = location.pathname.match(/^\/shorts\/([A-Za-z0-9_-]{11})/)?.[1] || "";
+  if (!videoId) return;
+  const reel = activeShortVideo()?.closest("ytd-reel-video-renderer");
+  if (!reel?.isConnected) return;
+  if (ytqsDeduplicateShortsPagePublishTimes(reel, videoId)) return;
+  if (reel.dataset.ytqsPublishRequest === videoId) return;
+  reel.dataset.ytqsPublishRequest = videoId;
+  try {
+    const publishDate = ytqsCurrentShortsPagePublishDate(videoId) || await ytqsGetShortsPublishDate(videoId);
+    const label = ytqsFormatShortsPublishTime(publishDate);
+    if (!label || !reel.isConnected || contentType() !== "shorts" || ytqsSettings.shortsControls.publishTimeEnabled === false) return;
+    if (location.pathname.match(/^\/shorts\/([A-Za-z0-9_-]{11})/)?.[1] !== videoId) return;
+    if (ytqsDeduplicateShortsPagePublishTimes(reel, videoId)) return;
+    const metapanel = reel.querySelector(".ytReelPlayerOverlayViewModelMetadataContainerMetapanel yt-reel-metapanel-view-model");
+    if (!metapanel) return;
+    const titleItem = [...metapanel.children].find((element) => element.querySelector?.("yt-shorts-video-title-view-model")) || null;
+    const marker = document.createElement("div");
+    marker.className = "ytReelMetapanelViewModelMetapanelItem ytqs-shorts-page-publish-time";
+    marker.dataset.videoId = videoId;
+    marker.title = `${ytqsText("published")}：${label}`;
+    marker.setAttribute("role", "note");
+    marker.setAttribute("aria-label", marker.title);
+    marker.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 5v4.6l3.2 1.9-1 1.7L11 12.7V7h2Z"/></svg>';
+    const text = document.createElement("span");
+    text.textContent = label;
+    marker.append(text);
+    metapanel.insertBefore(marker, titleItem);
+  } finally {
+    if (reel.dataset.ytqsPublishRequest === videoId) delete reel.dataset.ytqsPublishRequest;
+  }
+}
+
 function ytqsScanShortsCards() {
   const onHome = location.pathname === "/";
+  const onShortsPage = contentType() === "shorts";
   const channelNamesEnabled = onHome && ytqsSettings.shortsControls.channelNamesEnabled !== false;
   const publishTimeEnabled = onHome && ytqsSettings.shortsControls.publishTimeEnabled !== false;
+  const pagePublishTimeEnabled = onShortsPage && ytqsSettings.shortsControls.publishTimeEnabled !== false;
   if (!channelNamesEnabled) document.querySelectorAll(".ytqs-shorts-channel-name").forEach((element) => element.remove());
   if (!publishTimeEnabled) document.querySelectorAll(".ytqs-shorts-publish-time").forEach((element) => element.remove());
+  if (!pagePublishTimeEnabled) document.querySelectorAll(".ytqs-shorts-page-publish-time").forEach((element) => element.remove());
+  if (pagePublishTimeEnabled) {
+    ytqsInstallShortsChannelStyle();
+    ytqsRenderShortsPagePublishTime();
+  }
   if (!channelNamesEnabled && !publishTimeEnabled) {
     return;
   }

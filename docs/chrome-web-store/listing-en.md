@@ -26,7 +26,7 @@ Key features:
 - The arrow menu offers five formats: title + URL, title + timestamp URL, Markdown, HTML, and channel + title + URL
 - Export or import JSON settings with merge/replace preview and an automatic local restore point
 - In Shorts, use ← / → to seek 3, 5 (default), or 10 seconds, optionally disable the arrow keys, and press 0 to return to the beginning
-- Adds clickable channel names and relative publish times to Shorts cards on the Home page
+- Adds clickable channel names and relative publish times to Home Shorts cards, and publish times to Shorts playback pages
 - On-screen speed feedback and synchronized YouTube settings-menu values
 - Traditional Chinese, English, and Japanese UI; follow the system language or choose manually
 
