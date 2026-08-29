@@ -3,7 +3,7 @@ const YTQS_DEFAULTS = {
   language: "system",
   global: { speed: 1, quality: "hd1080", premiumQualityEnabled: false, theaterModeEnabled: false },
   shorts: { speed: 1, quality: "hd1080", premiumQualityEnabled: false },
-  shortsControls: { seekSeconds: 5, arrowKeysEnabled: true, channelNamesEnabled: true, publishTimeEnabled: true },
+  shortsControls: { seekSeconds: 5, arrowKeysEnabled: true, channelNamesEnabled: true, publishTimeEnabled: false },
   copy: { defaultFormat: "title-url" },
   channels: {}
 };
@@ -74,7 +74,7 @@ function ytqsNormalizeSettings(value) {
       seekSeconds: YTQS_SEEK_SECONDS.includes(Number(value?.shortsControls?.seekSeconds)) ? Number(value.shortsControls.seekSeconds) : 5,
       arrowKeysEnabled: value?.shortsControls?.arrowKeysEnabled !== false,
       channelNamesEnabled: value?.shortsControls?.channelNamesEnabled !== false,
-      publishTimeEnabled: value?.shortsControls?.publishTimeEnabled !== false
+      publishTimeEnabled: value?.shortsControls?.publishTimeEnabled === true
     },
     copy: {
       defaultFormat: YTQSCopy.FORMATS.includes(value?.copy?.defaultFormat) ? value.copy.defaultFormat : YTQSCopy.DEFAULT_FORMAT

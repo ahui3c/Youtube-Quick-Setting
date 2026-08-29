@@ -69,6 +69,8 @@ vm.runInContext(copySource, sandbox, { filename: "copy-utils.js" });
 vm.runInContext(source, sandbox, { filename: "content.js" });
 
 const api = sandbox.__contentTest;
+assert.equal(api.ytqsNormalizeSettings({}).shortsControls.publishTimeEnabled, false);
+assert.equal(api.ytqsNormalizeSettings({ shortsControls: { publishTimeEnabled: true } }).shortsControls.publishTimeEnabled, true);
 assert.equal(api.contentType(), "shorts");
 assert.equal(api.isVideoPage(), true);
 assert.equal(api.restoreNormalSpeed(), true);

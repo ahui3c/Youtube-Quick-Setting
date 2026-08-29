@@ -52,7 +52,7 @@ After updating the files, click **Reload** for the extension on `chrome://extens
 
 Use the **Videos / Shorts** selector to configure each content type independently. When the popup is opened from a Short, it automatically selects the Shorts profile.
 
-**Show channel names on Home Shorts** and **Show Shorts publish time** are enabled by default. The extension adds a clickable channel name below Home card titles, shows relative time such as “2 days ago” after the view count, and displays publish time between the channel and title on Shorts playback pages. Playback pages prefer the public publish date already loaded by YouTube; only visible Home cards request public metadata from YouTube. Each feature can be disabled independently, results are cached only for the current page, and no third-party server is involved.
+**Show channel names on Home Shorts** is enabled by default, while **Show Shorts publish time** is off by default on first install. When publish time is enabled, the extension shows relative time such as “2 days ago” after Home card view counts and between the channel and title on Shorts playback pages. The channel-name option independently adds a clickable channel name below Home card titles. Playback pages prefer the public publish date already loaded by YouTube; only visible Home cards request public metadata from YouTube. Results are cached only for the current page, and no third-party server is involved.
 
 To create a channel override, open the popup on that channel's video or Short and enable **Current channel override**. Each channel stores independent standard-video and Shorts profiles.
 

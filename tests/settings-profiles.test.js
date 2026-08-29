@@ -36,7 +36,7 @@ assert.deepEqual(
 );
 assert.deepEqual(
   JSON.parse(JSON.stringify(migrated.shortsControls)),
-  { seekSeconds: 5, arrowKeysEnabled: true, channelNamesEnabled: true, publishTimeEnabled: true }
+  { seekSeconds: 5, arrowKeysEnabled: true, channelNamesEnabled: true, publishTimeEnabled: false }
 );
 assert.deepEqual(
   JSON.parse(JSON.stringify(migrated.channels.channelA.regular)),

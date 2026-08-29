@@ -30,7 +30,7 @@ const MESSAGES = {
     shortsSeekSeconds: "快進秒數", secondsUnit: "秒", shortsArrowKeysTitle: "啟用 Shorts 左右方向鍵",
     shortsArrowKeysDescription: "控制 ←／→ 快退快進，0 回片頭不受影響",
     shortsChannelNamesTitle: "首頁 Shorts 顯示頻道名稱", shortsChannelNamesDescription: "在 Shorts 卡片補上可點擊的頻道名稱",
-    shortsPublishTimeTitle: "Shorts 顯示發布時間資訊", shortsPublishTimeDescription: "在首頁卡片與 Shorts 播放頁顯示影片發布時間",
+    shortsPublishTimeTitle: "Shorts 顯示發布時間資訊", shortsPublishTimeDescription: "預設關閉；開啟後在首頁卡片與 Shorts 播放頁顯示發布時間",
     globalTheaterTitle: "自動開啟劇院模式", globalTheaterDescription: "進入一般影片時自動切換為劇院模式",
     channelTheater: "這個頻道的劇院模式", theaterInherit: "跟隨全局", theaterOn: "強制開啟", theaterOff: "強制關閉",
     connected: "已連線到目前影片", disconnected: "請開啟 YouTube 影片或 Shorts", languageLabel: "介面語言",
@@ -56,7 +56,7 @@ const MESSAGES = {
     shortsSeekSeconds: "Seek interval", secondsUnit: "sec", shortsArrowKeysTitle: "Enable Shorts arrow keys",
     shortsArrowKeysDescription: "Controls ←/→ seeking; 0 always returns to the start",
     shortsChannelNamesTitle: "Show channel names on Home Shorts", shortsChannelNamesDescription: "Add a clickable channel name to Shorts cards on the Home page",
-    shortsPublishTimeTitle: "Show Shorts publish time", shortsPublishTimeDescription: "Show the video's publish time on Home cards and Shorts playback pages",
+    shortsPublishTimeTitle: "Show Shorts publish time", shortsPublishTimeDescription: "Off by default; shows publish time on Home cards and Shorts playback pages",
     globalTheaterTitle: "Automatically open Theater mode", globalTheaterDescription: "Switch standard videos to Theater mode when they open",
     channelTheater: "Theater mode for this channel", theaterInherit: "Follow global", theaterOn: "Force on", theaterOff: "Force off",
     connected: "Connected to the current video", disconnected: "Open a YouTube video or Short", languageLabel: "Interface language",
@@ -82,7 +82,7 @@ const MESSAGES = {
     shortsSeekSeconds: "移動秒数", secondsUnit: "秒", shortsArrowKeysTitle: "ショートの左右キーを有効化",
     shortsArrowKeysDescription: "←／→ の移動を制御。0 の先頭移動は常に有効",
     shortsChannelNamesTitle: "ホームのショートにチャンネル名を表示", shortsChannelNamesDescription: "ショートのカードにクリック可能なチャンネル名を追加します",
-    shortsPublishTimeTitle: "ショートの公開時刻情報を表示", shortsPublishTimeDescription: "ホームのカードとショート再生ページに動画の公開時刻を表示します",
+    shortsPublishTimeTitle: "ショートの公開時刻情報を表示", shortsPublishTimeDescription: "既定ではオフ。ホームのカードとショート再生ページに公開時刻を表示します",
     globalTheaterTitle: "シアターモードを自動的に有効化", globalTheaterDescription: "通常動画を開いたときにシアターモードへ切り替えます",
     channelTheater: "このチャンネルのシアターモード", theaterInherit: "全体設定に従う", theaterOn: "常にオン", theaterOff: "常にオフ",
     connected: "現在の動画に接続しました", disconnected: "YouTube 動画またはショートを開いてください", languageLabel: "表示言語",
@@ -99,7 +99,7 @@ const DEFAULT_SETTINGS = {
   language: "system",
   global: { ...DEFAULT_PROFILE, theaterModeEnabled: false },
   shorts: { ...DEFAULT_PROFILE },
-  shortsControls: { seekSeconds: 5, arrowKeysEnabled: true, channelNamesEnabled: true, publishTimeEnabled: true },
+  shortsControls: { seekSeconds: 5, arrowKeysEnabled: true, channelNamesEnabled: true, publishTimeEnabled: false },
   copy: { defaultFormat: YTQSCopy.DEFAULT_FORMAT },
   channels: {}
 };
@@ -161,7 +161,7 @@ function normalizeSettings(value) {
       seekSeconds: SHORTS_SEEK_SECONDS.includes(Number(value?.shortsControls?.seekSeconds)) ? Number(value.shortsControls.seekSeconds) : 5,
       arrowKeysEnabled: value?.shortsControls?.arrowKeysEnabled !== false,
       channelNamesEnabled: value?.shortsControls?.channelNamesEnabled !== false,
-      publishTimeEnabled: value?.shortsControls?.publishTimeEnabled !== false
+      publishTimeEnabled: value?.shortsControls?.publishTimeEnabled === true
     },
     copy: {
       defaultFormat: COPY_FORMATS.includes(value?.copy?.defaultFormat) ? value.copy.defaultFormat : YTQSCopy.DEFAULT_FORMAT
