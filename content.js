@@ -423,6 +423,7 @@ function ytqsInstallShortsChannelStyle() {
     .ytqs-shorts-channel-name:hover{color:var(--yt-spec-text-primary,#0f0f0f);text-decoration:none}
     .ytqs-shorts-publish-time{white-space:nowrap}
     .ytqs-shorts-page-publish-time{display:inline-flex!important;align-items:center;align-self:flex-start;gap:5px;width:max-content;max-width:100%;margin:3px 0 2px;padding:2px 8px;border-radius:999px;background:rgba(127,127,127,.16);color:inherit;font-family:Roboto,"Microsoft JhengHei UI",sans-serif;font-size:12px;font-weight:500;line-height:18px;opacity:.86;pointer-events:none;white-space:nowrap}
+    .ytqs-shorts-page-publish-time.ytqs-on-video{background:rgba(0,0,0,.58);box-shadow:0 1px 4px rgba(0,0,0,.3);color:#fff!important;opacity:1;text-shadow:0 1px 2px rgba(0,0,0,.75)}
     .ytqs-shorts-page-publish-time svg{width:13px;height:13px;flex:none;fill:currentColor}
   `;
   document.documentElement.append(style);
@@ -453,6 +454,22 @@ function ytqsDeduplicateShortsPagePublishTimes(reel, videoId) {
     if (marker !== current) marker.remove();
   });
   return current;
+}
+
+function ytqsIsMarkerOverVideo(markerRect, videoRect) {
+  if (!markerRect || !videoRect || videoRect.width <= 0 || videoRect.height <= 0) return false;
+  const centerX = markerRect.left + markerRect.width / 2;
+  const centerY = markerRect.top + markerRect.height / 2;
+  return centerX >= videoRect.left && centerX <= videoRect.right
+    && centerY >= videoRect.top && centerY <= videoRect.bottom;
+}
+
+function ytqsUpdateShortsPagePublishTimeContrast(reel, marker) {
+  if (!reel?.isConnected || !marker?.isConnected) return false;
+  const video = reel.querySelector("video");
+  const onVideo = Boolean(video && ytqsIsMarkerOverVideo(marker.getBoundingClientRect(), video.getBoundingClientRect()));
+  marker.classList.toggle("ytqs-on-video", onVideo);
+  return onVideo;
 }
 
 async function ytqsRenderShortsChannelName(card) {
@@ -512,7 +529,11 @@ async function ytqsRenderShortsPagePublishTime() {
   if (!videoId) return;
   const reel = activeShortVideo()?.closest("ytd-reel-video-renderer");
   if (!reel?.isConnected) return;
-  if (ytqsDeduplicateShortsPagePublishTimes(reel, videoId)) return;
+  const existingMarker = ytqsDeduplicateShortsPagePublishTimes(reel, videoId);
+  if (existingMarker) {
+    ytqsUpdateShortsPagePublishTimeContrast(reel, existingMarker);
+    return;
+  }
   if (reel.dataset.ytqsPublishRequest === videoId) return;
   reel.dataset.ytqsPublishRequest = videoId;
   try {
@@ -535,6 +556,7 @@ async function ytqsRenderShortsPagePublishTime() {
     text.textContent = label;
     marker.append(text);
     metapanel.insertBefore(marker, titleItem);
+    ytqsUpdateShortsPagePublishTimeContrast(reel, marker);
   } finally {
     if (reel.dataset.ytqsPublishRequest === videoId) delete reel.dataset.ytqsPublishRequest;
   }
@@ -854,3 +876,4 @@ document.addEventListener("yt-navigate-finish", ytqsScheduleShortsCardScan, true
 document.addEventListener("yt-page-data-updated", ytqsScheduleShortsCardScan, true);
 window.addEventListener("popstate", scheduleRefresh);
 window.addEventListener("popstate", ytqsScheduleShortsCardScan);
+window.addEventListener("resize", ytqsScheduleShortsCardScan, { passive: true });

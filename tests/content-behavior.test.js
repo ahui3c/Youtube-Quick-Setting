@@ -12,8 +12,10 @@ assert.match(source, /event\.key === "0"/);
 assert.match(source, /event\.code === "Numpad0"/);
 assert.match(source, /event\.code === "KeyS"/);
 assert.match(source, /ytReelPlayerOverlayViewModelMetadataContainerMetapanel/);
+assert.match(source, /\.ytqs-shorts-page-publish-time\.ytqs-on-video/);
+assert.match(source, /window\.addEventListener\("resize", ytqsScheduleShortsCardScan/);
 source = source.replace(/^\s*show(?:Speed|Seek|Copy)Overlay\([^;]+;\r?$/gm, "");
-source = source.replace(/\ndocument\.addEventListener\("keydown"[\s\S]*$/, "\nthis.__contentTest = { contentType, isVideoPage, effectiveSettings, restoreNormalSpeed, seekShorts, handleKeyboardShortcut, currentVideoInfo, copyCurrentVideoInfo, ytqsNormalizeSettings, ytqsShortsVideoId, ytqsNormalizeShortsAuthor, ytqsExtractShortsPublishDate, ytqsNormalizePublishDate, ytqsCurrentShortsPagePublishDate, ytqsFormatShortsPublishTime, ytqsDeduplicateShortsChannelNames, ytqsDeduplicateShortsPublishTimes, ytqsDeduplicateShortsPagePublishTimes, setSettings: (value) => { ytqsSettings = ytqsNormalizeSettings(value); }, setContext: (value) => { ytqsContext = value; } };" );
+source = source.replace(/\ndocument\.addEventListener\("keydown"[\s\S]*$/, "\nthis.__contentTest = { contentType, isVideoPage, effectiveSettings, restoreNormalSpeed, seekShorts, handleKeyboardShortcut, currentVideoInfo, copyCurrentVideoInfo, ytqsNormalizeSettings, ytqsShortsVideoId, ytqsNormalizeShortsAuthor, ytqsExtractShortsPublishDate, ytqsNormalizePublishDate, ytqsCurrentShortsPagePublishDate, ytqsFormatShortsPublishTime, ytqsDeduplicateShortsChannelNames, ytqsDeduplicateShortsPublishTimes, ytqsDeduplicateShortsPagePublishTimes, ytqsIsMarkerOverVideo, setSettings: (value) => { ytqsSettings = ytqsNormalizeSettings(value); }, setContext: (value) => { ytqsContext = value; } };" );
 
 const messages = [];
 const clipboardWrites = [];
@@ -115,6 +117,10 @@ assert.equal(api.ytqsDeduplicateShortsPagePublishTimes(activeReel, "qRjSmLc2cOs"
 assert.equal(firstPagePublishMarker.removed, false);
 assert.equal(duplicatePagePublishMarker.removed, true);
 assert.equal(stalePagePublishMarker.removed, true);
+const videoRect = { left: 500, right: 900, top: 80, bottom: 780, width: 400, height: 700 };
+assert.equal(api.ytqsIsMarkerOverVideo({ left: 540, top: 700, width: 80, height: 24 }, videoRect), true);
+assert.equal(api.ytqsIsMarkerOverVideo({ left: 100, top: 700, width: 80, height: 24 }, videoRect), false);
+assert.equal(api.ytqsIsMarkerOverVideo({ left: 540, top: 700, width: 80, height: 24 }, { ...videoRect, width: 0 }), false);
 
 api.setSettings({
   global: { speed: 1, quality: "hd1080", premiumQualityEnabled: true, theaterModeEnabled: true },

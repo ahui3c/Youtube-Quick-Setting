@@ -4,7 +4,7 @@
   "private": true,
   "description": "Localized Chrome extension for automatic YouTube playback speed and quality preferences.",
   "scripts": {
-    "test": "node tests/quality-selection.test.js && node tests/settings-profiles.test.js && node tests/copy-and-transfer.test.js && node tests/content-behavior.test.js && node tests/popup-ui.test.js",
+    "test": "node tests/quality-selection.test.js && node tests/settings-profiles.test.js && node tests/copy-and-transfer.test.js && node tests/content-behavior.test.js && node tests/popup-ui.test.js && node tests/shorts-contrast-ui.test.js",
     "render:marketing": "node scripts/render-marketing-assets.js",
     "render:store": "node scripts/render-store-assets.js"
   },
