@@ -430,6 +430,8 @@ legend {
 .copy-format-menu button:focus-visible { background: #292a2e; outline: 0; }
 .copy-format-menu button[aria-checked="true"] { color: white; font-weight: 700; }
 .copy-format-check { color: var(--green); text-align: center; }
+.copy-format-menu .copy-format-action { margin-top: 4px; border-top: 1px solid var(--line); border-radius: 0 0 7px 7px; color: #dfe9ff; }
+.copy-format-facebook-icon { display: grid; place-items: center; width: 17px; height: 17px; border-radius: 50%; background: #1877f2; color: white; font-family: Arial,sans-serif; font-size: 12px; font-weight: 800; }
 
 .shortcut-hint {
   display: flex;

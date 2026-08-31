@@ -15,10 +15,11 @@ assert.match(source, /ytReelPlayerOverlayViewModelMetadataContainerMetapanel/);
 assert.match(source, /\.ytqs-shorts-page-publish-time\.ytqs-on-video/);
 assert.match(source, /window\.addEventListener\("resize", ytqsScheduleShortsCardScan/);
 source = source.replace(/^\s*show(?:Speed|Seek|Copy)Overlay\([^;]+;\r?$/gm, "");
-source = source.replace(/\ndocument\.addEventListener\("keydown"[\s\S]*$/, "\nthis.__contentTest = { contentType, isVideoPage, effectiveSettings, restoreNormalSpeed, seekShorts, handleKeyboardShortcut, currentVideoInfo, copyCurrentVideoInfo, ytqsNormalizeSettings, ytqsShortsVideoId, ytqsNormalizeShortsAuthor, ytqsExtractShortsPublishDate, ytqsNormalizePublishDate, ytqsCurrentShortsPagePublishDate, ytqsFormatShortsPublishTime, ytqsDeduplicateShortsChannelNames, ytqsDeduplicateShortsPublishTimes, ytqsDeduplicateShortsPagePublishTimes, ytqsIsMarkerOverVideo, setSettings: (value) => { ytqsSettings = ytqsNormalizeSettings(value); }, setContext: (value) => { ytqsContext = value; } };" );
+source = source.replace(/\ndocument\.addEventListener\("keydown"[\s\S]*$/, "\nthis.__contentTest = { contentType, isVideoPage, effectiveSettings, restoreNormalSpeed, seekShorts, handleKeyboardShortcut, currentVideoInfo, copyCurrentVideoInfo, facebookShareReady, openFacebookShareWindow, ytqsNormalizeSettings, ytqsShortsVideoId, ytqsNormalizeShortsAuthor, ytqsExtractShortsPublishDate, ytqsNormalizePublishDate, ytqsCurrentShortsPagePublishDate, ytqsFormatShortsPublishTime, ytqsDeduplicateShortsChannelNames, ytqsDeduplicateShortsPublishTimes, ytqsDeduplicateShortsPagePublishTimes, ytqsIsMarkerOverVideo, setSettings: (value) => { ytqsSettings = ytqsNormalizeSettings(value); }, setContext: (value) => { ytqsContext = value; } };" );
 
 const messages = [];
 const clipboardWrites = [];
+const openedWindows = [];
 const video = {
   playbackRate: 2,
   defaultPlaybackRate: 2,
@@ -54,7 +55,14 @@ const sandbox = {
       return selector.includes("#movie_player") ? player : null;
     }
   },
-  window: { postMessage: (message) => messages.push(message) },
+  window: {
+    postMessage: (message) => messages.push(message),
+    open: (url, name, features) => {
+      const opened = { url, name, features, opener: {}, focused: false, focus() { this.focused = true; } };
+      openedWindows.push(opened);
+      return opened;
+    }
+  },
   setTimeout: (callback) => callback(),
   clearTimeout() {},
   HTMLElement: MockHTMLElement,
@@ -71,6 +79,7 @@ vm.runInContext(source, sandbox, { filename: "content.js" });
 const api = sandbox.__contentTest;
 assert.equal(api.ytqsNormalizeSettings({}).shortsControls.publishTimeEnabled, false);
 assert.equal(api.ytqsNormalizeSettings({ shortsControls: { publishTimeEnabled: true } }).shortsControls.publishTimeEnabled, true);
+assert.equal(api.ytqsNormalizeSettings({ copy: { defaultFormat: "markdown" } }).copy.defaultFormat, "title-url");
 assert.equal(api.contentType(), "shorts");
 assert.equal(api.isVideoPage(), true);
 assert.equal(api.restoreNormalSpeed(), true);
@@ -230,19 +239,35 @@ assert.deepEqual(JSON.parse(JSON.stringify(info)), {
   text: "Test Video\nhttps://www.youtube.com/watch?v=qRjSmLc2cOs"
 });
 const copy = keyboardEvent("s", "KeyS");
+api.setSettings({ copy: { defaultFormat: "markdown" } });
 assert.equal(api.handleKeyboardShortcut(copy), true);
 assert.equal(copy.preventDefaultCalled, true);
 assert.equal(copy.stopImmediatePropagationCalled, true);
 
 video.currentTime = 125.9;
-const timestampCopy = keyboardEvent("S", "KeyS");
-timestampCopy.shiftKey = true;
-assert.equal(api.handleKeyboardShortcut(timestampCopy), true);
-
 setImmediate(() => {
+  assert.equal(api.facebookShareReady(), true);
+  const share = keyboardEvent("s", "KeyS");
+  assert.equal(api.handleKeyboardShortcut(share), true);
+  assert.equal(openedWindows.length, 1);
+  const openedUrl = new URL(openedWindows[0].url);
+  assert.equal(openedUrl.origin, "https://www.facebook.com");
+  assert.equal(openedUrl.pathname, "/sharer/sharer.php");
+  assert.equal(openedUrl.searchParams.get("u"), "https://www.youtube.com/watch?v=qRjSmLc2cOs");
+  assert.equal(openedUrl.searchParams.get("quote"), "Test Video\nhttps://www.youtube.com/watch?v=qRjSmLc2cOs");
+  assert.equal(openedWindows[0].opener, null);
+  assert.equal(openedWindows[0].focused, true);
+  sandbox.window.open = () => null;
+  assert.equal(api.openFacebookShareWindow(), false);
+  assert.equal(api.facebookShareReady(), false);
+  const timestampCopy = keyboardEvent("S", "KeyS");
+  timestampCopy.shiftKey = true;
+  assert.equal(api.handleKeyboardShortcut(timestampCopy), true);
+  setImmediate(() => {
   assert.deepEqual(clipboardWrites, [
     "Test Video\nhttps://www.youtube.com/watch?v=qRjSmLc2cOs",
     "Test Video\nhttps://www.youtube.com/watch?v=qRjSmLc2cOs&t=125s"
   ]);
   console.log("CONTENT_BEHAVIOR_TESTS_OK");
+  });
 });

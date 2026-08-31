@@ -14,17 +14,17 @@ const RESTORE_POINT_KEY = "ytQuickSettingsRestorePoint";
 
 const MESSAGES = {
   "zh-Hant": {
-    appTitle: "YouTube 快速設定速度 / 畫質", system: "系統", regular: "一般影片", shorts: "Shorts",
+    appTitle: "YouTube 快速設定工具箱", system: "系統", regular: "一般影片", shorts: "Shorts",
     typeLabel: "影片類型", allRegular: "所有一般影片", allShorts: "所有 Shorts",
     globalHeading: "全域預設", saved: "已儲存", speed: "播放速度", quality: "影片畫質",
     channelKicker: "目前頻道優先", loadingChannel: "正在讀取頻道…", noChannel: "尚未偵測到影片頻道",
     currentChannel: "目前頻道", channelSpeed: "這個頻道的播放速度", channelQuality: "這個頻道的影片畫質",
     enableChannel: "啟用目前頻道專屬設定", removeChannel: "移除頻道專屬設定",
     channelEmpty: "請在 YouTube 影片或 Shorts 頁面開啟此面板，即可加入頻道專屬設定。",
-    shortcutTitle: "播放時快速操作", shortcutDescription: "−／+ 調速，* 回復 1×，S 複製，Shift+S 標題＋時間點",
-    shortsShortcutTitle: "Shorts 快速操作", shortsShortcutDescription: "←／→ {seconds} 秒，0 片頭；−／+ 調速，* 1×，S 複製，Shift+S 標題＋時間點",
-    copyVideoInfoTitle: "複製影片資訊", copyVideoInfoDescription: "預設：{format}｜S；Shift+S 複製標題＋時間點", copiedVideoInfo: "已複製到剪貼簿", copyVideoInfoFailed: "複製失敗", copyVideoInfoUnavailable: "請先開啟 YouTube 影片", copyFormatToggle: "選擇複製格式",
-    copyFormatTitleUrl: "標題＋網址", copyFormatTimestampUrl: "標題＋目前時間點網址", copyFormatMarkdown: "Markdown 連結", copyFormatHtml: "HTML 超連結", copyFormatChannelTitleUrl: "頻道＋標題＋網址",
+    shortcutTitle: "播放時快速操作", shortcutDescription: "−／+ 調速，* 回復 1×，S 複製／再按分享 FB，Shift+S 標題＋時間點",
+    shortsShortcutTitle: "Shorts 快速操作", shortsShortcutDescription: "←／→ {seconds} 秒，0 片頭；−／+ 調速，* 1×，S 複製／再按分享 FB，Shift+S 標題＋時間點",
+    copyVideoInfoTitle: "複製影片資訊", copyVideoInfoDescription: "預設：{format}｜S 複製，再按 S 分享 FB；Shift+S 標題＋時間點", copiedVideoInfo: "已複製到剪貼簿", copyVideoInfoFailed: "複製失敗", copyVideoInfoUnavailable: "請先開啟 YouTube 影片", copyFormatToggle: "選擇複製格式",
+    copyFormatTitleUrl: "標題＋網址", copyFormatTimestampUrl: "標題＋目前時間點網址", copyFormatMarkdown: "Markdown 連結", copyFormatHtml: "HTML 超連結", copyFormatChannelTitleUrl: "頻道＋標題＋網址", copyFormatFacebookShare: "分享標題＋連結到 Facebook", facebookShareOpened: "已開啟 Facebook 分享視窗", facebookShareBlocked: "無法開啟 Facebook 分享視窗",
     settingsTransferTitle: "設定備份與還原", settingsTransferDescription: "匯出、匯入或回復上次設定", exportSettings: "匯出 JSON", importSettings: "匯入 JSON", restoreSettings: "還原上次匯入前設定", settingsTransferNote: "設定檔只在你的裝置上處理。", settingsExported: "設定已匯出", settingsImported: "設定已匯入", settingsRestored: "設定已還原", settingsTransferFailed: "無法處理設定檔",
     importDialogKicker: "匯入預覽", importDialogTitle: "確認設定變更", importModeLegend: "匯入方式", importModeMerge: "合併設定", importModeReplace: "完全取代", previewSections: "一般設定變更", previewAdded: "新增頻道", previewUpdated: "更新頻道", previewRemoved: "移除頻道", previewTotal: "匯入後頻道總數", importRestoreNote: "套用前會自動建立可還原的本機備份。", cancelImport: "取消", applyImport: "套用匯入", invalidImportFile: "這不是有效的 YouTube 快速設定檔。", newerImportFile: "此設定檔來自較新版本，請先更新插件。", restorePointCreated: "已建立匯入前還原點",
     shortsSeekSeconds: "快進秒數", secondsUnit: "秒", shortsArrowKeysTitle: "啟用 Shorts 左右方向鍵",
@@ -40,19 +40,19 @@ const MESSAGES = {
     shortsQualityNote: "YouTube Shorts 提供畫質控制時才會套用此偏好。"
   },
   en: {
-    appTitle: "YouTube Quick Speed / Quality Settings", system: "System", regular: "Videos", shorts: "Shorts",
+    appTitle: "YouTube Quick Settings Toolbox", system: "System", regular: "Videos", shorts: "Shorts",
     typeLabel: "Video type", allRegular: "All standard videos", allShorts: "All Shorts",
     globalHeading: "Global defaults", saved: "Saved", speed: "Playback speed", quality: "Video quality",
     channelKicker: "Current channel override", loadingChannel: "Loading channel…", noChannel: "No video channel detected",
     currentChannel: "Current channel", channelSpeed: "Playback speed for this channel", channelQuality: "Video quality for this channel",
     enableChannel: "Enable settings for the current channel", removeChannel: "Remove channel settings",
     channelEmpty: "Open this panel on a YouTube video or Short to add channel-specific settings.",
-    shortcutTitle: "Quick playback controls", shortcutDescription: "−/+ speed, * resets, S copies, Shift+S copies title + timestamp",
-    shortsShortcutTitle: "Shorts quick controls", shortsShortcutDescription: "←/→ {seconds}s, 0 restarts; −/+ speed, * 1×, S copies, Shift+S title + timestamp",
-    copyVideoInfoTitle: "Copy video info", copyVideoInfoDescription: "Default: {format} | S; Shift+S copies title + timestamp", copiedVideoInfo: "Copied to clipboard", copyVideoInfoFailed: "Copy failed", copyVideoInfoUnavailable: "Open a YouTube video first", copyFormatToggle: "Choose copy format",
-    copyFormatTitleUrl: "Title + URL", copyFormatTimestampUrl: "Title + URL at current time", copyFormatMarkdown: "Markdown link", copyFormatHtml: "HTML link", copyFormatChannelTitleUrl: "Channel + title + URL",
+    shortcutTitle: "Quick playback controls", shortcutDescription: "−/+ speed, * resets, S copies / press again for Facebook, Shift+S copies title + timestamp",
+    shortsShortcutTitle: "Shorts quick controls", shortsShortcutDescription: "←/→ {seconds}s, 0 restarts; −/+ speed, * 1×, S copies / press again for Facebook, Shift+S title + timestamp",
+    copyVideoInfoTitle: "Copy video info", copyVideoInfoDescription: "Default: {format} | S copies; press S again for Facebook; Shift+S adds timestamp", copiedVideoInfo: "Copied to clipboard", copyVideoInfoFailed: "Copy failed", copyVideoInfoUnavailable: "Open a YouTube video first", copyFormatToggle: "Choose copy format",
+    copyFormatTitleUrl: "Title + URL", copyFormatTimestampUrl: "Title + URL at current time", copyFormatMarkdown: "Markdown link", copyFormatHtml: "HTML link", copyFormatChannelTitleUrl: "Channel + title + URL", copyFormatFacebookShare: "Share title + link to Facebook", facebookShareOpened: "Facebook share window opened", facebookShareBlocked: "Could not open the Facebook share window",
     settingsTransferTitle: "Backup and restore settings", settingsTransferDescription: "Export, import, or restore the last settings", exportSettings: "Export JSON", importSettings: "Import JSON", restoreSettings: "Restore pre-import settings", settingsTransferNote: "Settings files are processed only on your device.", settingsExported: "Settings exported", settingsImported: "Settings imported", settingsRestored: "Settings restored", settingsTransferFailed: "Could not process the settings file",
-    importDialogKicker: "Import preview", importDialogTitle: "Confirm settings changes", importModeLegend: "Import mode", importModeMerge: "Merge settings", importModeReplace: "Replace all", previewSections: "General settings changed", previewAdded: "Channels added", previewUpdated: "Channels updated", previewRemoved: "Channels removed", previewTotal: "Channels after import", importRestoreNote: "A local restore point will be created before applying.", cancelImport: "Cancel", applyImport: "Apply import", invalidImportFile: "This is not a valid YouTube Quick Setting file.", newerImportFile: "This file is from a newer version. Update the extension first.", restorePointCreated: "Pre-import restore point created",
+    importDialogKicker: "Import preview", importDialogTitle: "Confirm settings changes", importModeLegend: "Import mode", importModeMerge: "Merge settings", importModeReplace: "Replace all", previewSections: "General settings changed", previewAdded: "Channels added", previewUpdated: "Channels updated", previewRemoved: "Channels removed", previewTotal: "Channels after import", importRestoreNote: "A local restore point will be created before applying.", cancelImport: "Cancel", applyImport: "Apply import", invalidImportFile: "This is not a valid YouTube Quick Settings Toolbox file.", newerImportFile: "This file is from a newer version. Update the extension first.", restorePointCreated: "Pre-import restore point created",
     shortsSeekSeconds: "Seek interval", secondsUnit: "sec", shortsArrowKeysTitle: "Enable Shorts arrow keys",
     shortsArrowKeysDescription: "Controls ←/→ seeking; 0 always returns to the start",
     shortsChannelNamesTitle: "Show channel names on Home Shorts", shortsChannelNamesDescription: "Add a clickable channel name to Shorts cards on the Home page",
@@ -66,17 +66,17 @@ const MESSAGES = {
     shortsQualityNote: "This preference applies when YouTube provides quality controls for Shorts."
   },
   ja: {
-    appTitle: "YouTube 速度 / 画質クイック設定", system: "システム", regular: "通常動画", shorts: "ショート",
+    appTitle: "YouTube クイック設定ツールボックス", system: "システム", regular: "通常動画", shorts: "ショート",
     typeLabel: "動画タイプ", allRegular: "すべての通常動画", allShorts: "すべてのショート",
     globalHeading: "全体の既定値", saved: "保存済み", speed: "再生速度", quality: "動画の画質",
     channelKicker: "現在のチャンネルを優先", loadingChannel: "チャンネルを読み込み中…", noChannel: "動画のチャンネルを検出できません",
     currentChannel: "現在のチャンネル", channelSpeed: "このチャンネルの再生速度", channelQuality: "このチャンネルの画質",
     enableChannel: "現在のチャンネル専用設定を有効にする", removeChannel: "チャンネル専用設定を削除",
     channelEmpty: "YouTube 動画またはショートのページでこのパネルを開くと、チャンネル専用設定を追加できます。",
-    shortcutTitle: "再生中のクイック操作", shortcutDescription: "−／+ 速度、* で 1×、S コピー、Shift+S タイトル＋現在位置",
-    shortsShortcutTitle: "ショートのクイック操作", shortsShortcutDescription: "←／→ {seconds} 秒、0 先頭、−／+ 速度、* 1×、S コピー、Shift+S タイトル＋現在位置",
-    copyVideoInfoTitle: "動画情報をコピー", copyVideoInfoDescription: "既定：{format}｜S、Shift+S はタイトル＋現在位置", copiedVideoInfo: "クリップボードにコピーしました", copyVideoInfoFailed: "コピーに失敗しました", copyVideoInfoUnavailable: "YouTube 動画を開いてください", copyFormatToggle: "コピー形式を選択",
-    copyFormatTitleUrl: "タイトル＋URL", copyFormatTimestampUrl: "タイトル＋現在位置の URL", copyFormatMarkdown: "Markdown リンク", copyFormatHtml: "HTML リンク", copyFormatChannelTitleUrl: "チャンネル＋タイトル＋URL",
+    shortcutTitle: "再生中のクイック操作", shortcutDescription: "−／+ 速度、* で 1×、S コピー／もう一度で Facebook、Shift+S タイトル＋現在位置",
+    shortsShortcutTitle: "ショートのクイック操作", shortsShortcutDescription: "←／→ {seconds} 秒、0 先頭、−／+ 速度、* 1×、S コピー／もう一度で Facebook、Shift+S タイトル＋現在位置",
+    copyVideoInfoTitle: "動画情報をコピー", copyVideoInfoDescription: "既定：{format}｜S でコピー、もう一度 S で Facebook、Shift+S は現在位置", copiedVideoInfo: "クリップボードにコピーしました", copyVideoInfoFailed: "コピーに失敗しました", copyVideoInfoUnavailable: "YouTube 動画を開いてください", copyFormatToggle: "コピー形式を選択",
+    copyFormatTitleUrl: "タイトル＋URL", copyFormatTimestampUrl: "タイトル＋現在位置の URL", copyFormatMarkdown: "Markdown リンク", copyFormatHtml: "HTML リンク", copyFormatChannelTitleUrl: "チャンネル＋タイトル＋URL", copyFormatFacebookShare: "タイトル＋リンクを Facebook に共有", facebookShareOpened: "Facebook の共有画面を開きました", facebookShareBlocked: "Facebook の共有画面を開けませんでした",
     settingsTransferTitle: "設定のバックアップと復元", settingsTransferDescription: "書き出し、読み込み、前回設定の復元", exportSettings: "JSON を書き出す", importSettings: "JSON を読み込む", restoreSettings: "読み込み前の設定に戻す", settingsTransferNote: "設定ファイルは端末内だけで処理されます。", settingsExported: "設定を書き出しました", settingsImported: "設定を読み込みました", settingsRestored: "設定を復元しました", settingsTransferFailed: "設定ファイルを処理できませんでした",
     importDialogKicker: "読み込みプレビュー", importDialogTitle: "設定変更の確認", importModeLegend: "読み込み方法", importModeMerge: "設定を結合", importModeReplace: "すべて置換", previewSections: "一般設定の変更", previewAdded: "追加チャンネル", previewUpdated: "更新チャンネル", previewRemoved: "削除チャンネル", previewTotal: "読み込み後のチャンネル数", importRestoreNote: "適用前にローカル復元ポイントを自動作成します。", cancelImport: "キャンセル", applyImport: "読み込みを適用", invalidImportFile: "有効な YouTube クイック設定ファイルではありません。", newerImportFile: "新しいバージョンの設定ファイルです。先に拡張機能を更新してください。", restorePointCreated: "読み込み前の復元ポイントを作成しました",
     shortsSeekSeconds: "移動秒数", secondsUnit: "秒", shortsArrowKeysTitle: "ショートの左右キーを有効化",
@@ -164,7 +164,7 @@ function normalizeSettings(value) {
       publishTimeEnabled: value?.shortsControls?.publishTimeEnabled === true
     },
     copy: {
-      defaultFormat: COPY_FORMATS.includes(value?.copy?.defaultFormat) ? value.copy.defaultFormat : YTQSCopy.DEFAULT_FORMAT
+      defaultFormat: YTQSCopy.DEFAULT_FORMAT
     },
     channels
   };
@@ -225,7 +225,7 @@ function applyTranslations() {
   $("#removeChannel").textContent = t("removeChannel");
   $("#channelEmpty").textContent = t("channelEmpty");
   $("#copyVideoInfoTitle").textContent = t("copyVideoInfoTitle");
-  $("#copyVideoInfoDescription").textContent = t("copyVideoInfoDescription").replace("{format}", copyFormatLabel(settings.copy.defaultFormat));
+  $("#copyVideoInfoDescription").textContent = t("copyVideoInfoDescription").replace("{format}", copyFormatLabel(YTQSCopy.DEFAULT_FORMAT));
   $("#copyFormatToggleLabel").textContent = t("copyFormatToggle");
   $("#copyFormatToggle").setAttribute("aria-label", t("copyFormatToggle"));
   $("#settingsTransferTitle").textContent = t("settingsTransferTitle");
@@ -483,18 +483,28 @@ async function copyTextToClipboard(text) {
 
 function showCopyButtonState(state, summary = "") {
   const button = $("#copyVideoInfo");
-  button.classList.toggle("copied", state === "copied");
-  button.classList.toggle("failed", state === "failed");
+  const succeeded = state === "copied" || state === "shared";
+  const failed = state === "failed" || state === "share-failed";
+  button.classList.toggle("copied", succeeded);
+  button.classList.toggle("failed", failed);
   const stateElement = $("#copyVideoInfoState");
   stateElement.textContent = state === "copied"
     ? `${t("copiedVideoInfo")} · ${summary}`
-    : state === "failed" ? t("copyVideoInfoFailed") : "";
+    : state === "shared"
+      ? `${t("facebookShareOpened")} · ${summary}`
+      : state === "share-failed"
+        ? t("facebookShareBlocked")
+        : state === "failed" ? t("copyVideoInfoFailed") : "";
   stateElement.hidden = !state;
   $("#copyVideoInfoDescription").textContent = state === "copied"
     ? t("copiedVideoInfo")
-    : state === "failed"
-      ? t("copyVideoInfoFailed")
-      : t("copyVideoInfoDescription").replace("{format}", copyFormatLabel(settings.copy.defaultFormat));
+    : state === "shared"
+      ? t("facebookShareOpened")
+      : state === "share-failed"
+        ? t("facebookShareBlocked")
+        : state === "failed"
+          ? t("copyVideoInfoFailed")
+          : t("copyVideoInfoDescription").replace("{format}", copyFormatLabel(YTQSCopy.DEFAULT_FORMAT));
   clearTimeout(showCopyButtonState.timer);
   if (state) showCopyButtonState.timer = setTimeout(() => showCopyButtonState(""), 1800);
 }
@@ -507,9 +517,9 @@ function closeCopyFormatMenu() {
 function renderCopyFormatMenu() {
   const menu = $("#copyFormatMenu");
   if (!menu) return;
-  menu.replaceChildren(...COPY_FORMATS.map((format) => {
+  const formatButtons = COPY_FORMATS.map((format) => {
     const button = document.createElement("button");
-    const selected = settings.copy.defaultFormat === format;
+    const selected = YTQSCopy.DEFAULT_FORMAT === format;
     button.type = "button";
     button.dataset.copyFormat = format;
     button.setAttribute("role", "menuitemradio");
@@ -521,10 +531,22 @@ function renderCopyFormatMenu() {
     label.textContent = copyFormatLabel(format);
     button.append(check, label);
     return button;
-  }));
+  });
+  const facebookButton = document.createElement("button");
+  facebookButton.type = "button";
+  facebookButton.dataset.copyAction = "facebook-share";
+  facebookButton.className = "copy-format-action";
+  facebookButton.setAttribute("role", "menuitem");
+  const facebookIcon = document.createElement("span");
+  facebookIcon.className = "copy-format-facebook-icon";
+  facebookIcon.textContent = "f";
+  const facebookLabel = document.createElement("span");
+  facebookLabel.textContent = t("copyFormatFacebookShare");
+  facebookButton.append(facebookIcon, facebookLabel);
+  menu.replaceChildren(...formatButtons, facebookButton);
 }
 
-async function copyVideoInfo(format, rememberAsDefault = false) {
+async function copyVideoInfo(format) {
   const freshContext = await getPageContext();
   if (freshContext?.isVideo) context = freshContext;
   if (!context?.videoTitle || !context?.videoUrl) {
@@ -532,12 +554,7 @@ async function copyVideoInfo(format, rememberAsDefault = false) {
     $("#copyVideoInfoDescription").textContent = t("copyVideoInfoUnavailable");
     return false;
   }
-  const selectedFormat = COPY_FORMATS.includes(format) ? format : settings.copy.defaultFormat;
-  if (rememberAsDefault && settings.copy.defaultFormat !== selectedFormat) {
-    settings.copy.defaultFormat = selectedFormat;
-    await persist();
-    applyTranslations();
-  }
+  const selectedFormat = COPY_FORMATS.includes(format) ? format : YTQSCopy.DEFAULT_FORMAT;
   const text = YTQSCopy.formatVideoInfo({
     title: context.videoTitle,
     url: context.videoUrl,
@@ -547,6 +564,35 @@ async function copyVideoInfo(format, rememberAsDefault = false) {
   const copied = Boolean(text) && await copyTextToClipboard(text);
   showCopyButtonState(copied ? "copied" : "failed", YTQSCopy.summarize(text));
   return copied;
+}
+
+function openFacebookShareFromPopup() {
+  if (!context?.videoTitle || !context?.videoUrl) {
+    showCopyButtonState("share-failed");
+    return false;
+  }
+  const shareUrl = YTQSCopy.facebookShareUrl({ title: context.videoTitle, url: context.videoUrl });
+  const width = 720;
+  const height = 680;
+  const left = Math.max(0, Math.round((window.screenX || 0) + ((window.outerWidth || width) - width) / 2));
+  const top = Math.max(0, Math.round((window.screenY || 0) + ((window.outerHeight || height) - height) / 2));
+  const shareWindow = shareUrl && window.open(
+    shareUrl,
+    "ytqs-facebook-share",
+    `popup=yes,width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+  );
+  if (!shareWindow) {
+    showCopyButtonState("share-failed");
+    return false;
+  }
+  try {
+    shareWindow.opener = null;
+    shareWindow.focus();
+  } catch {
+    // The cross-origin share window can still open even when focus is restricted.
+  }
+  showCopyButtonState("shared", YTQSCopy.summarize(`${context.videoTitle}\n${context.videoUrl}`));
+  return true;
 }
 
 function setTransferStatus(messageKey, isError = false) {
@@ -700,7 +746,7 @@ $("#shortsPublishTimeEnabled").addEventListener("change", async (event) => {
   await persist();
 });
 
-$("#copyVideoInfo").addEventListener("click", () => copyVideoInfo(settings.copy.defaultFormat));
+$("#copyVideoInfo").addEventListener("click", () => copyVideoInfo(YTQSCopy.DEFAULT_FORMAT));
 
 $("#copyFormatToggle").addEventListener("click", () => {
   const willOpen = $("#copyFormatMenu").hidden;
@@ -710,10 +756,14 @@ $("#copyFormatToggle").addEventListener("click", () => {
 });
 
 $("#copyFormatMenu").addEventListener("click", async (event) => {
-  const button = event.target.closest("[data-copy-format]");
+  const button = event.target.closest("[data-copy-format], [data-copy-action]");
   if (!button) return;
   closeCopyFormatMenu();
-  await copyVideoInfo(button.dataset.copyFormat, true);
+  if (button.dataset.copyAction === "facebook-share") {
+    openFacebookShareFromPopup();
+    return;
+  }
+  await copyVideoInfo(button.dataset.copyFormat);
 });
 
 document.addEventListener("click", (event) => {

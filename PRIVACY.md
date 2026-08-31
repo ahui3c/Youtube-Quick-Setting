@@ -1,16 +1,16 @@
-# YouTube 快速設定速度 / 畫質－隱私權政策
+# YouTube 快速設定工具箱－隱私權政策
 
-最後更新：2026 年 8 月 28 日
+最後更新：2026 年 8 月 31 日
 
-本隱私權政策適用於 Chrome 擴充功能「YouTube 快速設定速度 / 畫質」（以下稱「本擴充功能」）。
+本隱私權政策適用於 Chrome 擴充功能「YouTube 快速設定工具箱」（以下稱「本擴充功能」）。
 
 ## 我們處理的資料
 
-本擴充功能只會在 `youtube.com` 上，於使用者操作或觀看影片時讀取目前頁面的影片類型、公開標題、公開網址、目前播放時間、公開發布日期、頻道名稱與頻道識別資訊，以判斷應套用的設定、補充 Shorts 卡片資訊，並在使用者主動執行複製操作時產生所選格式的文字。複製內容不會傳送給開發者或其他服務。
+本擴充功能只會在 `youtube.com` 上，於使用者操作或觀看影片時讀取目前頁面的影片類型、公開標題、公開網址、目前播放時間、公開發布日期、頻道名稱與頻道識別資訊，以判斷應套用的設定、補充 Shorts 卡片資訊，並在使用者主動執行複製操作時產生所選格式的文字。複製內容不會傳送給開發者。只有使用者在複製成功提示期間再次按下 `S`，或主動選擇下拉選單的 Facebook 分享項目時，擴充功能才會開啟 Facebook 分享頁面，並將目前影片的公開標題與公開網址加入分享網址參數；後續資料處理由 Facebook 的服務與隱私政策管理。
 
 若使用者啟用「首頁 Shorts 顯示頻道名稱」或「Shorts 顯示發布時間資訊」，本擴充功能會將首頁可見 Shorts 的公開影片網址傳送至 YouTube 自己的公開中繼資料或影片頁面，以取得頻道名稱、頻道網址及公開發布日期。Shorts 播放頁會優先讀取 YouTube 已載入目前頁面的公開發布日期，只有資料尚未就緒時才向 YouTube 自己的影片頁面補查。請求不會攜帶登入 Cookie，結果只暫存在目前頁面，不會傳送給開發者或其他服務。
 
-本擴充功能不會收集、傳送、出售或與開發者及第三方分享瀏覽紀錄、YouTube 頁面內容、個人資料或使用統計，也不含廣告、追蹤器與分析服務。
+除上述由使用者明確觸發的 YouTube 公開影片 Facebook 分享外，本擴充功能不會收集、傳送、出售或與開發者及第三方分享瀏覽紀錄、YouTube 頁面內容、個人資料或使用統計，也不含廣告、追蹤器與分析服務。
 
 ## 儲存的設定
 
@@ -29,7 +29,7 @@
 
 ## 資料安全與第三方
 
-本擴充功能不使用自有伺服器、不執行遠端程式碼，也不包含廣告或分析服務。Shorts 頻道名稱與發布日期只從目前正在使用的 YouTube 頁面讀取或向 YouTube 服務查詢。使用者偏好的跨裝置同步由 Chrome 提供並受 Google 的隱私條款約束。
+本擴充功能不使用自有伺服器、不執行遠端程式碼，也不包含廣告或分析服務。Shorts 頻道名稱與發布日期只從目前正在使用的 YouTube 頁面讀取或向 YouTube 服務查詢。使用者偏好的跨裝置同步由 Chrome 提供並受 Google 的隱私條款約束。Facebook 分享只會在使用者連續兩次按下 `S` 或主動選擇分享選單時開啟，且不需要 Facebook 主機權限；Facebook 分享頁面的登入、預覽與發佈行為由 Facebook 控制。
 
 本擴充功能對從 Google API 或 Google 服務取得之資訊的使用，遵守 Chrome Web Store User Data Policy，包括 Limited Use 要求。
 
@@ -39,8 +39,8 @@
 
 ## English
 
-This extension locally reads the current YouTube video type, title, public URL, current playback time, channel name, channel identifier, and public publish date only to provide its features. Selected video information is written to the clipboard only after the user clicks a copy control or presses `S`/`Shift+S`; clipboard contents are never read. JSON exports, imports, and the single local restore point are processed only on the user's device. Home Shorts channel names and publish dates are obtained from YouTube without login cookies. Synced preferences are stored with Chrome `storage.sync`; the developer cannot access them. The extension contains no ads, trackers, analytics, remote code, or developer-operated server.
+This extension locally reads the current YouTube video type, title, public URL, current playback time, channel name, channel identifier, and public publish date only to provide its features. Selected video information is written to the clipboard only after the user clicks a copy control or presses `S`/`Shift+S`; clipboard contents are never read. If the user presses `S` again while the successful copy confirmation is visible, or explicitly selects the Facebook share menu item, the extension opens Facebook sharing and includes the public video title and URL in the share URL parameters. Facebook then processes the share page under its own privacy policy. JSON exports, imports, and the single local restore point are processed only on the user's device. Home Shorts channel names and publish dates are obtained from YouTube without login cookies. Synced preferences are stored with Chrome `storage.sync`; the developer cannot access them. The extension contains no ads, trackers, analytics, remote code, or developer-operated server.
 
 ## 日本語
 
-本拡張機能は、機能提供のために現在の YouTube 動画タイプ、タイトル、公開 URL、現在の再生位置、チャンネル名、チャンネル識別情報、公開日をローカルで読み取ります。選択した動画情報は、ユーザーがコピー操作を行うか `S`／`Shift+S` キーを押した場合のみクリップボードへ書き込み、内容は読み取りません。JSON の書き出し・読み込みと単一の復元ポイントは端末内だけで処理されます。ホームのショートのチャンネル名と公開日は、ログイン Cookie なしで YouTube から取得します。同期設定は Chrome の同期ストレージに保存され、開発者はアクセスできません。広告、トラッカー、解析サービス、リモートコード、開発者運営サーバーは使用しません。
+本拡張機能は、機能提供のために現在の YouTube 動画タイプ、タイトル、公開 URL、現在の再生位置、チャンネル名、チャンネル識別情報、公開日をローカルで読み取ります。選択した動画情報は、ユーザーがコピー操作を行うか `S`／`Shift+S` キーを押した場合のみクリップボードへ書き込み、内容は読み取りません。コピー成功の確認表示中にユーザーがもう一度 `S` を押すか、Facebook 共有メニューを明示的に選択した場合のみ、Facebook 共有画面を開き、公開動画のタイトルと URL を共有 URL のパラメータに含めます。その後は Facebook のプライバシーポリシーに従って処理されます。JSON の書き出し・読み込みと単一の復元ポイントは端末内だけで処理されます。ホームのショートのチャンネル名と公開日は、ログイン Cookie なしで YouTube から取得します。同期設定は Chrome の同期ストレージに保存され、開発者はアクセスできません。広告、トラッカー、解析サービス、リモートコード、開発者運営サーバーは使用しません。

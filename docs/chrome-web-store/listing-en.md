@@ -2,7 +2,7 @@
 
 ## Name
 
-YouTube Quick Speed / Quality Settings
+YouTube Quick Settings Toolbox
 
 ## Summary
 
@@ -22,8 +22,8 @@ Key features:
 - Per-channel profiles override global defaults
 - A two-second on-video notice confirms applied channel settings
 - Use + / − to change speed and * to return instantly to 1×
-- Press S or the main popup button to copy video info in the default format; Shift+S copies the title + current timestamp URL
-- The arrow menu offers five formats: title + URL, title + timestamp URL, Markdown, HTML, and channel + title + URL
+- Press S to copy the title + URL, then press S again during the confirmation to open Facebook sharing; Shift+S copies the title + current timestamp URL
+- The arrow menu offers five copy formats plus a final action to share the title + link directly to Facebook
 - Export or import JSON settings with merge/replace preview and an automatic local restore point
 - In Shorts, use ← / → to seek 3, 5 (default), or 10 seconds, optionally disable the arrow keys, and press 0 to return to the beginning
 - Adds clickable channel names to Home Shorts cards; optional publish times are off by default and can be shown on Home cards and Shorts playback pages

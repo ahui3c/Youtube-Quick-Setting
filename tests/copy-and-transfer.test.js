@@ -19,6 +19,11 @@ assert.equal(YTQSCopy.FORMATS.includes("title-only"), false);
 assert.equal(YTQSCopy.formatVideoInfo(info, "url-only"), 'A <Useful> "Video"\nhttps://www.youtube.com/watch?v=qRjSmLc2cOs');
 assert.equal(YTQSCopy.formatVideoInfo(info, "channel-title-url"), `Test Channel\n${info.title}\n${info.url}`);
 assert.equal(YTQSCopy.timestampUrl("https://www.youtube.com/shorts/qRjSmLc2cOs", 12), "https://www.youtube.com/shorts/qRjSmLc2cOs?t=12s");
+const facebookUrl = new URL(YTQSCopy.facebookShareUrl(info));
+assert.equal(facebookUrl.origin, "https://www.facebook.com");
+assert.equal(facebookUrl.pathname, "/sharer/sharer.php");
+assert.equal(facebookUrl.searchParams.get("u"), info.url);
+assert.equal(facebookUrl.searchParams.get("quote"), `${info.title}\n${info.url}`);
 assert.match(YTQSCopy.summarize("x".repeat(120)), /…$/);
 
 const current = {
@@ -40,10 +45,10 @@ const imported = {
   channels: { channelB: { name: "B" } }
 };
 
-const exported = YTQSSettingsTransfer.createExport(current, "1.7.0");
+const exported = YTQSSettingsTransfer.createExport(current, "1.8.0");
 assert.equal(exported.schema, "youtube-quick-setting-settings");
 assert.equal(exported.formatVersion, 2);
-assert.equal(exported.extensionVersion, "1.7.0");
+assert.equal(exported.extensionVersion, "1.8.0");
 assert.deepEqual(YTQSSettingsTransfer.extractImport(exported).rawSettings, current);
 assert.equal(YTQSSettingsTransfer.extractImport(current).formatVersion, 2);
 assert.throws(() => YTQSSettingsTransfer.extractImport({ schema: "other", settings: {} }), /invalid-schema/);

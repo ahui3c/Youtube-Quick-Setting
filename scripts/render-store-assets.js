@@ -64,7 +64,7 @@ async function renderScreenshot(browser, scene) {
     .badge{display:inline-flex;padding:14px 20px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(28,31,36,.75);font-size:18px;font-weight:750;box-shadow:inset 0 1px rgba(255,255,255,.08)}
     .shot{position:relative;justify-self:end}.shot:before{content:"";position:absolute;inset:15% -10%;border-radius:50%;background:#ff3b30;filter:blur(90px);opacity:.22}
     .shot img{position:relative;width:365px;max-height:680px;object-fit:cover;object-position:top;border:1px solid rgba(255,255,255,.2);border-radius:22px;box-shadow:0 42px 90px rgba(0,0,0,.65)}
-  </style></head><body><div class="bg"></div><div class="shade"></div><div class="grain"></div><main><section><div class="brand"><img class="icon" src="${icon}"><strong>YouTube 快速設定速度 / 畫質</strong></div><p class="kicker">${scene.kicker}</p><h1>${scene.title}</h1><p class="subtitle">${scene.subtitle}</p><div class="badge">${scene.badge}</div></section><div class="shot"><img src="${popup}"></div></main></body></html>`);
+  </style></head><body><div class="bg"></div><div class="shade"></div><div class="grain"></div><main><section><div class="brand"><img class="icon" src="${icon}"><strong>YouTube 快速設定工具箱</strong></div><p class="kicker">${scene.kicker}</p><h1>${scene.title}</h1><p class="subtitle">${scene.subtitle}</p><div class="badge">${scene.badge}</div></section><div class="shot"><img src="${popup}"></div></main></body></html>`);
   await page.screenshot({ path: path.join(storeDir, scene.file), animations: "disabled" });
   await page.close();
 }
@@ -81,7 +81,7 @@ async function renderPromo(browser, width, height, file, compact) {
     .kicker{margin:0 0 ${compact ? 8 : 16}px;color:#ff6056;font-size:${compact ? 11 : 19}px;font-weight:850;letter-spacing:.13em}
     h1{margin:0;font-size:${compact ? 30 : 62}px;line-height:1.1;letter-spacing:-.045em;max-width:${compact ? 290 : 780}px}
     p{margin:${compact ? 10 : 20}px 0 0;color:#d3d6dc;font-size:${compact ? 13 : 25}px;font-weight:650}
-  </style></head><body><div class="bg"></div><div class="shade"></div><div class="grain"></div><main><img class="icon" src="${icon}"><section><div class="kicker">YOUTUBE QUICK SETTING</div><h1>快速設定速度 / 畫質</h1><p>影片 · Shorts · 頻道專屬 · 快速鍵</p></section></main></body></html>`);
+  </style></head><body><div class="bg"></div><div class="shade"></div><div class="grain"></div><main><img class="icon" src="${icon}"><section><div class="kicker">YOUTUBE QUICK TOOLBOX</div><h1>快速設定工具箱</h1><p>影片 · Shorts · 頻道專屬 · 快速鍵</p></section></main></body></html>`);
   await page.screenshot({ path: path.join(storeDir, file), animations: "disabled" });
   await page.close();
 }

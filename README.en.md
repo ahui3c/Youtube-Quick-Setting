@@ -1,4 +1,4 @@
-# YouTube Quick Speed / Quality Settings
+# YouTube Quick Settings Toolbox
 
 [繁體中文](README.md) · [English](README.en.md) · [日本語](README.ja.md)
 
@@ -18,7 +18,7 @@ A Chrome extension that automatically applies playback speed, video quality, and
 - Standard videos can open automatically in Theater mode, with per-channel follow-global, force-on, or force-off controls
 - A two-second player notice shows the active channel speed and quality
 - Press `+` or `-` to change speed, and `*` to return immediately to `1×`
-- Press `S` or the main popup button to copy video info in the current default format; use the arrow for five formats
+- Press `S` or the main popup button to copy the title + URL; press `S` again while the confirmation is visible to open Facebook sharing
 - Supports title + timestamp URL, Markdown, HTML, and channel + title + URL; `Shift+S` copies title + current timestamp URL directly
 - Export or import JSON settings with merge/replace preview and an automatic pre-import restore point
 - Keeps YouTube's native speed and quality menus in sync whenever the player permits it
@@ -72,8 +72,8 @@ Priority order:
 | `+` | Select the next faster speed |
 | `-` | Select the next slower speed |
 | `*` | Reset the current playback session to `1×` |
-| `S` | Copy video info in the current default format with a visible summary |
-| `Shift` + `S` | Copy a URL for the current playback time |
+| `S` | Copy the title + URL; press again while the confirmation is visible to open Facebook sharing |
+| `Shift` + `S` | Copy the title + URL for the current playback time |
 | `←` / `→` | Seek backward/forward 5 seconds in Shorts |
 | `0` | Return a Short to the beginning |
 
@@ -83,7 +83,9 @@ The Shorts settings let you disable the arrow keys or select a `3`, `5` (default
 
 ### Copy formats and settings backup
 
-The main copy button uses the current default format. Choosing another format from the arrow menu copies it immediately and makes it the new default. Every copy shows a success state and a compact content preview in the popup or on the video.
+The main copy button and `S` shortcut always copy the title + URL. Press `S` again while the successful copy confirmation is visible to open a Facebook share window with the video URL and title text. The last item in the arrow menu, “Share title + link to Facebook,” opens the same share window directly. Other formats are copied once without changing the main button or shortcut default. Every action shows a success state and a compact content preview in the popup or on the video.
+
+Facebook controls the final title, thumbnail, and text layout based on the public YouTube link. If the browser blocks the popup, the extension shows an error and does not retry automatically.
 
 “Backup and restore settings” exports a format-version `v2` JSON file. Before import, the extension previews general changes and channel additions, updates, and removals. Users can merge settings or replace everything. A local pre-import restore point is created automatically and is never sent to the developer.
 

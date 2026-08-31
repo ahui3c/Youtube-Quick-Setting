@@ -45,5 +45,13 @@
     return compact.length > maxLength ? `${compact.slice(0, maxLength - 1)}…` : compact;
   }
 
-  globalThis.YTQSCopy = Object.freeze({ DEFAULT_FORMAT, FORMATS, formatVideoInfo, summarize, timestampUrl });
+  function facebookShareUrl(info) {
+    const title = String(info?.title || "").trim();
+    const url = String(info?.url || "").trim();
+    if (!title || !url) return "";
+    const params = new URLSearchParams({ u: url, quote: `${title}\n${url}` });
+    return `https://www.facebook.com/sharer/sharer.php?${params.toString()}`;
+  }
+
+  globalThis.YTQSCopy = Object.freeze({ DEFAULT_FORMAT, FORMATS, formatVideoInfo, summarize, timestampUrl, facebookShareUrl });
 })();

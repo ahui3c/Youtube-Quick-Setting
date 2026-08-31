@@ -10,6 +10,7 @@ const YTQS_DEFAULTS = {
 const YTQS_SPEEDS = [0.7, 1, 1.25, 2, 3];
 const YTQS_SEEK_SECONDS = [3, 5, 10];
 const YTQS_THEATER_OVERRIDES = ["inherit", "on", "off"];
+const YTQS_FACEBOOK_SHARE_WINDOW_MS = 2200;
 let ytqsSettings = YTQS_DEFAULTS;
 let ytqsContext = { isVideo: false, contentType: "regular", channelId: "", channelName: "" };
 let ytqsRefreshTimer = 0;
@@ -18,6 +19,7 @@ let ytqsLastNavigationVideoId = "";
 let ytqsShortsScanTimer = 0;
 let ytqsShortsMutationObserver = null;
 let ytqsShortsIntersectionObserver = null;
+let ytqsFacebookShareReadyUntil = 0;
 let ytqsShortsMetadataRequests = 0;
 const ytqsShortsMetadataCache = new Map();
 const ytqsShortsMetadataPending = new Map();
@@ -30,9 +32,9 @@ const YTQS_QUALITY_LABELS = {
 };
 
 const YTQS_MESSAGES = {
-  "zh-Hant": { channelSettings: "頻道指定設定", speed: "速度", quality: "解析度", playbackSpeed: "播放速度", seconds: "秒", backToStart: "回到片頭", copiedVideoInfo: "已複製影片資訊", copyFailed: "複製失敗", today: "今天", published: "發布時間" },
-  en: { channelSettings: "Channel settings", speed: "Speed", quality: "Quality", playbackSpeed: "Playback speed", seconds: "sec", backToStart: "Back to start", copiedVideoInfo: "Video info copied", copyFailed: "Copy failed", today: "today", published: "Published" },
-  ja: { channelSettings: "チャンネル設定", speed: "速度", quality: "画質", playbackSpeed: "再生速度", seconds: "秒", backToStart: "先頭に戻る", copiedVideoInfo: "動画情報をコピーしました", copyFailed: "コピーに失敗しました", today: "今日", published: "公開時刻" }
+  "zh-Hant": { channelSettings: "頻道指定設定", speed: "速度", quality: "解析度", playbackSpeed: "播放速度", seconds: "秒", backToStart: "回到片頭", copiedVideoInfo: "已複製影片資訊", copiedVideoInfoShareHint: "已複製，再按一次 S 分享到 Facebook", facebookShareOpened: "已開啟 Facebook 分享視窗", facebookShareBlocked: "無法開啟 Facebook 分享視窗", copyFailed: "複製失敗", today: "今天", published: "發布時間" },
+  en: { channelSettings: "Channel settings", speed: "Speed", quality: "Quality", playbackSpeed: "Playback speed", seconds: "sec", backToStart: "Back to start", copiedVideoInfo: "Video info copied", copiedVideoInfoShareHint: "Copied — press S again to share on Facebook", facebookShareOpened: "Facebook share window opened", facebookShareBlocked: "Could not open the Facebook share window", copyFailed: "Copy failed", today: "today", published: "Published" },
+  ja: { channelSettings: "チャンネル設定", speed: "速度", quality: "画質", playbackSpeed: "再生速度", seconds: "秒", backToStart: "先頭に戻る", copiedVideoInfo: "動画情報をコピーしました", copiedVideoInfoShareHint: "コピーしました。もう一度 S で Facebook に共有", facebookShareOpened: "Facebook の共有画面を開きました", facebookShareBlocked: "Facebook の共有画面を開けませんでした", copyFailed: "コピーに失敗しました", today: "今日", published: "公開時刻" }
 };
 
 function ytqsNormalizeProfile(value, fallback = YTQS_DEFAULTS.global) {
@@ -77,7 +79,7 @@ function ytqsNormalizeSettings(value) {
       publishTimeEnabled: value?.shortsControls?.publishTimeEnabled === true
     },
     copy: {
-      defaultFormat: YTQSCopy.FORMATS.includes(value?.copy?.defaultFormat) ? value.copy.defaultFormat : YTQSCopy.DEFAULT_FORMAT
+      defaultFormat: YTQSCopy.DEFAULT_FORMAT
     },
     channels
   };
@@ -679,7 +681,7 @@ function showSeekOverlay(deltaSeconds, currentTime, duration) {
   showSpeedOverlay.timer = setTimeout(() => overlay.classList.remove("ytqs-show"), 1050);
 }
 
-function showCopyOverlay(success, title = "") {
+function showCopyOverlay(success, title = "", messageKey = "", kind = "copy") {
   let overlay = document.querySelector("#ytqs-copy-overlay");
   if (!overlay) {
     overlay = document.createElement("div");
@@ -690,6 +692,7 @@ function showCopyOverlay(success, title = "") {
       #ytqs-copy-overlay{position:fixed;z-index:2147483647;left:50%;top:24%;transform:translate(-50%,-8px);display:grid;grid-template-columns:28px minmax(0,1fr);align-items:center;column-gap:10px;min-width:230px;max-width:min(440px,calc(100vw - 32px));padding:13px 17px;border:1px solid rgba(255,255,255,.2);border-radius:12px;background:rgba(16,16,18,.92);box-shadow:0 14px 45px rgba(0,0,0,.4);color:#fff;font-family:Roboto,"Microsoft JhengHei UI",sans-serif;opacity:0;pointer-events:none;transition:opacity .15s ease,transform .15s ease;backdrop-filter:blur(8px)}
       #ytqs-copy-overlay.ytqs-show{opacity:1;transform:translate(-50%,0)}
       #ytqs-copy-overlay .ytqs-copy-icon{grid-row:1/3;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#31b879;color:#fff;font-size:16px;font-weight:800}
+      #ytqs-copy-overlay.ytqs-copy-share .ytqs-copy-icon{background:#1877f2;font-family:Arial,sans-serif}
       #ytqs-copy-overlay.ytqs-copy-error .ytqs-copy-icon{background:#ff3b30}
       #ytqs-copy-overlay .ytqs-copy-value{font-size:14px;font-weight:700;line-height:1.3}
       #ytqs-copy-overlay .ytqs-copy-title{overflow:hidden;color:#b7b7ba;font-size:11px;line-height:1.35;text-overflow:ellipsis;white-space:nowrap}
@@ -698,14 +701,15 @@ function showCopyOverlay(success, title = "") {
     document.documentElement.append(style, overlay);
   }
   overlay.classList.toggle("ytqs-copy-error", !success);
-  overlay.querySelector(".ytqs-copy-icon").textContent = success ? "✓" : "!";
-  overlay.querySelector(".ytqs-copy-value").textContent = ytqsText(success ? "copiedVideoInfo" : "copyFailed");
+  overlay.classList.toggle("ytqs-copy-share", kind === "share" && success);
+  overlay.querySelector(".ytqs-copy-icon").textContent = success ? kind === "share" ? "f" : "✓" : "!";
+  overlay.querySelector(".ytqs-copy-value").textContent = ytqsText(messageKey || (success ? "copiedVideoInfo" : "copyFailed"));
   overlay.querySelector(".ytqs-copy-title").textContent = title;
   overlay.classList.remove("ytqs-show");
   void overlay.offsetWidth;
   overlay.classList.add("ytqs-show");
   clearTimeout(showCopyOverlay.timer);
-  showCopyOverlay.timer = setTimeout(() => overlay.classList.remove("ytqs-show"), 1600);
+  showCopyOverlay.timer = setTimeout(() => overlay.classList.remove("ytqs-show"), YTQS_FACEBOOK_SHARE_WINDOW_MS);
 }
 
 async function writeClipboardText(text) {
@@ -732,7 +736,7 @@ async function writeClipboardText(text) {
   }
 }
 
-async function copyCurrentVideoInfo(formatOverride = "") {
+async function copyCurrentVideoInfo(formatOverride = "", armFacebookShare = false) {
   const info = currentVideoInfo();
   if (!info) {
     showCopyOverlay(false);
@@ -740,11 +744,49 @@ async function copyCurrentVideoInfo(formatOverride = "") {
   }
   const format = YTQSCopy.FORMATS.includes(formatOverride)
     ? formatOverride
-    : ytqsSettings.copy?.defaultFormat || YTQSCopy.DEFAULT_FORMAT;
+    : YTQSCopy.DEFAULT_FORMAT;
   const text = YTQSCopy.formatVideoInfo({ ...info, channelName: ytqsContext.channelName }, format);
   const copied = Boolean(text) && await writeClipboardText(text);
-  showCopyOverlay(copied, YTQSCopy.summarize(text));
+  ytqsFacebookShareReadyUntil = copied && armFacebookShare
+    ? Date.now() + YTQS_FACEBOOK_SHARE_WINDOW_MS
+    : 0;
+  showCopyOverlay(copied, YTQSCopy.summarize(text), copied && armFacebookShare ? "copiedVideoInfoShareHint" : "");
   return copied;
+}
+
+function facebookShareReady() {
+  return ytqsFacebookShareReadyUntil > Date.now();
+}
+
+function openFacebookShareWindow() {
+  const info = currentVideoInfo();
+  const shareUrl = YTQSCopy.facebookShareUrl(info);
+  ytqsFacebookShareReadyUntil = 0;
+  if (!shareUrl) {
+    showCopyOverlay(false, "", "facebookShareBlocked", "share");
+    return false;
+  }
+  const width = 720;
+  const height = 680;
+  const left = Math.max(0, Math.round((window.screenX || 0) + ((window.outerWidth || width) - width) / 2));
+  const top = Math.max(0, Math.round((window.screenY || 0) + ((window.outerHeight || height) - height) / 2));
+  const shareWindow = window.open(
+    shareUrl,
+    "ytqs-facebook-share",
+    `popup=yes,width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+  );
+  if (!shareWindow) {
+    showCopyOverlay(false, YTQSCopy.summarize(info.text), "facebookShareBlocked", "share");
+    return false;
+  }
+  try {
+    shareWindow.opener = null;
+    shareWindow.focus();
+  } catch {
+    // The cross-origin share window can still open even when focus is restricted.
+  }
+  showCopyOverlay(true, YTQSCopy.summarize(info.text), "facebookShareOpened", "share");
+  return true;
 }
 
 function seekShorts(deltaSeconds) {
@@ -828,7 +870,11 @@ function handleKeyboardShortcut(event) {
   if (event.repeat && !isSeekBackward && !isSeekForward) return false;
   if ((isSeekBackward || isSeekForward || isSeekStart) && isSeekBlockedTarget(event.target)) return false;
   const handled = isCopy
-    ? (copyCurrentVideoInfo(event.shiftKey ? "timestamp-url" : ""), true)
+    ? (event.shiftKey
+      ? (ytqsFacebookShareReadyUntil = 0, copyCurrentVideoInfo("timestamp-url"), true)
+      : facebookShareReady()
+        ? (openFacebookShareWindow(), true)
+        : (copyCurrentVideoInfo("title-url", true), true))
     : isSeekStart
     ? seekShorts(0)
     : isSeekBackward

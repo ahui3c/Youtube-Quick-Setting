@@ -62,7 +62,7 @@ const independent = normalizeSettings({
 });
 assert.equal(independent.language, "ja");
 assert.equal(independent.schemaVersion, 2);
-assert.equal(independent.copy.defaultFormat, "markdown");
+assert.equal(independent.copy.defaultFormat, "title-url");
 assert.equal(independent.global.speed, 1);
 assert.equal(independent.global.theaterModeEnabled, true);
 assert.equal(independent.global.premiumQualityEnabled, true);

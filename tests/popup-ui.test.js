@@ -8,7 +8,13 @@ const { chromium } = require("playwright");
   await page.addInitScript(() => {
     globalThis.savedSettings = [];
     globalThis.copiedTexts = [];
+    globalThis.openedWindows = [];
     globalThis.localStore = {};
+    window.open = (url, name, features) => {
+      const opened = { url, name, features, opener: window, focused: false, focus() { this.focused = true; } };
+      openedWindows.push(opened);
+      return opened;
+    };
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
       value: { writeText: async (text) => copiedTexts.push(text) }
@@ -23,6 +29,7 @@ const { chromium } = require("playwright");
               global: { speed: 1, quality: "hd1080", premiumQualityEnabled: false, theaterModeEnabled: true },
               shorts: { speed: 3, quality: "highest" },
               shortsControls: { seekSeconds: 10, arrowKeysEnabled: false, channelNamesEnabled: true, publishTimeEnabled: true },
+              copy: { defaultFormat: "markdown" },
               channels: {}
             }
           }),
@@ -33,7 +40,7 @@ const { chromium } = require("playwright");
           set: async (value) => Object.assign(localStore, value)
         }
       },
-      runtime: { getManifest: () => ({ version: "1.7.0" }) },
+      runtime: { getManifest: () => ({ version: "1.8.0" }) },
       tabs: {
         query: async () => [{ id: 1, url: "https://www.youtube.com/watch?v=abc123" }],
         sendMessage: async () => ({
@@ -51,7 +58,7 @@ const { chromium } = require("playwright");
 
   await page.goto(`file:///${path.resolve("popup.html").replaceAll("\\", "/")}`);
   await page.waitForSelector("#globalSpeed .option-button");
-  assert.equal(await page.locator("#appTitle").innerText(), "YouTube 速度 / 画質クイック設定");
+  assert.equal(await page.locator("#appTitle").innerText(), "YouTube クイック設定ツールボックス");
   assert.equal(await page.locator("#globalSpeed .selected").innerText(), "1×");
   assert.equal(await page.locator("#globalTheaterSetting").isVisible(), true);
   assert.equal(await page.locator("#globalTheaterEnabled").isChecked(), true);
@@ -64,11 +71,26 @@ const { chromium } = require("playwright");
   assert.match(await page.locator("#copyVideoInfoState").innerText(), /Test Video/);
   await page.locator("#copyFormatToggle").click();
   assert.equal(await page.locator("#copyFormatMenu [role='menuitemradio']").count(), 5);
+  assert.equal(await page.locator("#copyFormatMenu button").count(), 6);
+  assert.equal(await page.locator("#copyFormatMenu button").last().getAttribute("data-copy-action"), "facebook-share");
   await page.getByRole("menuitemradio", { name: "Markdown リンク" }).click();
   assert.equal(await page.evaluate(() => copiedTexts.at(-1)), "[Test Video](https://www.youtube.com/watch?v=qRjSmLc2cOs)");
-  assert.equal(await page.evaluate(() => savedSettings.at(-1).ytQuickSettings.copy.defaultFormat), "markdown");
   await page.locator("#copyVideoInfo").click();
-  assert.equal(await page.evaluate(() => copiedTexts.at(-1)), "[Test Video](https://www.youtube.com/watch?v=qRjSmLc2cOs)");
+  assert.equal(await page.evaluate(() => copiedTexts.at(-1)), "Test Video\nhttps://www.youtube.com/watch?v=qRjSmLc2cOs");
+  await page.locator("#copyFormatToggle").click();
+  await page.getByRole("menuitem", { name: "タイトル＋リンクを Facebook に共有" }).click();
+  const facebookShare = await page.evaluate(() => {
+    const opened = openedWindows.at(-1);
+    return { url: opened.url, name: opened.name, features: opened.features, openerIsNull: opened.opener === null, focused: opened.focused };
+  });
+  const facebookShareUrl = new URL(facebookShare.url);
+  assert.equal(facebookShareUrl.origin, "https://www.facebook.com");
+  assert.equal(facebookShareUrl.pathname, "/sharer/sharer.php");
+  assert.equal(facebookShareUrl.searchParams.get("u"), "https://www.youtube.com/watch?v=qRjSmLc2cOs");
+  assert.equal(facebookShareUrl.searchParams.get("quote"), "Test Video\nhttps://www.youtube.com/watch?v=qRjSmLc2cOs");
+  assert.equal(facebookShare.openerIsNull, true);
+  assert.equal(facebookShare.focused, true);
+  assert.equal(await page.locator("#copyVideoInfoDescription").innerText(), "Facebook の共有画面を開きました");
   await page.locator("#globalPremiumQualityEnabled").check();
   assert.equal(await page.evaluate(() => savedSettings.at(-1).ytQuickSettings.global.premiumQualityEnabled), true);
   await page.locator("#channelEnabled").check();
@@ -167,7 +189,7 @@ const { chromium } = require("playwright");
   assert.ok(shortsShortcut.y >= shortsChannel.y + shortsChannel.height - 1, "Shorts shortcuts should stay below channel settings");
 
   await page.locator("#languageSelect").selectOption("en");
-  assert.equal(await page.locator("#appTitle").innerText(), "YouTube Quick Speed / Quality Settings");
+  assert.equal(await page.locator("#appTitle").innerText(), "YouTube Quick Settings Toolbox");
   assert.equal(await page.locator("#shortsPublishTimeTitle").innerText(), "Show Shorts publish time");
   assert.match(await page.locator("#shortcutDescription").innerText(), /0 restarts/);
   assert.match(await page.locator("#shortcutDescription").innerText(), /10s/);
@@ -203,7 +225,7 @@ const { chromium } = require("playwright");
   await page.locator("[data-content-type='shorts']").click();
 
   await page.locator("#languageSelect").selectOption("zh-Hant");
-  assert.equal(await page.locator("#appTitle").innerText(), "YouTube 快速設定速度 / 畫質");
+  assert.equal(await page.locator("#appTitle").innerText(), "YouTube 快速設定工具箱");
   assert.equal(await page.locator("#shortsPublishTimeTitle").innerText(), "Shorts 顯示發布時間資訊");
 
   const panel = await page.locator(".panel").boundingBox();
