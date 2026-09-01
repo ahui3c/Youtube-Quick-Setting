@@ -4,7 +4,7 @@
 
 ![YouTube Quick Speed and Quality Settings 4K promotional image](docs/images/promo-en-4k.png)
 
-A Chrome extension that automatically applies playback speed, video quality, and channel-specific preferences to standard YouTube videos and Shorts.
+A Chrome extension that applies playback speed, video quality, and channel-specific preferences to standard YouTube videos, with separate speed and quick controls for Shorts.
 
 ## Features
 
@@ -95,7 +95,7 @@ When the requested resolution is unavailable, the extension selects the highest 
 
 Highest, 4K, and 1080p exclude Premium quality by default. `1080p Premium` becomes eligible only after the user explicitly enables **Use Premium enhanced quality**. Non-subscribers should leave it off to avoid the Premium trial prompt. Channel profiles store this switch independently.
 
-The current desktop Shorts player does not expose a native quality menu or a usable quality API. The extension stores the Shorts quality preference independently and applies it whenever YouTube exposes a controllable option. Shorts playback-speed control is unaffected.
+The current desktop Shorts player does not expose stable native quality controls. The Shorts settings page therefore omits video quality and the extension does not force a quality level in the background. Shorts playback speed and quick controls are unaffected.
 
 ## Privacy
 

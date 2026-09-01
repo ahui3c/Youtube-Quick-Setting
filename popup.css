@@ -225,6 +225,13 @@ legend {
 
 .quality-button:hover { border-color: #51535a; color: white; }
 .quality-button.selected { border-color: var(--red); background: rgb(255 59 48 / 10%); color: white; }
+.quality-button:disabled {
+  cursor: not-allowed;
+  border-color: var(--line);
+  background: var(--card-strong);
+  color: #777980;
+}
+.quality-button.selected:disabled { border-color: #55575d; background: rgb(255 255 255 / 4%); color: #96989e; }
 
 .context-note {
   margin: 8px 1px 0;
@@ -238,6 +245,9 @@ legend {
   padding-top: 16px;
   border-top: 1px solid var(--line);
 }
+.shorts-controls > .toggle-setting:first-child { margin-top: 0; }
+.shorts-seek-setting { margin-top: 15px; transition: opacity .16s ease; }
+.shorts-seek-setting:disabled { opacity: .5; }
 
 .toggle-setting {
   display: flex;

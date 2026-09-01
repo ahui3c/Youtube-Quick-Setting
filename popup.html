@@ -36,10 +36,9 @@
           <div class="speed-track" id="globalSpeed" role="radiogroup" aria-label="全域播放速度"></div>
         </fieldset>
 
-        <fieldset>
+        <fieldset id="globalQualityFieldset">
           <legend id="globalQualityLegend">影片畫質</legend>
           <div class="choice-grid" id="globalQuality" role="radiogroup" aria-label="全域影片畫質"></div>
-          <p class="context-note" id="shortsQualityNote" hidden>YouTube Shorts 提供畫質控制時才會套用此偏好。</p>
         </fieldset>
 
         <div class="toggle-setting" id="globalPremiumQualitySetting">
@@ -67,10 +66,6 @@
         </div>
 
         <div class="shorts-controls" id="shortsControls" hidden>
-          <fieldset>
-            <legend id="shortsSeekSecondsLegend">快進秒數</legend>
-            <div class="choice-grid" id="shortsSeekSeconds" role="radiogroup" aria-labelledby="shortsSeekSecondsLegend"></div>
-          </fieldset>
           <div class="toggle-setting">
             <div>
               <strong id="shortsArrowKeysTitle">啟用 Shorts 左右方向鍵</strong>
@@ -82,6 +77,10 @@
               <span class="sr-only" id="shortsArrowKeysLabel">啟用 Shorts 左右方向鍵</span>
             </label>
           </div>
+          <fieldset class="shorts-seek-setting" id="shortsSeekSecondsFieldset">
+            <legend id="shortsSeekSecondsLegend">快進秒數</legend>
+            <div class="choice-grid" id="shortsSeekSeconds" role="radiogroup" aria-labelledby="shortsSeekSecondsLegend"></div>
+          </fieldset>
           <div class="toggle-setting">
             <div>
               <strong id="shortsChannelNamesTitle">首頁 Shorts 顯示頻道名稱</strong>
@@ -149,7 +148,7 @@
             <div class="speed-track" id="channelSpeed" role="radiogroup" aria-label="頻道播放速度"></div>
           </fieldset>
 
-          <fieldset>
+          <fieldset id="channelQualityFieldset">
             <legend id="channelQualityLegend">這個頻道的影片畫質</legend>
             <div class="choice-grid" id="channelQuality" role="radiogroup" aria-label="頻道影片畫質"></div>
           </fieldset>

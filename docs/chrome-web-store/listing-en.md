@@ -6,7 +6,7 @@ YouTube Quick Settings Toolbox
 
 ## Summary
 
-Automatically apply speed, quality, Shorts, and per-channel settings on YouTube, with quick keyboard controls.
+Automatically apply speed, quality, and per-channel settings to standard YouTube videos, with separate Shorts speed and keyboard controls.
 
 ## Description
 

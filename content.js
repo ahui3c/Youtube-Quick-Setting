@@ -136,7 +136,9 @@ function effectiveSettings() {
   const profile = channel
     ? channel[ytqsContext.contentType] || channel.regular
     : ytqsContext.contentType === "shorts" ? ytqsSettings.shorts : ytqsSettings.global;
-  if (ytqsContext.contentType === "shorts") return profile;
+  if (ytqsContext.contentType === "shorts") {
+    return { speed: profile.speed, quality: null, premiumQualityEnabled: false };
+  }
   const override = channel?.regular?.theaterModeOverride || "inherit";
   const theaterMode = override === "on"
     ? true
@@ -196,12 +198,13 @@ function currentVideo() {
 }
 
 function showChannelSettingsNotice(channelSettings) {
+  const isShorts = ytqsContext.contentType === "shorts";
   const noticeKey = [
     currentVideoId(),
     ytqsContext.contentType,
     ytqsContext.channelId,
     channelSettings.speed,
-    channelSettings.quality
+    isShorts ? "no-quality" : channelSettings.quality
   ].join("|");
   if (noticeKey === ytqsLastChannelNoticeKey) return;
   ytqsLastChannelNoticeKey = noticeKey;
@@ -233,15 +236,17 @@ function showChannelSettingsNotice(channelSettings) {
   notice.id = "ytqs-channel-settings-notice";
   notice.setAttribute("role", "status");
   notice.setAttribute("aria-live", "polite");
+  const qualityMarkup = isShorts ? "" : `
+      <span class="ytqs-channel-divider" aria-hidden="true"></span>
+      <span class="ytqs-channel-label">${ytqsText("quality")}</span>
+      <strong>${YTQS_QUALITY_LABELS[channelSettings.quality] || channelSettings.quality}</strong>`;
   notice.innerHTML = `
     <span class="ytqs-channel-accent" aria-hidden="true"></span>
     <span class="ytqs-channel-title">${ytqsText("channelSettings")}</span>
     <span class="ytqs-channel-values">
       <span class="ytqs-channel-label">${ytqsText("speed")}</span>
       <strong>${Number(channelSettings.speed)}×</strong>
-      <span class="ytqs-channel-divider" aria-hidden="true"></span>
-      <span class="ytqs-channel-label">${ytqsText("quality")}</span>
-      <strong>${YTQS_QUALITY_LABELS[channelSettings.quality] || channelSettings.quality}</strong>
+      ${qualityMarkup}
     </span>
   `;
 
@@ -423,8 +428,11 @@ function ytqsInstallShortsChannelStyle() {
   style.textContent = `
     .ytqs-shorts-channel-name{display:block;max-width:calc(100% - 36px);margin:3px 36px 0 0;color:var(--yt-spec-text-secondary,#606060);font-family:Roboto,Arial,sans-serif;font-size:1.4rem;font-weight:400;line-height:2rem;overflow:hidden;text-decoration:none;text-overflow:ellipsis;white-space:nowrap}
     .ytqs-shorts-channel-name:hover{color:var(--yt-spec-text-primary,#0f0f0f);text-decoration:none}
+    html[dark] .ytqs-shorts-channel-name,html[data-theme="dark"] .ytqs-shorts-channel-name,body[dark] .ytqs-shorts-channel-name{color:#aaa}
+    html[dark] .ytqs-shorts-channel-name:hover,html[data-theme="dark"] .ytqs-shorts-channel-name:hover,body[dark] .ytqs-shorts-channel-name:hover{color:var(--yt-spec-text-primary,#f1f1f1)}
     .ytqs-shorts-publish-time{white-space:nowrap}
-    .ytqs-shorts-page-publish-time{display:inline-flex!important;align-items:center;align-self:flex-start;gap:5px;width:max-content;max-width:100%;margin:3px 0 2px;padding:2px 8px;border-radius:999px;background:rgba(127,127,127,.16);color:inherit;font-family:Roboto,"Microsoft JhengHei UI",sans-serif;font-size:12px;font-weight:500;line-height:18px;opacity:.86;pointer-events:none;white-space:nowrap}
+    .ytqs-shorts-page-publish-time{display:inline-flex!important;align-items:center;align-self:flex-start;gap:5px;width:max-content;max-width:100%;margin:3px 0 2px;padding:2px 8px;border-radius:999px;background:rgba(0,0,0,.08);color:var(--yt-spec-text-secondary,#606060);font-family:Roboto,"Microsoft JhengHei UI",sans-serif;font-size:12px;font-weight:500;line-height:18px;opacity:.86;pointer-events:none;white-space:nowrap}
+    html[dark] .ytqs-shorts-page-publish-time:not(.ytqs-on-video),html[data-theme="dark"] .ytqs-shorts-page-publish-time:not(.ytqs-on-video),body[dark] .ytqs-shorts-page-publish-time:not(.ytqs-on-video){background:rgba(255,255,255,.14);box-shadow:0 1px 3px rgba(0,0,0,.28);color:var(--yt-spec-text-primary,#f1f1f1)}
     .ytqs-shorts-page-publish-time.ytqs-on-video{background:rgba(0,0,0,.58);box-shadow:0 1px 4px rgba(0,0,0,.3);color:#fff!important;opacity:1;text-shadow:0 1px 2px rgba(0,0,0,.75)}
     .ytqs-shorts-page-publish-time svg{width:13px;height:13px;flex:none;fill:currentColor}
   `;
@@ -635,10 +643,17 @@ function showSpeedOverlay(speed) {
       #ytqs-speed-overlay .ytqs-speed-icon{grid-row:1/3;color:#ff3b30;font-size:15px;letter-spacing:-3px}
       #ytqs-speed-overlay .ytqs-speed-value{font-size:22px;font-weight:700;line-height:1}
       #ytqs-speed-overlay .ytqs-speed-label{color:#b7b7ba;font-size:11px;line-height:1.1}
+      #ytqs-speed-overlay.ytqs-seek-overlay{gap:1px 7px;min-width:118px;padding:8px 12px;border-color:rgba(255,255,255,.14);border-radius:9px;background:rgba(16,16,18,.68);box-shadow:0 7px 22px rgba(0,0,0,.22);backdrop-filter:blur(4px)}
+      #ytqs-speed-overlay.ytqs-seek-overlay.ytqs-show{opacity:.82}
+      #ytqs-speed-overlay.ytqs-seek-overlay .ytqs-speed-icon{font-size:11px;letter-spacing:-2px}
+      #ytqs-speed-overlay.ytqs-seek-overlay .ytqs-speed-value{font-size:17px}
+      #ytqs-speed-overlay.ytqs-seek-overlay .ytqs-speed-label{font-size:10px}
       @media(prefers-reduced-motion:reduce){#ytqs-speed-overlay{transition:none}}
     `;
     document.documentElement.append(style, overlay);
   }
+  overlay.classList.remove("ytqs-seek-overlay");
+  positionOverlayForContent(overlay);
   overlay.querySelector(".ytqs-speed-icon").textContent = "▶▶";
   overlay.querySelector(".ytqs-speed-value").textContent = `${speed}×`;
   overlay.querySelector(".ytqs-speed-label").textContent = ytqsText("playbackSpeed");
@@ -647,6 +662,28 @@ function showSpeedOverlay(speed) {
   overlay.classList.add("ytqs-show");
   clearTimeout(showSpeedOverlay.timer);
   showSpeedOverlay.timer = setTimeout(() => overlay.classList.remove("ytqs-show"), 1050);
+}
+
+function positionShortsOverlay(overlay, video) {
+  const rect = video?.getBoundingClientRect?.();
+  if (!overlay || !rect || !Number.isFinite(rect.left) || !Number.isFinite(rect.top) || rect.width <= 0 || rect.height <= 0) {
+    return false;
+  }
+  const viewportWidth = Number(window.innerWidth) || document.documentElement?.clientWidth || rect.right || rect.width;
+  const viewportHeight = Number(window.innerHeight) || document.documentElement?.clientHeight || rect.bottom || rect.height;
+  const centerX = Math.min(viewportWidth - 16, Math.max(16, rect.left + rect.width / 2));
+  const upperOffset = Math.min(150, Math.max(72, rect.height * .18));
+  const upperY = Math.min(viewportHeight - 64, Math.max(24, rect.top + upperOffset));
+  overlay.style.left = `${Math.round(centerX)}px`;
+  overlay.style.top = `${Math.round(upperY)}px`;
+  return true;
+}
+
+function positionOverlayForContent(overlay, video = currentVideo()) {
+  if (contentType() === "shorts" && positionShortsOverlay(overlay, video)) return true;
+  overlay?.style?.removeProperty?.("left");
+  overlay?.style?.removeProperty?.("top");
+  return false;
 }
 
 function formatPlaybackTime(value) {
@@ -659,13 +696,15 @@ function formatPlaybackTime(value) {
     : `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-function showSeekOverlay(deltaSeconds, currentTime, duration) {
+function showSeekOverlay(deltaSeconds, currentTime, duration, video = currentVideo()) {
   let overlay = document.querySelector("#ytqs-speed-overlay");
   if (!overlay) {
     showSpeedOverlay(1);
     overlay = document.querySelector("#ytqs-speed-overlay");
   }
   if (!overlay) return;
+  overlay.classList.add("ytqs-seek-overlay");
+  positionShortsOverlay(overlay, video);
   const isReset = deltaSeconds === 0;
   overlay.querySelector(".ytqs-speed-icon").textContent = isReset ? "↶" : deltaSeconds > 0 ? "▶▶" : "◀◀";
   overlay.querySelector(".ytqs-speed-value").textContent = isReset
@@ -700,6 +739,7 @@ function showCopyOverlay(success, title = "", messageKey = "", kind = "copy") {
     `;
     document.documentElement.append(style, overlay);
   }
+  positionOverlayForContent(overlay);
   overlay.classList.toggle("ytqs-copy-error", !success);
   overlay.classList.toggle("ytqs-copy-share", kind === "share" && success);
   overlay.querySelector(".ytqs-copy-icon").textContent = success ? kind === "share" ? "f" : "✓" : "!";
@@ -798,7 +838,7 @@ function seekShorts(deltaSeconds) {
   const current = Number(video.currentTime) || 0;
   const next = deltaSeconds === 0 ? 0 : Math.min(duration, Math.max(0, current + deltaSeconds));
   video.currentTime = next;
-  showSeekOverlay(deltaSeconds, next, duration);
+  showSeekOverlay(deltaSeconds, next, duration, video);
   return true;
 }
 

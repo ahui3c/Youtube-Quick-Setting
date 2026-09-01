@@ -14,8 +14,12 @@ assert.match(source, /event\.code === "KeyS"/);
 assert.match(source, /ytReelPlayerOverlayViewModelMetadataContainerMetapanel/);
 assert.match(source, /\.ytqs-shorts-page-publish-time\.ytqs-on-video/);
 assert.match(source, /window\.addEventListener\("resize", ytqsScheduleShortsCardScan/);
+assert.match(source, /#ytqs-speed-overlay\.ytqs-seek-overlay\.ytqs-show\{opacity:\.82\}/);
+assert.match(source, /rect\.left \+ rect\.width \/ 2/);
+assert.match(source, /function showSpeedOverlay\([\s\S]*?positionOverlayForContent\(overlay\)/);
+assert.match(source, /function showCopyOverlay\([\s\S]*?positionOverlayForContent\(overlay\)/);
 source = source.replace(/^\s*show(?:Speed|Seek|Copy)Overlay\([^;]+;\r?$/gm, "");
-source = source.replace(/\ndocument\.addEventListener\("keydown"[\s\S]*$/, "\nthis.__contentTest = { contentType, isVideoPage, effectiveSettings, restoreNormalSpeed, seekShorts, handleKeyboardShortcut, currentVideoInfo, copyCurrentVideoInfo, facebookShareReady, openFacebookShareWindow, ytqsNormalizeSettings, ytqsShortsVideoId, ytqsNormalizeShortsAuthor, ytqsExtractShortsPublishDate, ytqsNormalizePublishDate, ytqsCurrentShortsPagePublishDate, ytqsFormatShortsPublishTime, ytqsDeduplicateShortsChannelNames, ytqsDeduplicateShortsPublishTimes, ytqsDeduplicateShortsPagePublishTimes, ytqsIsMarkerOverVideo, setSettings: (value) => { ytqsSettings = ytqsNormalizeSettings(value); }, setContext: (value) => { ytqsContext = value; } };" );
+source = source.replace(/\ndocument\.addEventListener\("keydown"[\s\S]*$/, "\nthis.__contentTest = { contentType, isVideoPage, effectiveSettings, restoreNormalSpeed, seekShorts, handleKeyboardShortcut, currentVideoInfo, copyCurrentVideoInfo, facebookShareReady, openFacebookShareWindow, positionShortsOverlay, positionOverlayForContent, ytqsNormalizeSettings, ytqsShortsVideoId, ytqsNormalizeShortsAuthor, ytqsExtractShortsPublishDate, ytqsNormalizePublishDate, ytqsCurrentShortsPagePublishDate, ytqsFormatShortsPublishTime, ytqsDeduplicateShortsChannelNames, ytqsDeduplicateShortsPublishTimes, ytqsDeduplicateShortsPagePublishTimes, ytqsIsMarkerOverVideo, setSettings: (value) => { ytqsSettings = ytqsNormalizeSettings(value); }, setContext: (value) => { ytqsContext = value; } };" );
 
 const messages = [];
 const clipboardWrites = [];
@@ -26,7 +30,7 @@ const video = {
   currentTime: 12,
   duration: 30,
   paused: false,
-  getBoundingClientRect: () => ({ width: 400, height: 700 }),
+  getBoundingClientRect: () => ({ left: 100, top: 40, right: 500, bottom: 740, width: 400, height: 700 }),
   closest: () => ({ querySelector: () => player })
 };
 const player = { querySelector: () => video, classList: { contains: () => false } };
@@ -56,6 +60,8 @@ const sandbox = {
     }
   },
   window: {
+    innerWidth: 1000,
+    innerHeight: 900,
     postMessage: (message) => messages.push(message),
     open: (url, name, features) => {
       const opened = { url, name, features, opener: {}, focused: false, focus() { this.focused = true; } };
@@ -77,6 +83,12 @@ vm.runInContext(copySource, sandbox, { filename: "copy-utils.js" });
 vm.runInContext(source, sandbox, { filename: "content.js" });
 
 const api = sandbox.__contentTest;
+const seekOverlay = { style: {} };
+assert.equal(api.positionShortsOverlay(seekOverlay, video), true);
+assert.equal(seekOverlay.style.left, "300px");
+assert.equal(seekOverlay.style.top, "166px");
+assert.equal(api.positionShortsOverlay(seekOverlay, { getBoundingClientRect: () => ({ width: 0, height: 0 }) }), false);
+assert.equal(api.positionOverlayForContent(seekOverlay, video), true);
 assert.equal(api.ytqsNormalizeSettings({}).shortsControls.publishTimeEnabled, false);
 assert.equal(api.ytqsNormalizeSettings({ shortsControls: { publishTimeEnabled: true } }).shortsControls.publishTimeEnabled, true);
 assert.equal(api.ytqsNormalizeSettings({ copy: { defaultFormat: "markdown" } }).copy.defaultFormat, "title-url");
@@ -148,7 +160,14 @@ assert.equal(api.effectiveSettings().premiumQualityEnabled, false);
 api.setContext({ isVideo: true, contentType: "regular", channelId: "", channelName: "" });
 assert.equal(api.effectiveSettings().theaterMode, true);
 assert.equal(api.effectiveSettings().premiumQualityEnabled, true);
+api.setContext({ isVideo: true, contentType: "shorts", channelId: "channelA", channelName: "Channel A" });
+assert.deepEqual(JSON.parse(JSON.stringify(api.effectiveSettings())), {
+  speed: 2,
+  quality: null,
+  premiumQualityEnabled: false
+});
 api.setSettings({ global: { speed: 1, quality: "hd1080", theaterModeEnabled: false } });
+api.setContext({ isVideo: true, contentType: "regular", channelId: "", channelName: "" });
 assert.equal(api.effectiveSettings().theaterMode, null);
 
 assert.equal(api.seekShorts(5), true);

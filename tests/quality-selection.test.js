@@ -3,6 +3,8 @@ const fs = require("node:fs");
 const vm = require("node:vm");
 
 let source = fs.readFileSync("page-bridge.js", "utf8");
+assert.match(source, /!currentSettings\?\.quality/);
+assert.match(source, /if \(settings\?\.quality\) setTimeout\(\(\) => applyQualityViaMenu/);
 source = source.replace(
   /\n\}\)\(\);\s*$/,
   "\nwindow.__qualityTest = { bestQuality, chooseMenuQuality, applyTheaterMode, applyTheaterModeOnce, applyWithRetries, shouldRestoreQualityPosition };\n})();"
@@ -62,6 +64,8 @@ applyWithRetries({ speed: 1, quality: "hd1080", premiumQualityEnabled: false, th
 assert.equal(scheduledTasks, 5);
 applyWithRetries({ speed: 1, quality: "hd2160", premiumQualityEnabled: false, theaterMode: true });
 assert.equal(scheduledTasks, 10);
+applyWithRetries({ speed: 2, quality: null, premiumQualityEnabled: false, theaterMode: null });
+assert.equal(scheduledTasks, 14);
 assert.equal(shouldRestoreQualityPosition(0, 0.7), true);
 assert.equal(shouldRestoreQualityPosition(0.62, 0.7), false);
 assert.equal(shouldRestoreQualityPosition(2, 0.7), false);

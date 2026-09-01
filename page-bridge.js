@@ -192,7 +192,7 @@
   }
 
   async function applyQualityViaMenu(token, attempt = 0) {
-    if (token !== applyToken || !currentSettings || qualityMenuBusy) return;
+    if (token !== applyToken || !currentSettings?.quality || qualityMenuBusy) return;
     const player = getPlayer();
     const settingsButton = player?.querySelector(".ytp-settings-button");
     if (!player || !settingsButton) return;
@@ -265,7 +265,7 @@
     // theater-mode change the viewer makes manually.
     applyTheaterModeOnce(player, currentSettings.theaterMode);
 
-    if (!player) return;
+    if (!player || !currentSettings.quality) return;
     const available = typeof player.getAvailableQualityLevels === "function"
       ? player.getAvailableQualityLevels()
       : [];
@@ -300,7 +300,7 @@
     lastApplySignature = signature;
     const token = ++applyToken;
     [0, 500, 1500, 3500].forEach((delay) => setTimeout(() => applyNow(token), delay));
-    setTimeout(() => applyQualityViaMenu(token), 900);
+    if (settings?.quality) setTimeout(() => applyQualityViaMenu(token), 900);
   }
 
   window.addEventListener("message", (event) => {

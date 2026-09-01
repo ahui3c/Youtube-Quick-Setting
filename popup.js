@@ -22,7 +22,7 @@ const MESSAGES = {
     enableChannel: "啟用目前頻道專屬設定", removeChannel: "移除頻道專屬設定",
     channelEmpty: "請在 YouTube 影片或 Shorts 頁面開啟此面板，即可加入頻道專屬設定。",
     shortcutTitle: "播放時快速操作", shortcutDescription: "−／+ 調速，* 回復 1×，S 複製／再按分享 FB，Shift+S 標題＋時間點",
-    shortsShortcutTitle: "Shorts 快速操作", shortsShortcutDescription: "←／→ {seconds} 秒，0 片頭；−／+ 調速，* 1×，S 複製／再按分享 FB，Shift+S 標題＋時間點",
+    shortsShortcutTitle: "Shorts 快速操作", shortsShortcutDescription: "←／→ {seconds} 秒，0 片頭；−／+ 調速，* 1×，S 複製／再按分享 FB，Shift+S 標題＋時間點", shortsShortcutDescriptionDisabled: "左右方向鍵已停用；0 片頭，−／+ 調速，* 1×，S 複製／再按分享 FB，Shift+S 標題＋時間點",
     copyVideoInfoTitle: "複製影片資訊", copyVideoInfoDescription: "預設：{format}｜S 複製，再按 S 分享 FB；Shift+S 標題＋時間點", copiedVideoInfo: "已複製到剪貼簿", copyVideoInfoFailed: "複製失敗", copyVideoInfoUnavailable: "請先開啟 YouTube 影片", copyFormatToggle: "選擇複製格式",
     copyFormatTitleUrl: "標題＋網址", copyFormatTimestampUrl: "標題＋目前時間點網址", copyFormatMarkdown: "Markdown 連結", copyFormatHtml: "HTML 超連結", copyFormatChannelTitleUrl: "頻道＋標題＋網址", copyFormatFacebookShare: "分享標題＋連結到 Facebook", facebookShareOpened: "已開啟 Facebook 分享視窗", facebookShareBlocked: "無法開啟 Facebook 分享視窗",
     settingsTransferTitle: "設定備份與還原", settingsTransferDescription: "匯出、匯入或回復上次設定", exportSettings: "匯出 JSON", importSettings: "匯入 JSON", restoreSettings: "還原上次匯入前設定", settingsTransferNote: "設定檔只在你的裝置上處理。", settingsExported: "設定已匯出", settingsImported: "設定已匯入", settingsRestored: "設定已還原", settingsTransferFailed: "無法處理設定檔",
@@ -36,8 +36,7 @@ const MESSAGES = {
     connected: "已連線到目前影片", disconnected: "請開啟 YouTube 影片或 Shorts", languageLabel: "介面語言",
     qualityHighest: "自動最高", quality4k: "4K", quality1080: "1080p", qualityPremiumHint: "Premium 強化畫質由下方開關獨立控制",
     premiumQualityTitle: "使用 Premium 強化畫質", premiumQualityDescription: "開啟後才會選擇 1080p Premium，僅適用已訂閱會員",
-    channelPremiumQualityDescription: "只為這個頻道允許選擇 1080p Premium",
-    shortsQualityNote: "YouTube Shorts 提供畫質控制時才會套用此偏好。"
+    channelPremiumQualityDescription: "只為這個頻道允許選擇 1080p Premium"
   },
   en: {
     appTitle: "YouTube Quick Settings Toolbox", system: "System", regular: "Videos", shorts: "Shorts",
@@ -48,7 +47,7 @@ const MESSAGES = {
     enableChannel: "Enable settings for the current channel", removeChannel: "Remove channel settings",
     channelEmpty: "Open this panel on a YouTube video or Short to add channel-specific settings.",
     shortcutTitle: "Quick playback controls", shortcutDescription: "−/+ speed, * resets, S copies / press again for Facebook, Shift+S copies title + timestamp",
-    shortsShortcutTitle: "Shorts quick controls", shortsShortcutDescription: "←/→ {seconds}s, 0 restarts; −/+ speed, * 1×, S copies / press again for Facebook, Shift+S title + timestamp",
+    shortsShortcutTitle: "Shorts quick controls", shortsShortcutDescription: "←/→ {seconds}s, 0 restarts; −/+ speed, * 1×, S copies / press again for Facebook, Shift+S title + timestamp", shortsShortcutDescriptionDisabled: "Arrow-key seeking is off; 0 restarts, −/+ changes speed, * resets, S copies / press again for Facebook, Shift+S adds timestamp",
     copyVideoInfoTitle: "Copy video info", copyVideoInfoDescription: "Default: {format} | S copies; press S again for Facebook; Shift+S adds timestamp", copiedVideoInfo: "Copied to clipboard", copyVideoInfoFailed: "Copy failed", copyVideoInfoUnavailable: "Open a YouTube video first", copyFormatToggle: "Choose copy format",
     copyFormatTitleUrl: "Title + URL", copyFormatTimestampUrl: "Title + URL at current time", copyFormatMarkdown: "Markdown link", copyFormatHtml: "HTML link", copyFormatChannelTitleUrl: "Channel + title + URL", copyFormatFacebookShare: "Share title + link to Facebook", facebookShareOpened: "Facebook share window opened", facebookShareBlocked: "Could not open the Facebook share window",
     settingsTransferTitle: "Backup and restore settings", settingsTransferDescription: "Export, import, or restore the last settings", exportSettings: "Export JSON", importSettings: "Import JSON", restoreSettings: "Restore pre-import settings", settingsTransferNote: "Settings files are processed only on your device.", settingsExported: "Settings exported", settingsImported: "Settings imported", settingsRestored: "Settings restored", settingsTransferFailed: "Could not process the settings file",
@@ -62,8 +61,7 @@ const MESSAGES = {
     connected: "Connected to the current video", disconnected: "Open a YouTube video or Short", languageLabel: "Interface language",
     qualityHighest: "Highest", quality4k: "4K", quality1080: "1080p", qualityPremiumHint: "Premium enhanced quality is controlled separately below",
     premiumQualityTitle: "Use Premium enhanced quality", premiumQualityDescription: "Allows 1080p Premium only when enabled; requires a Premium subscription",
-    channelPremiumQualityDescription: "Allow 1080p Premium for this channel only",
-    shortsQualityNote: "This preference applies when YouTube provides quality controls for Shorts."
+    channelPremiumQualityDescription: "Allow 1080p Premium for this channel only"
   },
   ja: {
     appTitle: "YouTube クイック設定ツールボックス", system: "システム", regular: "通常動画", shorts: "ショート",
@@ -74,7 +72,7 @@ const MESSAGES = {
     enableChannel: "現在のチャンネル専用設定を有効にする", removeChannel: "チャンネル専用設定を削除",
     channelEmpty: "YouTube 動画またはショートのページでこのパネルを開くと、チャンネル専用設定を追加できます。",
     shortcutTitle: "再生中のクイック操作", shortcutDescription: "−／+ 速度、* で 1×、S コピー／もう一度で Facebook、Shift+S タイトル＋現在位置",
-    shortsShortcutTitle: "ショートのクイック操作", shortsShortcutDescription: "←／→ {seconds} 秒、0 先頭、−／+ 速度、* 1×、S コピー／もう一度で Facebook、Shift+S タイトル＋現在位置",
+    shortsShortcutTitle: "ショートのクイック操作", shortsShortcutDescription: "←／→ {seconds} 秒、0 先頭、−／+ 速度、* 1×、S コピー／もう一度で Facebook、Shift+S タイトル＋現在位置", shortsShortcutDescriptionDisabled: "左右キーは無効です。0 先頭、−／+ 速度、* 1×、S コピー／もう一度で Facebook、Shift+S タイトル＋現在位置",
     copyVideoInfoTitle: "動画情報をコピー", copyVideoInfoDescription: "既定：{format}｜S でコピー、もう一度 S で Facebook、Shift+S は現在位置", copiedVideoInfo: "クリップボードにコピーしました", copyVideoInfoFailed: "コピーに失敗しました", copyVideoInfoUnavailable: "YouTube 動画を開いてください", copyFormatToggle: "コピー形式を選択",
     copyFormatTitleUrl: "タイトル＋URL", copyFormatTimestampUrl: "タイトル＋現在位置の URL", copyFormatMarkdown: "Markdown リンク", copyFormatHtml: "HTML リンク", copyFormatChannelTitleUrl: "チャンネル＋タイトル＋URL", copyFormatFacebookShare: "タイトル＋リンクを Facebook に共有", facebookShareOpened: "Facebook の共有画面を開きました", facebookShareBlocked: "Facebook の共有画面を開けませんでした",
     settingsTransferTitle: "設定のバックアップと復元", settingsTransferDescription: "書き出し、読み込み、前回設定の復元", exportSettings: "JSON を書き出す", importSettings: "JSON を読み込む", restoreSettings: "読み込み前の設定に戻す", settingsTransferNote: "設定ファイルは端末内だけで処理されます。", settingsExported: "設定を書き出しました", settingsImported: "設定を読み込みました", settingsRestored: "設定を復元しました", settingsTransferFailed: "設定ファイルを処理できませんでした",
@@ -88,8 +86,7 @@ const MESSAGES = {
     connected: "現在の動画に接続しました", disconnected: "YouTube 動画またはショートを開いてください", languageLabel: "表示言語",
     qualityHighest: "最高画質", quality4k: "4K", quality1080: "1080p", qualityPremiumHint: "Premium 高画質は下のスイッチで個別に設定",
     premiumQualityTitle: "Premium 高画質を使用", premiumQualityDescription: "オンの場合のみ 1080p Premium を選択。Premium 登録が必要です",
-    channelPremiumQualityDescription: "このチャンネルだけ 1080p Premium を許可",
-    shortsQualityNote: "YouTube がショートの画質設定を提供している場合に適用されます。"
+    channelPremiumQualityDescription: "このチャンネルだけ 1080p Premium を許可"
   }
 };
 
@@ -249,19 +246,23 @@ function applyTranslations() {
   $("#cancelImport").textContent = t("cancelImport");
   $("#applyImport").textContent = t("applyImport");
   const isShorts = activeContentType === "shorts";
+  const shortsArrowKeysEnabled = settings.shortsControls.arrowKeysEnabled === true;
   $("#shortcutTitle").textContent = t(isShorts ? "shortsShortcutTitle" : "shortcutTitle");
-  $("#shortcutDescription").textContent = t(isShorts ? "shortsShortcutDescription" : "shortcutDescription")
+  $("#shortcutDescription").textContent = t(isShorts
+    ? shortsArrowKeysEnabled ? "shortsShortcutDescription" : "shortsShortcutDescriptionDisabled"
+    : "shortcutDescription")
     .replace("{seconds}", String(settings.shortsControls.seekSeconds));
   const shortcutKeys = $("#shortcutKeys");
   shortcutKeys.classList.toggle("shorts", isShorts);
-  shortcutKeys.replaceChildren(...(isShorts ? ["←", "→", "0", "−", "＋", "＊", "S"] : ["−", "＋", "＊", "S"]).map((key) => {
+  const keys = isShorts
+    ? shortsArrowKeysEnabled ? ["←", "→", "0", "−", "＋", "＊", "S"] : ["0", "−", "＋", "＊", "S"]
+    : ["−", "＋", "＊", "S"];
+  shortcutKeys.replaceChildren(...keys.map((key) => {
     const element = document.createElement("kbd");
     element.textContent = key;
     return element;
   }));
   $("#globalKicker").textContent = t(activeContentType === "shorts" ? "allShorts" : "allRegular");
-  $("#shortsQualityNote").textContent = t("shortsQualityNote");
-  $("#shortsQualityNote").hidden = activeContentType !== "shorts";
   $("#shortsSeekSecondsLegend").textContent = t("shortsSeekSeconds");
   $("#shortsArrowKeysTitle").textContent = t("shortsArrowKeysTitle");
   $("#shortsArrowKeysDescription").textContent = t("shortsArrowKeysDescription");
@@ -361,11 +362,17 @@ function renderGlobal() {
     renderGlobal();
     await persist();
   });
-  createQualityControl($("#globalQuality"), profile.quality, async (quality) => {
-    profile.quality = quality;
-    renderGlobal();
-    await persist();
-  });
+  const qualityFieldset = $("#globalQualityFieldset");
+  qualityFieldset.hidden = activeContentType === "shorts";
+  if (activeContentType === "regular") {
+    createQualityControl($("#globalQuality"), profile.quality, async (quality) => {
+      profile.quality = quality;
+      renderGlobal();
+      await persist();
+    });
+  } else {
+    $("#globalQuality").replaceChildren();
+  }
   const theaterSetting = $("#globalTheaterSetting");
   theaterSetting.hidden = activeContentType === "shorts";
   $("#globalTheaterEnabled").checked = settings.global.theaterModeEnabled;
@@ -381,6 +388,10 @@ function renderShortsControls() {
   container.hidden = !visible;
   if (!visible) return;
   const selected = settings.shortsControls.seekSeconds;
+  const arrowKeysEnabled = settings.shortsControls.arrowKeysEnabled === true;
+  const fieldset = $("#shortsSeekSecondsFieldset");
+  fieldset.disabled = !arrowKeysEnabled;
+  fieldset.setAttribute("aria-disabled", String(!arrowKeysEnabled));
   const choices = $("#shortsSeekSeconds");
   choices.replaceChildren();
   SHORTS_SEEK_SECONDS.forEach((seconds) => {
@@ -390,6 +401,7 @@ function renderShortsControls() {
     button.textContent = `${seconds} ${t("secondsUnit")}`;
     button.setAttribute("role", "radio");
     button.setAttribute("aria-checked", String(selected === seconds));
+    button.disabled = !arrowKeysEnabled;
     button.addEventListener("click", async () => {
       settings.shortsControls.seekSeconds = seconds;
       renderType();
@@ -432,11 +444,17 @@ function renderChannel() {
     renderChannel();
     await persist();
   });
-  createQualityControl($("#channelQuality"), profile.quality, async (quality) => {
-    profile.quality = quality;
-    renderChannel();
-    await persist();
-  });
+  const qualityFieldset = $("#channelQualityFieldset");
+  qualityFieldset.hidden = activeContentType === "shorts";
+  if (activeContentType === "regular") {
+    createQualityControl($("#channelQuality"), profile.quality, async (quality) => {
+      profile.quality = quality;
+      renderChannel();
+      await persist();
+    });
+  } else {
+    $("#channelQuality").replaceChildren();
+  }
   const premiumQualitySetting = $("#channelPremiumQualitySetting");
   premiumQualitySetting.hidden = activeContentType === "shorts";
   $("#channelPremiumQualityEnabled").checked = profile.premiumQualityEnabled;
@@ -732,7 +750,7 @@ $("#languageSelect").addEventListener("change", async (event) => {
 
 $("#shortsArrowKeysEnabled").addEventListener("change", async (event) => {
   settings.shortsControls.arrowKeysEnabled = event.target.checked;
-  applyTranslations();
+  renderType();
   await persist();
 });
 
