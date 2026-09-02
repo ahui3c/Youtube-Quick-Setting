@@ -7,15 +7,23 @@ assert.match(source, /!currentSettings\?\.quality/);
 assert.match(source, /if \(settings\?\.quality\) setTimeout\(\(\) => applyQualityViaMenu/);
 source = source.replace(
   /\n\}\)\(\);\s*$/,
-  "\nwindow.__qualityTest = { bestQuality, chooseMenuQuality, applyTheaterMode, applyTheaterModeOnce, applyWithRetries, shouldRestoreQualityPosition };\n})();"
+  "\nwindow.__qualityTest = { bestQuality, chooseMenuQuality, applyTheaterMode, applyTheaterModeOnce, disableAutoplayNext, applyWithRetries, shouldRestoreQualityPosition };\n})();"
 );
 
 let theaterEnabled = false;
 let sizeButtonClicks = 0;
 let scheduledTasks = 0;
+let autoplayEnabled = true;
+let autoplayClicks = 0;
+const autoplayToggle = {
+  getAttribute: (name) => name === "aria-checked" ? String(autoplayEnabled) : null,
+  click() { autoplayEnabled = false; autoplayClicks += 1; }
+};
 const player = {
   classList: { contains: (name) => name === "ytp-big-mode" && theaterEnabled },
-  querySelector: (selector) => selector === ".ytp-size-button" ? { click: () => { theaterEnabled = !theaterEnabled; sizeButtonClicks += 1; } } : null
+  querySelector: (selector) => selector === ".ytp-size-button"
+    ? { click: () => { theaterEnabled = !theaterEnabled; sizeButtonClicks += 1; } }
+    : selector === ".ytp-autonav-toggle-button" ? autoplayToggle : null
 };
 const sandbox = {
   window: { addEventListener() {} },
@@ -31,7 +39,7 @@ const sandbox = {
 vm.createContext(sandbox);
 vm.runInContext(source, sandbox, { filename: "page-bridge.js" });
 
-const { bestQuality, chooseMenuQuality, applyTheaterMode, applyTheaterModeOnce, applyWithRetries, shouldRestoreQualityPosition } = sandbox.window.__qualityTest;
+const { bestQuality, chooseMenuQuality, applyTheaterMode, applyTheaterModeOnce, disableAutoplayNext, applyWithRetries, shouldRestoreQualityPosition } = sandbox.window.__qualityTest;
 
 assert.equal(applyTheaterMode(player, true), true);
 assert.equal(theaterEnabled, true);
@@ -57,6 +65,14 @@ sandbox.location.href = "https://www.youtube.com/watch?v=video-b";
 assert.equal(applyTheaterModeOnce(player, true), true);
 assert.equal(theaterEnabled, true);
 assert.equal(sizeButtonClicks, 4);
+
+assert.equal(disableAutoplayNext(player, false), false);
+assert.equal(autoplayEnabled, true);
+assert.equal(disableAutoplayNext(player, true), true);
+assert.equal(autoplayEnabled, false);
+assert.equal(autoplayClicks, 1);
+assert.equal(disableAutoplayNext(player, true), true);
+assert.equal(autoplayClicks, 1);
 
 applyWithRetries({ speed: 1, quality: "hd1080", premiumQualityEnabled: false, theaterMode: true });
 assert.equal(scheduledTasks, 5);

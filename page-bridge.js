@@ -23,6 +23,8 @@
   let lastApplySignature = "";
   let pendingQualityResume = null;
   let pendingQualityResumeTimer = 0;
+  let autoplayToggleObserver = null;
+  let autoplayToggleTarget = null;
 
   function getActiveShortVideo() {
     const videos = [...document.querySelectorAll("ytd-reel-video-renderer video, ytd-shorts video")];
@@ -89,6 +91,35 @@
     const handled = applyTheaterMode(player, desired);
     if (handled) theaterHandledForVideo = true;
     return handled;
+  }
+
+  function findAutoplayToggle(player) {
+    return player?.querySelector?.(".ytp-autonav-toggle-button")
+      || document.querySelector("#movie_player .ytp-autonav-toggle-button");
+  }
+
+  function disableAutoplayNext(player, enabled = currentSettings?.disableAutoplayNext === true) {
+    if (!enabled || /^\/shorts\/[^/]+/.test(location.pathname)) return false;
+    const toggle = findAutoplayToggle(player);
+    if (!toggle) return false;
+    if (toggle.getAttribute("aria-checked") === "true") toggle.click();
+    return toggle.getAttribute("aria-checked") !== "true";
+  }
+
+  function watchAutoplayToggle(player) {
+    const enabled = currentSettings?.disableAutoplayNext === true && !/^\/shorts\/[^/]+/.test(location.pathname);
+    const toggle = enabled ? findAutoplayToggle(player) : null;
+    if (toggle === autoplayToggleTarget) {
+      if (toggle) disableAutoplayNext(player, true);
+      return;
+    }
+    autoplayToggleObserver?.disconnect();
+    autoplayToggleObserver = null;
+    autoplayToggleTarget = toggle;
+    if (!toggle) return;
+    disableAutoplayNext(player, true);
+    autoplayToggleObserver = new MutationObserver(() => disableAutoplayNext(player, true));
+    autoplayToggleObserver.observe(toggle, { attributes: true, attributeFilter: ["aria-checked"] });
   }
 
   function bestQuality(available, preference) {
@@ -264,6 +295,7 @@
     // applied successfully, later quality/speed retries must respect any
     // theater-mode change the viewer makes manually.
     applyTheaterModeOnce(player, currentSettings.theaterMode);
+    watchAutoplayToggle(player);
 
     if (!player || !currentSettings.quality) return;
     const available = typeof player.getAvailableQualityLevels === "function"
@@ -294,7 +326,8 @@
       Number(settings?.speed),
       settings?.quality || "",
       settings?.premiumQualityEnabled === true ? "premium" : "standard",
-      typeof settings?.theaterMode === "boolean" ? String(settings.theaterMode) : "theater-auto"
+      typeof settings?.theaterMode === "boolean" ? String(settings.theaterMode) : "theater-auto",
+      settings?.disableAutoplayNext === true ? "autoplay-off" : "autoplay-default"
     ].join("|");
     if (signature === lastApplySignature) return;
     lastApplySignature = signature;

@@ -1,16 +1,21 @@
 const YTQS_DEFAULTS = {
-  schemaVersion: 2,
+  schemaVersion: 4,
   language: "system",
-  global: { speed: 1, quality: "hd1080", premiumQualityEnabled: false, theaterModeEnabled: false },
+  global: { speed: 1, quality: "hd1080", premiumQualityEnabled: false, theaterModeEnabled: false, disableAutoplayNext: false, hideEndScreenRecommendations: false },
   shorts: { speed: 1, quality: "hd1080", premiumQualityEnabled: false },
   shortsControls: { seekSeconds: 5, arrowKeysEnabled: true, channelNamesEnabled: true, publishTimeEnabled: false },
+  gridLayout: { regularColumns: "auto", shortsColumns: "auto" },
+  dateDisplay: { enabled: false, format: YTQSDate.DEFAULT_FORMAT },
   copy: { defaultFormat: "title-url" },
+  screenshot: { output: "download" },
   channels: {}
 };
 const YTQS_SPEEDS = [0.7, 1, 1.25, 2, 3];
 const YTQS_SEEK_SECONDS = [3, 5, 10];
+const YTQS_HOME_GRID_COLUMNS = ["auto", 2, 3, 4, 5, 6];
+const YTQS_SCREENSHOT_OUTPUTS = ["download", "clipboard"];
 const YTQS_THEATER_OVERRIDES = ["inherit", "on", "off"];
-const YTQS_FACEBOOK_SHARE_WINDOW_MS = 2200;
+const YTQS_SOCIAL_SHARE_WINDOW_MS = 4000;
 let ytqsSettings = YTQS_DEFAULTS;
 let ytqsContext = { isVideo: false, contentType: "regular", channelId: "", channelName: "" };
 let ytqsRefreshTimer = 0;
@@ -19,7 +24,7 @@ let ytqsLastNavigationVideoId = "";
 let ytqsShortsScanTimer = 0;
 let ytqsShortsMutationObserver = null;
 let ytqsShortsIntersectionObserver = null;
-let ytqsFacebookShareReadyUntil = 0;
+let ytqsSocialShareReadyUntil = 0;
 let ytqsShortsMetadataRequests = 0;
 const ytqsShortsMetadataCache = new Map();
 const ytqsShortsMetadataPending = new Map();
@@ -32,9 +37,9 @@ const YTQS_QUALITY_LABELS = {
 };
 
 const YTQS_MESSAGES = {
-  "zh-Hant": { channelSettings: "頻道指定設定", speed: "速度", quality: "解析度", playbackSpeed: "播放速度", seconds: "秒", backToStart: "回到片頭", copiedVideoInfo: "已複製影片資訊", copiedVideoInfoShareHint: "已複製，再按一次 S 分享到 Facebook", facebookShareOpened: "已開啟 Facebook 分享視窗", facebookShareBlocked: "無法開啟 Facebook 分享視窗", copyFailed: "複製失敗", today: "今天", published: "發布時間" },
-  en: { channelSettings: "Channel settings", speed: "Speed", quality: "Quality", playbackSpeed: "Playback speed", seconds: "sec", backToStart: "Back to start", copiedVideoInfo: "Video info copied", copiedVideoInfoShareHint: "Copied — press S again to share on Facebook", facebookShareOpened: "Facebook share window opened", facebookShareBlocked: "Could not open the Facebook share window", copyFailed: "Copy failed", today: "today", published: "Published" },
-  ja: { channelSettings: "チャンネル設定", speed: "速度", quality: "画質", playbackSpeed: "再生速度", seconds: "秒", backToStart: "先頭に戻る", copiedVideoInfo: "動画情報をコピーしました", copiedVideoInfoShareHint: "コピーしました。もう一度 S で Facebook に共有", facebookShareOpened: "Facebook の共有画面を開きました", facebookShareBlocked: "Facebook の共有画面を開けませんでした", copyFailed: "コピーに失敗しました", today: "今日", published: "公開時刻" }
+  "zh-Hant": { channelSettings: "頻道指定設定", speed: "速度", quality: "解析度", playbackSpeed: "播放速度", seconds: "秒", backToStart: "回到片頭", copiedVideoInfo: "已複製影片資訊", copiedVideoInfoShareHint: "已成功複製到剪貼簿，再按快速鍵快速分享 F / T / X", socialShareOpened: "已開啟分享視窗", socialShareBlocked: "無法開啟分享視窗", copyFailed: "複製失敗", screenshotSaved: "影片截圖已下載", screenshotCopied: "影片截圖已複製到剪貼簿", screenshotFailed: "無法擷取影片畫面", today: "今天", published: "發布時間" },
+  en: { channelSettings: "Channel settings", speed: "Speed", quality: "Quality", playbackSpeed: "Playback speed", seconds: "sec", backToStart: "Back to start", copiedVideoInfo: "Video info copied", copiedVideoInfoShareHint: "Copied to clipboard — press F / T / X to share", socialShareOpened: "Share window opened", socialShareBlocked: "Could not open the share window", copyFailed: "Copy failed", screenshotSaved: "Video screenshot downloaded", screenshotCopied: "Video screenshot copied to clipboard", screenshotFailed: "Could not capture the video frame", today: "today", published: "Published" },
+  ja: { channelSettings: "チャンネル設定", speed: "速度", quality: "画質", playbackSpeed: "再生速度", seconds: "秒", backToStart: "先頭に戻る", copiedVideoInfo: "動画情報をコピーしました", copiedVideoInfoShareHint: "クリップボードにコピーしました。F / T / X ですぐに共有できます", socialShareOpened: "共有画面を開きました", socialShareBlocked: "共有画面を開けませんでした", copyFailed: "コピーに失敗しました", screenshotSaved: "動画スクリーンショットを保存しました", screenshotCopied: "動画スクリーンショットをクリップボードにコピーしました", screenshotFailed: "動画画面を保存できませんでした", today: "今日", published: "公開時刻" }
 };
 
 function ytqsNormalizeProfile(value, fallback = YTQS_DEFAULTS.global) {
@@ -48,7 +53,9 @@ function ytqsNormalizeProfile(value, fallback = YTQS_DEFAULTS.global) {
 function ytqsNormalizeSettings(value) {
   const global = {
     ...ytqsNormalizeProfile(value?.global),
-    theaterModeEnabled: value?.global?.theaterModeEnabled === true
+    theaterModeEnabled: value?.global?.theaterModeEnabled === true,
+    disableAutoplayNext: value?.global?.disableAutoplayNext === true,
+    hideEndScreenRecommendations: value?.global?.hideEndScreenRecommendations === true
   };
   const shorts = ytqsNormalizeProfile(value?.shorts, global);
   const channels = {};
@@ -68,7 +75,7 @@ function ytqsNormalizeSettings(value) {
     });
   }
   return {
-    schemaVersion: 2,
+    schemaVersion: 4,
     language: ["system", "zh-Hant", "en", "ja"].includes(value?.language) ? value.language : "system",
     global,
     shorts,
@@ -78,8 +85,19 @@ function ytqsNormalizeSettings(value) {
       channelNamesEnabled: value?.shortsControls?.channelNamesEnabled !== false,
       publishTimeEnabled: value?.shortsControls?.publishTimeEnabled === true
     },
+    gridLayout: {
+      regularColumns: YTQS_HOME_GRID_COLUMNS.includes(value?.gridLayout?.regularColumns) ? value.gridLayout.regularColumns : "auto",
+      shortsColumns: YTQS_HOME_GRID_COLUMNS.includes(value?.gridLayout?.shortsColumns) ? value.gridLayout.shortsColumns : "auto"
+    },
+    dateDisplay: {
+      enabled: value?.dateDisplay?.enabled === true,
+      format: YTQSDate.normalizeFormat(value?.dateDisplay?.format)
+    },
     copy: {
       defaultFormat: YTQSCopy.DEFAULT_FORMAT
+    },
+    screenshot: {
+      output: YTQS_SCREENSHOT_OUTPUTS.includes(value?.screenshot?.output) ? value.screenshot.output : "download"
     },
     channels
   };
@@ -116,7 +134,7 @@ function isVideoPage() {
 
 function readChannelContext() {
   const type = contentType();
-  if (!isVideoPage()) return { isVideo: false, contentType: type, channelId: "", channelName: "", videoTitle: "", videoUrl: "", currentTime: 0 };
+  if (!isVideoPage()) return { isVideo: false, contentType: type, channelId: "", channelName: "", videoTitle: "", videoUrl: "", currentTime: 0, isSpherical: false };
   const activeReel = type === "shorts" ? activeShortVideo()?.closest("ytd-reel-video-renderer") : null;
   const channelLink = type === "shorts"
     ? activeReel?.querySelector("#channel-name a, a[href^='/@'], a[href^='/channel/']")
@@ -128,7 +146,7 @@ function readChannelContext() {
   const channelId = href.match(/\/channel\/([^/?]+)/)?.[1] || channelPath || channelIdMeta;
   const channelName = channelLink?.textContent?.trim() || document.querySelector('link[itemprop="name"]')?.getAttribute("content") || "";
   const videoInfo = currentVideoInfo();
-  return { isVideo: true, contentType: type, channelId, channelName, videoTitle: videoInfo?.title || "", videoUrl: videoInfo?.url || "", currentTime: videoInfo?.currentTime || 0 };
+  return { isVideo: true, contentType: type, channelId, channelName, videoTitle: videoInfo?.title || "", videoUrl: videoInfo?.url || "", currentTime: videoInfo?.currentTime || 0, isSpherical: isSphericalVideo() };
 }
 
 function effectiveSettings() {
@@ -137,7 +155,7 @@ function effectiveSettings() {
     ? channel[ytqsContext.contentType] || channel.regular
     : ytqsContext.contentType === "shorts" ? ytqsSettings.shorts : ytqsSettings.global;
   if (ytqsContext.contentType === "shorts") {
-    return { speed: profile.speed, quality: null, premiumQualityEnabled: false };
+    return { speed: profile.speed, quality: null, premiumQualityEnabled: false, disableAutoplayNext: false, hideEndScreenRecommendations: false };
   }
   const override = channel?.regular?.theaterModeOverride || "inherit";
   const theaterMode = override === "on"
@@ -145,7 +163,12 @@ function effectiveSettings() {
     : override === "off"
       ? false
       : ytqsSettings.global.theaterModeEnabled === true ? true : null;
-  return { ...profile, theaterMode };
+  return {
+    ...profile,
+    theaterMode,
+    disableAutoplayNext: ytqsSettings.global.disableAutoplayNext === true,
+    hideEndScreenRecommendations: ytqsSettings.global.hideEndScreenRecommendations === true
+  };
 }
 
 function currentVideoId() {
@@ -267,6 +290,8 @@ function showChannelSettingsNotice(channelSettings) {
 }
 
 function applySettings() {
+  applyHomeGridLayout();
+  applyEndScreenRecommendationVisibility();
   if (!ytqsContext.isVideo) return;
   const channel = ytqsContext.channelId && ytqsSettings.channels?.[ytqsContext.channelId];
   const channelSettings = channel?.[ytqsContext.contentType] || channel?.regular;
@@ -276,6 +301,62 @@ function applySettings() {
     settings: effectiveSettings()
   }, location.origin);
   if (channelSettings) showChannelSettingsNotice(channelSettings);
+}
+
+function ytqsIsHomeGridPage(pathname = location.pathname) {
+  return pathname === "/" || pathname === "/feed/subscriptions";
+}
+
+function ytqsHomeGridStyleText(gridLayout = ytqsSettings.gridLayout, pathname = location.pathname) {
+  if (!ytqsIsHomeGridPage(pathname)) return "";
+  const declarations = [];
+  if (gridLayout?.regularColumns !== "auto" && YTQS_HOME_GRID_COLUMNS.includes(gridLayout?.regularColumns)) {
+    declarations.push(`--ytd-rich-grid-items-per-row:${gridLayout.regularColumns} !important`);
+  }
+  if (gridLayout?.shortsColumns !== "auto" && YTQS_HOME_GRID_COLUMNS.includes(gridLayout?.shortsColumns)) {
+    declarations.push(`--ytd-rich-grid-slim-items-per-row:${gridLayout.shortsColumns} !important`);
+  }
+  return declarations.length ? `ytd-rich-grid-renderer{${declarations.join(";")}}` : "";
+}
+
+function applyHomeGridLayout() {
+  const css = ytqsHomeGridStyleText();
+  let style = document.querySelector("#ytqs-home-grid-style");
+  if (!css) {
+    style?.remove();
+    return false;
+  }
+  if (!style) {
+    style = document.createElement("style");
+    style.id = "ytqs-home-grid-style";
+    document.documentElement.append(style);
+  }
+  style.textContent = css;
+  return true;
+}
+
+function applyEndScreenRecommendationVisibility() {
+  let style = document.querySelector("#ytqs-end-screen-style");
+  if (!style) {
+    style = document.createElement("style");
+    style.id = "ytqs-end-screen-style";
+    style.textContent = `
+      #movie_player.ytqs-hide-end-screen-recommendations:not(:hover) .ytp-endscreen-content,
+      #movie_player.ytqs-hide-end-screen-recommendations:not(:hover) .ytp-autonav-endscreen-upnext-container,
+      #movie_player.ytqs-hide-end-screen-recommendations:not(:hover) .ytp-autonav-endscreen-countdown-container {
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+      }
+    `;
+    document.documentElement.append(style);
+  }
+  const player = document.querySelector("#movie_player");
+  const enabled = ytqsContext.isVideo
+    && ytqsContext.contentType === "regular"
+    && ytqsSettings.global.hideEndScreenRecommendations === true;
+  player?.classList?.toggle("ytqs-hide-end-screen-recommendations", enabled);
+  return enabled;
 }
 
 function refreshContextAndApply(attempt = 0) {
@@ -329,12 +410,7 @@ async function ytqsLoadShortsAuthor(videoId) {
 }
 
 function ytqsExtractShortsPublishDate(source) {
-  const html = typeof source === "string" ? source : "";
-  const match = html.match(/"publishDate"\s*:\s*"([^"]+)"/)
-    || html.match(/"uploadDate"\s*:\s*"([^"]+)"/)
-    || html.match(/itemprop="uploadDate"\s+content="([^"]+)"/);
-  if (!match) return "";
-  return ytqsNormalizePublishDate(match[1].replaceAll("\\u0026", "&"));
+  return ytqsNormalizePublishDate(YTQSDate.extract(source));
 }
 
 function ytqsNormalizePublishDate(value) {
@@ -364,6 +440,9 @@ async function ytqsLoadShortsPublishDate(videoId) {
 }
 
 function ytqsFormatShortsPublishTime(value, now = Date.now()) {
+  if (ytqsSettings.dateDisplay.enabled) {
+    return YTQSDate.format(value, ytqsSettings.dateDisplay.format, ytqsLanguage());
+  }
   const timestamp = Date.parse(value);
   if (!Number.isFinite(timestamp)) return "";
   const elapsed = Math.max(0, Number(now) - timestamp);
@@ -435,8 +514,111 @@ function ytqsInstallShortsChannelStyle() {
     html[dark] .ytqs-shorts-page-publish-time:not(.ytqs-on-video),html[data-theme="dark"] .ytqs-shorts-page-publish-time:not(.ytqs-on-video),body[dark] .ytqs-shorts-page-publish-time:not(.ytqs-on-video){background:rgba(255,255,255,.14);box-shadow:0 1px 3px rgba(0,0,0,.28);color:var(--yt-spec-text-primary,#f1f1f1)}
     .ytqs-shorts-page-publish-time.ytqs-on-video{background:rgba(0,0,0,.58);box-shadow:0 1px 4px rgba(0,0,0,.3);color:#fff!important;opacity:1;text-shadow:0 1px 2px rgba(0,0,0,.75)}
     .ytqs-shorts-page-publish-time svg{width:13px;height:13px;flex:none;fill:currentColor}
+    .ytqs-absolute-date{white-space:nowrap}
   `;
   document.documentElement.append(style);
+}
+
+function ytqsVideoIdFromCard(card) {
+  const href = card?.querySelector?.('a[href*="/watch?v="]')?.getAttribute?.("href") || "";
+  try {
+    const videoId = new URL(href, location.origin).searchParams.get("v") || "";
+    return /^[A-Za-z0-9_-]{11}$/.test(videoId) ? videoId : "";
+  } catch {
+    return "";
+  }
+}
+
+function ytqsLooksLikeRelativeDate(text) {
+  return /(?:ago|前|分钟前|小時前|時間前|日前|週前|週間前|か月前|年前|seconds?|minutes?|hours?|days?|weeks?|months?|years?)/i.test(String(text || "").trim());
+}
+
+function ytqsCardDateElement(card) {
+  const elements = [...(card?.querySelectorAll?.(
+    "#metadata-line > span, .inline-metadata-item, .ytContentMetadataViewModelMetadataRow > .ytContentMetadataViewModelMetadataText"
+  ) || [])];
+  return elements.find((element) => ytqsLooksLikeRelativeDate(element.textContent)) || null;
+}
+
+function ytqsRestoreAbsoluteDateElement(element) {
+  if (!element?.classList?.contains("ytqs-absolute-date")) return;
+  if (element.dataset.ytqsOriginalDate) element.textContent = element.dataset.ytqsOriginalDate;
+  element.classList.remove("ytqs-absolute-date");
+  delete element.dataset.ytqsOriginalDate;
+  delete element.dataset.ytqsAbsoluteVideoId;
+}
+
+function ytqsRestoreAbsoluteDates() {
+  document.querySelectorAll(".ytqs-absolute-date").forEach(ytqsRestoreAbsoluteDateElement);
+}
+
+function ytqsApplyAbsoluteDate(element, videoId, value) {
+  const label = YTQSDate.format(value, ytqsSettings.dateDisplay.format, ytqsLanguage());
+  if (!label || !element?.isConnected || !ytqsSettings.dateDisplay.enabled) return false;
+  if (element.dataset.ytqsAbsoluteVideoId && element.dataset.ytqsAbsoluteVideoId !== videoId) {
+    ytqsRestoreAbsoluteDateElement(element);
+  }
+  if (!element.dataset.ytqsOriginalDate) element.dataset.ytqsOriginalDate = element.textContent.trim();
+  element.dataset.ytqsAbsoluteVideoId = videoId;
+  element.classList.add("ytqs-absolute-date");
+  element.title = element.dataset.ytqsOriginalDate;
+  element.textContent = label;
+  return true;
+}
+
+async function ytqsRenderCardAbsoluteDate(card) {
+  if (!ytqsSettings.dateDisplay.enabled || !card?.isConnected) return;
+  const videoId = ytqsVideoIdFromCard(card);
+  const element = ytqsCardDateElement(card);
+  if (!videoId || !element) return;
+  if (element.dataset.ytqsAbsoluteVideoId === videoId) return;
+  const publishDate = await ytqsGetShortsPublishDate(videoId);
+  if (ytqsVideoIdFromCard(card) !== videoId) return;
+  ytqsApplyAbsoluteDate(element, videoId, publishDate);
+}
+
+function ytqsCurrentWatchVideoId() {
+  if (location.pathname !== "/watch") return "";
+  return new URLSearchParams(location.search).get("v") || "";
+}
+
+function ytqsCurrentWatchDateElement() {
+  const elements = [...document.querySelectorAll("ytd-watch-metadata #info span, ytd-watch-metadata #info-container span, #info-strings yt-formatted-string")];
+  return elements.find((element) => ytqsLooksLikeRelativeDate(element.textContent)) || null;
+}
+
+function ytqsCurrentStructuredPublishDate() {
+  const direct = document.querySelector('meta[itemprop="uploadDate"], meta[itemprop="datePublished"]')?.content || "";
+  if (ytqsNormalizePublishDate(direct)) return direct;
+  const scripts = [...document.querySelectorAll('script[type="application/ld+json"], ytd-watch-metadata script')];
+  for (const script of scripts) {
+    const value = YTQSDate.extract(script.textContent || "");
+    if (value) return value;
+  }
+  return "";
+}
+
+async function ytqsRenderWatchAbsoluteDate() {
+  const videoId = ytqsCurrentWatchVideoId();
+  const element = ytqsCurrentWatchDateElement();
+  if (!ytqsSettings.dateDisplay.enabled || !videoId || !element) return;
+  if (element.dataset.ytqsAbsoluteVideoId === videoId) return;
+  const publishDate = ytqsCurrentStructuredPublishDate() || await ytqsGetShortsPublishDate(videoId);
+  if (ytqsCurrentWatchVideoId() !== videoId) return;
+  ytqsApplyAbsoluteDate(element, videoId, publishDate);
+}
+
+function ytqsScanAbsoluteDates() {
+  if (!ytqsSettings.dateDisplay.enabled) {
+    ytqsRestoreAbsoluteDates();
+    return;
+  }
+  ytqsInstallShortsChannelStyle();
+  ytqsRenderWatchAbsoluteDate();
+  document.querySelectorAll("ytd-rich-item-renderer, ytd-video-renderer, ytd-grid-video-renderer, ytd-compact-video-renderer, ytd-playlist-video-renderer").forEach((card) => {
+    const rect = card.getBoundingClientRect();
+    if (rect.bottom >= -600 && rect.top <= innerHeight + 600) ytqsRenderCardAbsoluteDate(card);
+  });
 }
 
 function ytqsDeduplicateShortsChannelNames(card, videoId) {
@@ -573,6 +755,7 @@ async function ytqsRenderShortsPagePublishTime() {
 }
 
 function ytqsScanShortsCards() {
+  ytqsScanAbsoluteDates();
   const onHome = location.pathname === "/";
   const onShortsPage = contentType() === "shorts";
   const channelNamesEnabled = onHome && ytqsSettings.shortsControls.channelNamesEnabled !== false;
@@ -731,7 +914,8 @@ function showCopyOverlay(success, title = "", messageKey = "", kind = "copy") {
       #ytqs-copy-overlay{position:fixed;z-index:2147483647;left:50%;top:24%;transform:translate(-50%,-8px);display:grid;grid-template-columns:28px minmax(0,1fr);align-items:center;column-gap:10px;min-width:230px;max-width:min(440px,calc(100vw - 32px));padding:13px 17px;border:1px solid rgba(255,255,255,.2);border-radius:12px;background:rgba(16,16,18,.92);box-shadow:0 14px 45px rgba(0,0,0,.4);color:#fff;font-family:Roboto,"Microsoft JhengHei UI",sans-serif;opacity:0;pointer-events:none;transition:opacity .15s ease,transform .15s ease;backdrop-filter:blur(8px)}
       #ytqs-copy-overlay.ytqs-show{opacity:1;transform:translate(-50%,0)}
       #ytqs-copy-overlay .ytqs-copy-icon{grid-row:1/3;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#31b879;color:#fff;font-size:16px;font-weight:800}
-      #ytqs-copy-overlay.ytqs-copy-share .ytqs-copy-icon{background:#1877f2;font-family:Arial,sans-serif}
+      #ytqs-copy-overlay.ytqs-copy-share .ytqs-copy-icon{background:#5b5bd6;font-family:Arial,sans-serif}
+      #ytqs-copy-overlay.ytqs-copy-screenshot .ytqs-copy-icon{background:#2878d4}
       #ytqs-copy-overlay.ytqs-copy-error .ytqs-copy-icon{background:#ff3b30}
       #ytqs-copy-overlay .ytqs-copy-value{font-size:14px;font-weight:700;line-height:1.3}
       #ytqs-copy-overlay .ytqs-copy-title{overflow:hidden;color:#b7b7ba;font-size:11px;line-height:1.35;text-overflow:ellipsis;white-space:nowrap}
@@ -742,14 +926,72 @@ function showCopyOverlay(success, title = "", messageKey = "", kind = "copy") {
   positionOverlayForContent(overlay);
   overlay.classList.toggle("ytqs-copy-error", !success);
   overlay.classList.toggle("ytqs-copy-share", kind === "share" && success);
-  overlay.querySelector(".ytqs-copy-icon").textContent = success ? kind === "share" ? "f" : "✓" : "!";
+  overlay.classList.toggle("ytqs-copy-screenshot", kind === "screenshot" && success);
+  overlay.querySelector(".ytqs-copy-icon").textContent = success ? kind === "share" ? "f" : kind === "screenshot" ? "▣" : "✓" : "!";
   overlay.querySelector(".ytqs-copy-value").textContent = ytqsText(messageKey || (success ? "copiedVideoInfo" : "copyFailed"));
   overlay.querySelector(".ytqs-copy-title").textContent = title;
   overlay.classList.remove("ytqs-show");
   void overlay.offsetWidth;
   overlay.classList.add("ytqs-show");
   clearTimeout(showCopyOverlay.timer);
-  showCopyOverlay.timer = setTimeout(() => overlay.classList.remove("ytqs-show"), YTQS_FACEBOOK_SHARE_WINDOW_MS);
+  showCopyOverlay.timer = setTimeout(() => overlay.classList.remove("ytqs-show"), YTQS_SOCIAL_SHARE_WINDOW_MS);
+}
+
+function ytqsScreenshotFilename(title = document.title, date = new Date()) {
+  const cleanTitle = String(title || "YouTube")
+    .replace(/\s+-\s+YouTube\s*$/i, "")
+    .replace(/[<>:"/\\|?*\u0000-\u001F]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 90) || "YouTube";
+  const timestamp = date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z").replace("T", "-");
+  return `${cleanTitle}-${timestamp}.png`;
+}
+
+async function captureCurrentVideoFrame(video = currentVideo(), requestedOutput = ytqsSettings.screenshot?.output) {
+  const width = Number(video?.videoWidth) || 0;
+  const height = Number(video?.videoHeight) || 0;
+  if (!video || video.readyState < 2 || width <= 0 || height <= 0) {
+    showCopyOverlay(false, "", "screenshotFailed", "screenshot");
+    return { ok: false, reason: "video-not-ready" };
+  }
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d", { alpha: false });
+    if (!context) throw new Error("canvas-context-unavailable");
+    context.drawImage(video, 0, 0, width, height);
+    const blob = await new Promise((resolve, reject) => {
+      try {
+        canvas.toBlob((value) => value ? resolve(value) : reject(new Error("empty-screenshot")), "image/png");
+      } catch (error) {
+        reject(error);
+      }
+    });
+    const filename = ytqsScreenshotFilename(currentVideoInfo()?.title || document.title);
+    const output = requestedOutput === "clipboard" ? "clipboard" : "download";
+    if (output === "clipboard") {
+      if (!navigator.clipboard?.write || typeof ClipboardItem !== "function") throw new Error("image-clipboard-unavailable");
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+      showCopyOverlay(true, `${width}×${height}`, "screenshotCopied", "screenshot");
+      return { ok: true, output, width, height };
+    }
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = filename;
+    anchor.hidden = true;
+    document.documentElement.append(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+    showCopyOverlay(true, `${width}×${height} · ${filename}`, "screenshotSaved", "screenshot");
+    return { ok: true, output, filename, width, height };
+  } catch {
+    showCopyOverlay(false, "", "screenshotFailed", "screenshot");
+    return { ok: false, reason: "capture-failed" };
+  }
 }
 
 async function writeClipboardText(text) {
@@ -776,7 +1018,7 @@ async function writeClipboardText(text) {
   }
 }
 
-async function copyCurrentVideoInfo(formatOverride = "", armFacebookShare = false) {
+async function copyCurrentVideoInfo(formatOverride = "", armSocialShare = false) {
   const info = currentVideoInfo();
   if (!info) {
     showCopyOverlay(false);
@@ -787,23 +1029,31 @@ async function copyCurrentVideoInfo(formatOverride = "", armFacebookShare = fals
     : YTQSCopy.DEFAULT_FORMAT;
   const text = YTQSCopy.formatVideoInfo({ ...info, channelName: ytqsContext.channelName }, format);
   const copied = Boolean(text) && await writeClipboardText(text);
-  ytqsFacebookShareReadyUntil = copied && armFacebookShare
-    ? Date.now() + YTQS_FACEBOOK_SHARE_WINDOW_MS
+  ytqsSocialShareReadyUntil = copied && armSocialShare
+    ? Date.now() + YTQS_SOCIAL_SHARE_WINDOW_MS
     : 0;
-  showCopyOverlay(copied, YTQSCopy.summarize(text), copied && armFacebookShare ? "copiedVideoInfoShareHint" : "");
+  showCopyOverlay(copied, YTQSCopy.summarize(text), copied && armSocialShare ? "copiedVideoInfoShareHint" : "");
   return copied;
 }
 
-function facebookShareReady() {
-  return ytqsFacebookShareReadyUntil > Date.now();
+function socialShareReady() {
+  return ytqsSocialShareReadyUntil > Date.now();
 }
 
-function openFacebookShareWindow() {
+function socialPlatformFromEvent(event) {
+  const key = event?.key?.toLowerCase();
+  return key === "f" ? "facebook"
+    : key === "x" ? "x"
+      : key === "t" ? "threads"
+        : "";
+}
+
+function openSocialShareWindow(platform) {
   const info = currentVideoInfo();
-  const shareUrl = YTQSCopy.facebookShareUrl(info);
-  ytqsFacebookShareReadyUntil = 0;
+  const shareUrl = YTQSCopy.socialShareUrl(platform, info);
+  ytqsSocialShareReadyUntil = 0;
   if (!shareUrl) {
-    showCopyOverlay(false, "", "facebookShareBlocked", "share");
+    showCopyOverlay(false, "", "socialShareBlocked", "share");
     return false;
   }
   const width = 720;
@@ -812,11 +1062,11 @@ function openFacebookShareWindow() {
   const top = Math.max(0, Math.round((window.screenY || 0) + ((window.outerHeight || height) - height) / 2));
   const shareWindow = window.open(
     shareUrl,
-    "ytqs-facebook-share",
+    `ytqs-${platform}-share`,
     `popup=yes,width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
   );
   if (!shareWindow) {
-    showCopyOverlay(false, YTQSCopy.summarize(info.text), "facebookShareBlocked", "share");
+    showCopyOverlay(false, YTQSCopy.summarize(info.text), "socialShareBlocked", "share");
     return false;
   }
   try {
@@ -825,7 +1075,10 @@ function openFacebookShareWindow() {
   } catch {
     // The cross-origin share window can still open even when focus is restricted.
   }
-  showCopyOverlay(true, YTQSCopy.summarize(info.text), "facebookShareOpened", "share");
+  const icon = platform === "facebook" ? "f" : platform === "threads" ? "T" : "X";
+  showCopyOverlay(true, YTQSCopy.summarize(info.text), "socialShareOpened", "share");
+  const overlay = document.querySelector("#ytqs-copy-overlay .ytqs-copy-icon");
+  if (overlay) overlay.textContent = icon;
   return true;
 }
 
@@ -895,26 +1148,43 @@ function isSeekBlockedTarget(target) {
   return target instanceof HTMLElement && Boolean(target.closest("button, a, [role='button'], [role='menu'], [role='menuitem'], [role='slider']"));
 }
 
+function isSphericalVideo() {
+  const player = currentPlayer();
+  return player?.classList?.contains("ytp-webgl-spherical") === true
+    || Boolean(player?.querySelector?.(".ytp-webgl-spherical-control"));
+}
+
 function handleKeyboardShortcut(event) {
-  if (!isVideoPage() || event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey || isTypingTarget(event.target)) return false;
+  const isScreenshot = event.ctrlKey === true
+    && event.altKey !== true
+    && event.metaKey !== true
+    && event.shiftKey !== true
+    && (event.code === "KeyS" || event.key?.toLowerCase() === "s");
+  if (!isVideoPage() || event.defaultPrevented || event.altKey || event.metaKey || isTypingTarget(event.target)) return false;
+  if (event.ctrlKey && !isScreenshot) return false;
   const isShorts = contentType() === "shorts";
   const shortsControls = ytqsSettings.shortsControls || YTQS_DEFAULTS.shortsControls;
   const isSeekBackward = isShorts && shortsControls.arrowKeysEnabled && event.key === "ArrowLeft";
   const isSeekForward = isShorts && shortsControls.arrowKeysEnabled && event.key === "ArrowRight";
   const isSeekStart = isShorts && (event.key === "0" || event.code === "Numpad0");
-  const isPlus = event.key === "+" || event.code === "NumpadAdd";
-  const isMinus = event.key === "-" || event.key === "−" || event.code === "NumpadSubtract";
-  const isReset = event.key === "*" || event.code === "NumpadMultiply";
-  const isCopy = event.code === "KeyS" || event.key?.toLowerCase() === "s";
-  if (!isSeekBackward && !isSeekForward && !isSeekStart && !isPlus && !isMinus && !isReset && !isCopy) return false;
+  const isSpeedDown = event.key === "PageUp" || event.code === "PageUp";
+  const isSpeedUp = event.key === "PageDown" || event.code === "PageDown";
+  const isReset = event.key === "Home" || event.code === "Home";
+  const socialPlatform = socialShareReady() ? socialPlatformFromEvent(event) : "";
+  // YouTube uses S as a native viewing control for 360° videos. Leave both S
+  // and Shift+S untouched while the spherical player is active.
+  const isCopy = !event.ctrlKey && (event.code === "KeyS" || event.key?.toLowerCase() === "s") && !isSphericalVideo();
+  if (!isSeekBackward && !isSeekForward && !isSeekStart && !isSpeedUp && !isSpeedDown && !isReset && !isCopy && !isScreenshot && !socialPlatform) return false;
   if (event.repeat && !isSeekBackward && !isSeekForward) return false;
   if ((isSeekBackward || isSeekForward || isSeekStart) && isSeekBlockedTarget(event.target)) return false;
-  const handled = isCopy
+  const handled = socialPlatform
+    ? (openSocialShareWindow(socialPlatform), true)
+    : isScreenshot
+      ? (captureCurrentVideoFrame(currentVideo(), ytqsSettings.screenshot.output), true)
+    : isCopy
     ? (event.shiftKey
-      ? (ytqsFacebookShareReadyUntil = 0, copyCurrentVideoInfo("timestamp-url"), true)
-      : facebookShareReady()
-        ? (openFacebookShareWindow(), true)
-        : (copyCurrentVideoInfo("title-url", true), true))
+      ? (ytqsSocialShareReadyUntil = 0, copyCurrentVideoInfo("timestamp-url"), true)
+      : (copyCurrentVideoInfo("title-url", true), true))
     : isSeekStart
     ? seekShorts(0)
     : isSeekBackward
@@ -923,7 +1193,7 @@ function handleKeyboardShortcut(event) {
         ? seekShorts(shortsControls.seekSeconds)
         : isReset
           ? restoreNormalSpeed()
-          : adjustSpeed(isPlus ? 1 : -1);
+          : adjustSpeed(isSpeedUp ? 1 : -1);
   if (handled) {
     event.preventDefault();
     event.stopImmediatePropagation();
@@ -939,7 +1209,13 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type === "YTQS_GET_CONTEXT") {
     ytqsContext = readChannelContext();
     sendResponse(ytqsContext);
+    return false;
   }
+  if (message?.type === "YTQS_CAPTURE_VIDEO_FRAME") {
+    captureCurrentVideoFrame(currentVideo(), message.output).then(sendResponse);
+    return true;
+  }
+  return false;
 });
 
 chrome.storage.onChanged.addListener((changes, area) => {

@@ -5,6 +5,7 @@ const vm = require("node:vm");
 let source = fs.readFileSync("popup.js", "utf8");
 const copySource = fs.readFileSync("copy-utils.js", "utf8");
 const transferSource = fs.readFileSync("settings-transfer.js", "utf8");
+const dateSource = fs.readFileSync("date-utils.js", "utf8");
 source = source.replace(
   /\n\$\("#typeSwitch"\)[\s\S]*$/,
   "\nthis.__settingsTest = { normalizeSettings, profileKey, channelProfile };"
@@ -18,6 +19,7 @@ const sandbox = {
 };
 vm.createContext(sandbox);
 vm.runInContext(copySource, sandbox, { filename: "copy-utils.js" });
+vm.runInContext(dateSource, sandbox, { filename: "date-utils.js" });
 vm.runInContext(transferSource, sandbox, { filename: "settings-transfer.js" });
 vm.runInContext(source, sandbox, { filename: "popup.js" });
 
@@ -28,8 +30,13 @@ const migrated = normalizeSettings({
     channelA: { name: "Channel A", speed: 2, quality: "highest" }
   }
 });
-assert.equal(migrated.schemaVersion, 2);
+assert.equal(migrated.schemaVersion, 4);
 assert.equal(migrated.copy.defaultFormat, "title-url");
+assert.deepEqual(JSON.parse(JSON.stringify(migrated.screenshot)), { output: "download" });
+assert.equal(migrated.global.disableAutoplayNext, false);
+assert.equal(migrated.global.hideEndScreenRecommendations, false);
+assert.deepEqual(JSON.parse(JSON.stringify(migrated.dateDisplay)), { enabled: false, format: "yyyy-MM-dd" });
+assert.deepEqual(JSON.parse(JSON.stringify(migrated.gridLayout)), { regularColumns: "auto", shortsColumns: "auto" });
 assert.deepEqual(
   JSON.parse(JSON.stringify(migrated.shorts)),
   { speed: 1.25, quality: "hd2160", premiumQualityEnabled: false }
@@ -50,9 +57,12 @@ assert.deepEqual(
 const independent = normalizeSettings({
   language: "ja",
   copy: { defaultFormat: "markdown" },
-  global: { speed: 1, quality: "hd1080", premiumQualityEnabled: true, theaterModeEnabled: true },
+  global: { speed: 1, quality: "hd1080", premiumQualityEnabled: true, theaterModeEnabled: true, disableAutoplayNext: true, hideEndScreenRecommendations: true },
   shorts: { speed: 3, quality: "highest" },
   shortsControls: { seekSeconds: 10, arrowKeysEnabled: false, channelNamesEnabled: false, publishTimeEnabled: false },
+  gridLayout: { regularColumns: 4, shortsColumns: 6 },
+  dateDisplay: { enabled: true, format: "dd/MM/yyyy HH:mm" },
+  screenshot: { output: "clipboard" },
   channels: {
     channelB: {
       regular: { speed: 1.25, quality: "hd1080", premiumQualityEnabled: true, theaterModeOverride: "off" },
@@ -61,16 +71,21 @@ const independent = normalizeSettings({
   }
 });
 assert.equal(independent.language, "ja");
-assert.equal(independent.schemaVersion, 2);
+assert.equal(independent.schemaVersion, 4);
 assert.equal(independent.copy.defaultFormat, "title-url");
+assert.deepEqual(JSON.parse(JSON.stringify(independent.screenshot)), { output: "clipboard" });
 assert.equal(independent.global.speed, 1);
 assert.equal(independent.global.theaterModeEnabled, true);
 assert.equal(independent.global.premiumQualityEnabled, true);
+assert.equal(independent.global.disableAutoplayNext, true);
+assert.equal(independent.global.hideEndScreenRecommendations, true);
 assert.equal(independent.shorts.speed, 3);
 assert.equal(independent.shortsControls.seekSeconds, 10);
 assert.equal(independent.shortsControls.arrowKeysEnabled, false);
 assert.equal(independent.shortsControls.channelNamesEnabled, false);
 assert.equal(independent.shortsControls.publishTimeEnabled, false);
+assert.deepEqual(JSON.parse(JSON.stringify(independent.gridLayout)), { regularColumns: 4, shortsColumns: 6 });
+assert.deepEqual(JSON.parse(JSON.stringify(independent.dateDisplay)), { enabled: true, format: "dd/MM/yyyy HH:mm" });
 assert.equal(channelProfile(independent.channels.channelB, "regular").speed, 1.25);
 assert.equal(channelProfile(independent.channels.channelB, "regular").theaterModeOverride, "off");
 assert.equal(channelProfile(independent.channels.channelB, "regular").premiumQualityEnabled, true);

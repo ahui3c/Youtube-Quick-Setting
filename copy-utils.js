@@ -53,5 +53,21 @@
     return `https://www.facebook.com/sharer/sharer.php?${params.toString()}`;
   }
 
-  globalThis.YTQSCopy = Object.freeze({ DEFAULT_FORMAT, FORMATS, formatVideoInfo, summarize, timestampUrl, facebookShareUrl });
+  function socialShareUrl(platform, info) {
+    const title = String(info?.title || "").trim();
+    const url = String(info?.url || "").trim();
+    if (!title || !url) return "";
+    if (platform === "facebook") return facebookShareUrl({ title, url });
+    if (platform === "x") {
+      const params = new URLSearchParams({ text: title, url });
+      return `https://twitter.com/intent/tweet?${params.toString()}`;
+    }
+    if (platform === "threads") {
+      const params = new URLSearchParams({ text: `${title}\n${url}` });
+      return `https://www.threads.net/intent/post?${params.toString()}`;
+    }
+    return "";
+  }
+
+  globalThis.YTQSCopy = Object.freeze({ DEFAULT_FORMAT, FORMATS, formatVideoInfo, summarize, timestampUrl, facebookShareUrl, socialShareUrl });
 })();

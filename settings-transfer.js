@@ -1,6 +1,6 @@
 (() => {
   const SCHEMA_ID = "youtube-quick-setting-settings";
-  const FORMAT_VERSION = 2;
+  const FORMAT_VERSION = 4;
 
   function createExport(settings, extensionVersion = "") {
     return {
@@ -29,7 +29,10 @@
       global: { ...current.global, ...imported.global },
       shorts: { ...current.shorts, ...imported.shorts },
       shortsControls: { ...current.shortsControls, ...imported.shortsControls },
+      gridLayout: { ...current.gridLayout, ...imported.gridLayout },
+      dateDisplay: { ...current.dateDisplay, ...imported.dateDisplay },
       copy: { ...current.copy, ...imported.copy },
+      screenshot: { ...current.screenshot, ...imported.screenshot },
       channels: { ...current.channels, ...imported.channels }
     };
   }
@@ -59,7 +62,7 @@
     const removed = mode === "replace"
       ? Object.keys(currentChannels).filter((id) => !Object.hasOwn(importedChannels, id)).length
       : 0;
-    const sections = ["language", "global", "shorts", "shortsControls", "copy"]
+    const sections = ["language", "global", "shorts", "shortsControls", "gridLayout", "dateDisplay", "copy", "screenshot"]
       .filter((key) => !same(current[key], next[key])).length;
     return { added, updated, removed, sections, totalChannels: Object.keys(next.channels || {}).length, next };
   }

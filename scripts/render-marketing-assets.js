@@ -14,7 +14,7 @@ const locales = {
     contentType: "regular",
     title: "每支影片，都用你習慣的速度與畫質",
     subtitle: "自動套用全域、Shorts 與頻道專屬設定",
-    chips: ["頻道優先", "Shorts 獨立", "1080p Premium", "＋／－ 調速", "＊ 回復 1×"],
+    chips: ["頻道優先", "Shorts 獨立", "1080p Premium", "PgUp 減速／PgDn 加速", "Home 回復 1×"],
     eyebrow: "YOUTUBE QUICK TOOLBOX",
     brandName: "YouTube 快速設定工具箱"
   },
@@ -24,7 +24,7 @@ const locales = {
     contentType: "shorts",
     title: "Every video, at your speed and quality",
     subtitle: "Automatic defaults for videos, Shorts, and individual channels",
-    chips: ["Channel overrides", "Separate Shorts", "1080p Premium", "+ / − speed", "* resets to 1×"],
+    chips: ["Channel overrides", "Separate Shorts", "1080p Premium", "PgUp slower / PgDn faster", "Home resets to 1×"],
     eyebrow: "YOUTUBE QUICK TOOLBOX",
     brandName: "YouTube Quick Settings Toolbox"
   },
@@ -34,7 +34,7 @@ const locales = {
     contentType: "shorts",
     title: "いつもの速度と画質を、すべての動画に",
     subtitle: "通常動画・ショート・チャンネル別設定を自動適用",
-    chips: ["チャンネル優先", "ショート個別設定", "1080p Premium", "＋／－ で速度変更", "＊ で 1×"],
+    chips: ["チャンネル優先", "ショート個別設定", "1080p Premium", "PgUp 減速／PgDn 加速", "Home で 1×"],
     eyebrow: "YOUTUBE QUICK TOOLBOX",
     brandName: "YouTube クイック設定ツールボックス"
   }

@@ -23,6 +23,9 @@ body {
   font-family: "Noto Sans TC", "Microsoft JhengHei UI", system-ui, sans-serif;
 }
 
+body:has(.shortcut-dialog[open]),
+body:has(.import-dialog[open]) { overflow: hidden; }
+
 button, input, select { font: inherit; }
 
 .panel { padding: 20px; }
@@ -143,6 +146,59 @@ h2 { font-size: 16px; line-height: 1.35; }
 
 .channel-card { margin-top: 12px; }
 
+.date-display-card {
+  margin-top: 12px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--card);
+}
+
+.more-video-settings-card {
+  margin-top: 12px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--card);
+  overflow: hidden;
+}
+
+.more-video-settings-heading {
+  padding: 14px 0 11px;
+  border-bottom: 1px solid var(--line);
+}
+
+.more-video-settings-heading h2 {
+  margin: 0;
+  color: white;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.more-video-setting + .more-video-setting { border-top: 1px solid var(--line); }
+.more-video-setting[hidden] { display: none; }
+.shorts-display-settings-card .home-grid-setting { margin: 0; padding: 14px 0; border-top: 0; }
+.shorts-display-setting { margin-top: 0; padding: 14px 0; border-top: 1px solid var(--line); }
+
+.date-display-toggle { margin-top: 0; padding: 14px 0; }
+.date-format-setting { padding: 0 0 14px; border-top: 1px solid var(--line); }
+.date-format-setting label { display: block; margin: 11px 0 7px; color: #c7c8cb; font-size: 11px; font-weight: 650; }
+.date-format-setting input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #45474d;
+  border-radius: 8px;
+  outline: 0;
+  background: #26272b;
+  color: white;
+  font: 600 12px/1.2 Consolas, monospace;
+}
+.date-format-setting input:focus { border-color: var(--focus); box-shadow: 0 0 0 2px rgb(104 167 255 / 18%); }
+.date-format-setting p { margin: 7px 0 0; color: var(--muted); font-size: 9px; line-height: 1.5; }
+.date-format-setting output { display: inline-block; margin-top: 8px; padding: 4px 8px; border-radius: 999px; background: #2b2c31; color: var(--green); font-size: 10px; font-weight: 650; }
+
 .section-heading {
   display: flex;
   align-items: center;
@@ -248,6 +304,11 @@ legend {
 .shorts-controls > .toggle-setting:first-child { margin-top: 0; }
 .shorts-seek-setting { margin-top: 15px; transition: opacity .16s ease; }
 .shorts-seek-setting:disabled { opacity: .5; }
+.home-grid-setting { margin-top: 16px; padding-top: 15px; border-top: 1px solid var(--line); }
+.home-grid-bottom-card { padding: 14px 16px; }
+.home-grid-bottom-card .home-grid-setting { margin-top: 0; padding-top: 0; border-top: 0; }
+.setting-description { margin: -2px 0 9px; color: var(--muted); font-size: 9px; line-height: 1.45; }
+.grid-column-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
 .toggle-setting {
   display: flex;
@@ -332,6 +393,98 @@ legend {
   overflow: hidden;
 }
 
+.screenshot-card {
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: #1d1e21;
+  overflow: hidden;
+}
+
+.screenshot-video-button {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 62px;
+  padding: 11px 13px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+}
+
+.screenshot-video-button:hover:not(:disabled) { background: #242529; }
+.screenshot-video-button:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+.screenshot-video-button:disabled { cursor: not-allowed; opacity: .45; }
+.screenshot-video-button.saved .screenshot-glyph { background: #214d3a; color: var(--green); }
+.screenshot-video-button.failed .screenshot-glyph { background: #552925; color: #ff8c85; }
+
+.screenshot-glyph {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: #2c2d31;
+  color: #d5d6da;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.screenshot-button-text { min-width: 0; }
+.screenshot-button-text strong, .screenshot-button-text span { display: block; }
+.screenshot-button-text strong { font-size: 12px; line-height: 1.35; }
+.screenshot-button-text span { margin-top: 3px; color: var(--muted); font-size: 10px; line-height: 1.35; }
+.screenshot-video-button kbd {
+  display: grid;
+  place-items: center;
+  min-width: 48px;
+  height: 27px;
+  padding: 0 7px;
+  border: 1px solid #4a4c51;
+  border-bottom-width: 3px;
+  border-radius: 7px;
+  background: #242529;
+  color: white;
+  font: 700 11px/1 "Segoe UI", sans-serif;
+  white-space: nowrap;
+}
+.screenshot-result-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 43px;
+  padding: 7px 13px;
+  border-top: 1px solid var(--line);
+}
+.screenshot-result-setting label { color: var(--muted); font-size: 10px; font-weight: 650; }
+.screenshot-result-setting select {
+  min-width: 132px;
+  height: 30px;
+  padding: 0 28px 0 9px;
+  border: 1px solid #45474d;
+  border-radius: 8px;
+  outline: 0;
+  background: #26272b;
+  color: #f2f3f5;
+  font-size: 10px;
+  font-weight: 650;
+}
+.screenshot-result-setting select:focus-visible { border-color: var(--focus); box-shadow: 0 0 0 2px rgb(104 167 255 / 18%); }
+.screenshot-state {
+  margin: 0;
+  padding: 8px 13px 10px 55px;
+  border-top: 1px solid var(--line);
+  color: #b9bbc0;
+  font-size: 10px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
 .copy-action-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 42px;
@@ -402,7 +555,19 @@ legend {
 .copy-button-text strong, .copy-button-text span { display: block; }
 .copy-button-text strong { font-size: 12px; line-height: 1.35; }
 .copy-button-text span { margin-top: 3px; color: var(--muted); font-size: 10px; line-height: 1.35; }
-.copy-video-button kbd { width: 25px; height: 27px; }
+.copy-video-button kbd {
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 27px;
+  padding: 0 5px;
+  border: 1px solid #4a4c51;
+  border-bottom-width: 3px;
+  border-radius: 7px;
+  background: #242529;
+  color: white;
+  font: 700 14px/1 "Segoe UI", sans-serif;
+}
 .copy-state {
   margin: 0;
   padding: 8px 13px 10px 55px;
@@ -440,35 +605,218 @@ legend {
 .copy-format-menu button:focus-visible { background: #292a2e; outline: 0; }
 .copy-format-menu button[aria-checked="true"] { color: white; font-weight: 700; }
 .copy-format-check { color: var(--green); text-align: center; }
-.copy-format-menu .copy-format-action { margin-top: 4px; border-top: 1px solid var(--line); border-radius: 0 0 7px 7px; color: #dfe9ff; }
-.copy-format-facebook-icon { display: grid; place-items: center; width: 17px; height: 17px; border-radius: 50%; background: #1877f2; color: white; font-family: Arial,sans-serif; font-size: 12px; font-weight: 800; }
+.copy-format-menu .copy-format-action { border-radius: 7px; color: #dfe9ff; }
+.copy-format-menu .copy-format-action[data-share-platform="facebook"] { margin-top: 4px; border-top: 1px solid var(--line); border-radius: 0; }
+.copy-format-menu .copy-format-action:last-child { border-radius: 0 0 7px 7px; }
+.copy-format-social-icon { display: grid; place-items: center; width: 17px; height: 17px; border: 1px solid #555860; border-radius: 50%; background: #090909; color: white; font-family: Arial,sans-serif; font-size: 10px; font-weight: 800; }
+.copy-format-social-icon.facebook { border-color: #1877f2; background: #1877f2; font-size: 12px; }
+.copy-format-social-icon.threads { font-size: 13px; line-height: 1; }
 
 .shortcut-hint {
+  display: block;
+  padding: 12px 0 0;
+}
+
+.shortcut-help-launcher {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px 4px 2px;
+  gap: 10px;
+  width: 100%;
+  min-height: 58px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: #1b1c1f;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
 }
 
-.key-pair { display: flex; gap: 3px; }
-.key-pair.shorts { display: grid; grid-template-columns: repeat(4, 25px); gap: 3px; }
-kbd {
+.shortcut-help-launcher:hover {
+  border-color: #4c4e54;
+  background: #202125;
+}
+
+.shortcut-help-launcher:active { transform: translateY(1px); }
+.shortcut-help-launcher:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.shortcut-launcher-icon {
   display: grid;
   place-items: center;
-  width: 25px;
-  height: 28px;
-  border: 1px solid #4a4c51;
-  border-bottom-width: 3px;
-  border-radius: 7px;
-  background: #242529;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #474950;
+  border-radius: 10px;
+  background: #292a2f;
+  box-shadow: inset 0 -2px 0 #17181b;
   color: white;
-  font: 700 14px/1 "Segoe UI", sans-serif;
+  font-size: 18px;
 }
 
-.shortcut-hint p { margin: 0; }
-.shortcut-hint strong, .shortcut-hint span { display: block; }
-.shortcut-hint strong { font-size: 12px; }
-.shortcut-hint span { color: var(--muted); font-size: 10px; margin-top: 2px; }
+.shortcut-launcher-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.shortcut-launcher-copy strong,
+.shortcut-launcher-copy > span { display: block; }
+.shortcut-launcher-copy strong { font-size: 12px; line-height: 1.35; }
+.shortcut-launcher-copy > span { margin-top: 2px; color: var(--muted); font-size: 9px; line-height: 1.35; }
+.shortcut-launcher-arrow { flex: 0 0 auto; color: #aeb0b6; font-size: 23px; line-height: 1; }
+
+.shortcut-dialog {
+  width: calc(100% - 20px);
+  max-width: 370px;
+  max-height: calc(100% - 20px);
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #4b4d53;
+  border-radius: 17px;
+  background: #17181b;
+  color: var(--ink);
+  box-shadow: 0 28px 80px rgb(0 0 0 / 70%);
+}
+
+.shortcut-dialog::backdrop {
+  background: rgb(5 6 8 / 78%);
+  backdrop-filter: blur(3px);
+}
+
+.shortcut-dialog form {
+  height: 100%;
+  max-height: calc(100vh - 20px);
+  padding: 15px;
+  overflow-y: auto;
+}
+
+.shortcut-dialog-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.shortcut-dialog-heading h2 { font-size: 16px; line-height: 1.25; }
+
+.shortcut-dialog-close {
+  display: grid;
+  place-items: center;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #44464c;
+  border-radius: 10px;
+  background: #25262b;
+  color: #d9dade;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.shortcut-dialog-close:hover { background: #303137; color: white; }
+.shortcut-dialog-close:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.shortcut-dialog-context {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 9px 10px;
+  border: 1px solid #383a40;
+  border-radius: 10px;
+  background: #202126;
+}
+
+.shortcut-context-dot {
+  flex: 0 0 7px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 4px rgb(58 210 135 / 10%);
+}
+
+.shortcut-dialog-context p { margin: 0; color: #c5c6cb; font-size: 9px; line-height: 1.45; }
+.shortcut-help-sections { display: grid; gap: 10px; margin-top: 11px; }
+
+.shortcut-help-section {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #383a40;
+  border-radius: 12px;
+  background: #1d1e22;
+}
+
+.shortcut-help-section::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 3px;
+  background: var(--red);
+  content: "";
+}
+
+.shortcut-help-section > header {
+  padding: 10px 12px 8px 14px;
+  border-bottom: 1px solid #34363b;
+}
+
+.shortcut-help-section h3 { font-size: 12px; line-height: 1.3; }
+.shortcut-help-section header p { margin: 2px 0 0; color: var(--muted); font-size: 8px; line-height: 1.4; }
+
+.shortcut-help-row {
+  display: grid;
+  grid-template-columns: 116px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 8px 11px 8px 14px;
+  border-bottom: 1px solid #303136;
+}
+
+.shortcut-help-row:last-child { border-bottom: 0; }
+.shortcut-help-row.is-disabled { opacity: .48; }
+
+.shortcut-key-cluster {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 3px;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.shortcut-key-cluster kbd {
+  display: grid;
+  place-items: center;
+  min-width: 30px;
+  width: auto;
+  height: 29px;
+  padding: 0 7px;
+  border: 1px solid #52545b;
+  border-bottom-width: 3px;
+  border-radius: 7px;
+  background: #292a2f;
+  color: white;
+  font: 750 11px/1 "Segoe UI", sans-serif;
+}
+
+.shortcut-key-separator { color: #85878d; font-size: 9px; font-weight: 800; }
+.shortcut-help-row-copy { min-width: 0; }
+.shortcut-help-row-copy strong,
+.shortcut-help-row-copy > span { display: block; }
+.shortcut-help-row-copy strong { color: #f1f2f4; font-size: 10px; line-height: 1.35; }
+.shortcut-help-row-copy > span { margin-top: 2px; color: var(--muted); font-size: 8px; line-height: 1.4; }
+
+.shortcut-dialog-tip {
+  margin: 10px 2px 0;
+  color: #96989f;
+  font-size: 8px;
+  line-height: 1.45;
+}
 
 .transfer-card {
   margin-top: 12px;

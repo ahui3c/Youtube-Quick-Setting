@@ -41,6 +41,12 @@
           <div class="choice-grid" id="globalQuality" role="radiogroup" aria-label="全域影片畫質"></div>
         </fieldset>
 
+        <fieldset class="home-grid-setting" id="homeGridColumnsFieldset">
+          <legend id="homeGridColumnsLegend">首頁每行影片數量</legend>
+          <p class="setting-description" id="homeGridColumnsDescription">僅套用首頁與訂閱內容頁；預設跟隨 YouTube</p>
+          <div class="choice-grid grid-column-options" id="homeGridColumns" role="radiogroup" aria-labelledby="homeGridColumnsLegend"></div>
+        </fieldset>
+
         <div class="toggle-setting" id="globalPremiumQualitySetting">
           <div>
             <strong id="globalPremiumQualityTitle">使用 Premium 強化畫質</strong>
@@ -81,28 +87,6 @@
             <legend id="shortsSeekSecondsLegend">快進秒數</legend>
             <div class="choice-grid" id="shortsSeekSeconds" role="radiogroup" aria-labelledby="shortsSeekSecondsLegend"></div>
           </fieldset>
-          <div class="toggle-setting">
-            <div>
-              <strong id="shortsChannelNamesTitle">首頁 Shorts 顯示頻道名稱</strong>
-              <span id="shortsChannelNamesDescription">在 Shorts 卡片補上可點擊的頻道名稱</span>
-            </div>
-            <label class="switch">
-              <input id="shortsChannelNamesEnabled" type="checkbox">
-              <span class="switch-ui" aria-hidden="true"></span>
-              <span class="sr-only" id="shortsChannelNamesLabel">首頁 Shorts 顯示頻道名稱</span>
-            </label>
-          </div>
-          <div class="toggle-setting">
-            <div>
-              <strong id="shortsPublishTimeTitle">Shorts 顯示發布時間資訊</strong>
-              <span id="shortsPublishTimeDescription">預設關閉；開啟後在首頁卡片與 Shorts 播放頁顯示發布時間</span>
-            </div>
-            <label class="switch">
-              <input id="shortsPublishTimeEnabled" type="checkbox">
-              <span class="switch-ui" aria-hidden="true"></span>
-              <span class="sr-only" id="shortsPublishTimeLabel">Shorts 顯示發布時間資訊</span>
-            </label>
-          </div>
         </div>
 
       </section>
@@ -124,6 +108,25 @@
         </div>
         <div class="copy-format-menu" id="copyFormatMenu" role="menu" hidden></div>
         <p class="copy-state" id="copyVideoInfoState" aria-live="polite" hidden></p>
+      </section>
+
+      <section class="screenshot-card" aria-labelledby="captureVideoFrameTitle">
+        <button class="screenshot-video-button" id="captureVideoFrame" type="button">
+          <span class="screenshot-glyph" aria-hidden="true">▣</span>
+          <span class="screenshot-button-text">
+            <strong id="captureVideoFrameTitle">一鍵影片截圖</strong>
+            <span id="captureVideoFrameDescription">截取不含 UI 的純影片畫面</span>
+          </span>
+          <kbd aria-hidden="true">Ctrl+S</kbd>
+        </button>
+        <div class="screenshot-result-setting">
+          <label for="captureVideoFrameResult" id="captureVideoFrameResultLabel">截圖結果</label>
+          <select id="captureVideoFrameResult">
+            <option value="download">下載存檔</option>
+            <option value="clipboard">複製到剪貼簿</option>
+          </select>
+        </div>
+        <p class="screenshot-state" id="captureVideoFrameState" aria-live="polite" hidden></p>
       </section>
 
       <section class="channel-card" id="channelCard" aria-labelledby="channelHeading">
@@ -176,9 +179,109 @@
       </section>
 
       <footer class="shortcut-hint" id="shortcutHint">
-        <div class="key-pair" id="shortcutKeys" aria-hidden="true"><kbd>−</kbd><kbd>＋</kbd><kbd>＊</kbd></div>
-        <p><strong id="shortcutTitle">播放時直接調速</strong><span id="shortcutDescription">按 −／+ 切換速度，按 * 恢復 1×</span></p>
+        <button class="shortcut-help-launcher" id="shortcutHelpButton" type="button" aria-haspopup="dialog" aria-controls="shortcutDialog">
+          <span class="shortcut-launcher-icon" aria-hidden="true"><span>⌨</span></span>
+          <span class="shortcut-launcher-copy">
+            <strong id="shortcutTitle">快捷鍵與操作指南</strong>
+            <span id="shortcutDescription">點擊查看完整按鍵說明</span>
+          </span>
+          <span class="shortcut-launcher-arrow" aria-hidden="true">›</span>
+        </button>
       </footer>
+
+      <section class="date-display-card home-grid-bottom-card" id="homeGridColumnsBottomCard" aria-labelledby="homeGridColumnsLegend" hidden></section>
+
+      <section class="more-video-settings-card shorts-display-settings-card" id="shortsDisplaySettingsCard" aria-labelledby="shortsDisplaySettingsTitle" hidden>
+        <header class="more-video-settings-heading">
+          <h2 id="shortsDisplaySettingsTitle">Shorts 顯示設定</h2>
+        </header>
+        <div class="shorts-display-settings-list">
+          <div id="shortsHomeGridSetting"></div>
+          <div class="toggle-setting shorts-display-setting">
+            <div>
+              <strong id="shortsChannelNamesTitle">首頁 Shorts 顯示頻道名稱</strong>
+              <span id="shortsChannelNamesDescription">在 Shorts 卡片補上可點擊的頻道名稱</span>
+            </div>
+            <label class="switch">
+              <input id="shortsChannelNamesEnabled" type="checkbox">
+              <span class="switch-ui" aria-hidden="true"></span>
+              <span class="sr-only" id="shortsChannelNamesLabel">首頁 Shorts 顯示頻道名稱</span>
+            </label>
+          </div>
+          <div class="toggle-setting shorts-display-setting">
+            <div>
+              <strong id="shortsPublishTimeTitle">Shorts 顯示發布時間資訊</strong>
+              <span id="shortsPublishTimeDescription">預設關閉；開啟後在首頁卡片與 Shorts 播放頁顯示發布時間</span>
+            </div>
+            <label class="switch">
+              <input id="shortsPublishTimeEnabled" type="checkbox">
+              <span class="switch-ui" aria-hidden="true"></span>
+              <span class="sr-only" id="shortsPublishTimeLabel">Shorts 顯示發布時間資訊</span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <section class="more-video-settings-card" id="moreVideoSettings" aria-labelledby="moreVideoSettingsTitle">
+        <header class="more-video-settings-heading">
+          <h2 id="moreVideoSettingsTitle">更多影片設定</h2>
+        </header>
+        <div class="more-video-settings-list">
+          <div class="more-video-setting" id="absoluteDateSetting">
+            <div class="toggle-setting date-display-toggle">
+              <div>
+                <strong id="absoluteDateTitle">顯示絕對上傳日期</strong>
+                <span id="absoluteDateDescription">將「2 週前」等相對時間改為完整日期</span>
+              </div>
+              <label class="switch">
+                <input id="absoluteDateEnabled" type="checkbox">
+                <span class="switch-ui" aria-hidden="true"></span>
+                <span class="sr-only" id="absoluteDateLabel">顯示絕對上傳日期</span>
+              </label>
+            </div>
+            <div class="date-format-setting" id="absoluteDateFormatSetting" hidden>
+              <label for="absoluteDateFormat" id="absoluteDateFormatLabel">日期與時間格式</label>
+              <input id="absoluteDateFormat" type="text" list="absoluteDateFormatPresets" maxlength="60" spellcheck="false" value="yyyy-MM-dd">
+              <datalist id="absoluteDateFormatPresets">
+                <option value="yyyy-MM-dd"></option>
+                <option value="yyyy/MM/dd"></option>
+                <option value="dd-MM-yyyy"></option>
+                <option value="yyyy-MM-dd HH:mm"></option>
+              </datalist>
+              <p id="absoluteDateFormatHelp">可用：yyyy、yy、MMM、MM、dd、ww、HH、hh、ap、mm、ss</p>
+              <output id="absoluteDatePreview" for="absoluteDateFormat"></output>
+            </div>
+          </div>
+
+          <div class="more-video-setting" id="globalHideEndScreenRecommendationsSetting" aria-labelledby="globalHideEndScreenRecommendationsTitle">
+            <div class="toggle-setting date-display-toggle">
+              <div>
+                <strong id="globalHideEndScreenRecommendationsTitle">隱藏片尾推薦卡</strong>
+                <span id="globalHideEndScreenRecommendationsDescription">移出播放器時隱藏，滑鼠移入即可暫時顯示</span>
+              </div>
+              <label class="switch">
+                <input id="globalHideEndScreenRecommendationsEnabled" type="checkbox">
+                <span class="switch-ui" aria-hidden="true"></span>
+                <span class="sr-only" id="globalHideEndScreenRecommendationsLabel">隱藏片尾推薦卡</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="more-video-setting" id="globalDisableAutoplayNextSetting" aria-labelledby="globalDisableAutoplayNextTitle">
+            <div class="toggle-setting date-display-toggle">
+              <div>
+                <strong id="globalDisableAutoplayNextTitle">取消自動播放下一部影片</strong>
+                <span id="globalDisableAutoplayNextDescription">自動關閉 YouTube 播放器的自動播放開關</span>
+              </div>
+              <label class="switch">
+                <input id="globalDisableAutoplayNextEnabled" type="checkbox">
+                <span class="switch-ui" aria-hidden="true"></span>
+                <span class="sr-only" id="globalDisableAutoplayNextLabel">取消自動播放下一部影片</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <details class="transfer-card" id="settingsTransfer">
         <summary>
@@ -186,7 +289,7 @@
             <strong id="settingsTransferTitle">設定備份與還原</strong>
             <span id="settingsTransferDescription">匯出、匯入或回復上次設定</span>
           </span>
-          <span class="version-badge" id="settingsVersionBadge">v2</span>
+          <span class="version-badge" id="settingsVersionBadge">v4</span>
         </summary>
         <div class="transfer-content">
           <div class="transfer-actions">
@@ -218,6 +321,24 @@
         </label>
       </div>
 
+      <dialog class="shortcut-dialog" id="shortcutDialog" aria-labelledby="shortcutDialogTitle">
+        <form method="dialog">
+          <header class="shortcut-dialog-heading">
+            <div>
+              <p class="section-kicker" id="shortcutDialogKicker">操作指南</p>
+              <h2 id="shortcutDialogTitle">YouTube 播放快捷鍵</h2>
+            </div>
+            <button class="shortcut-dialog-close" id="shortcutDialogClose" type="submit" value="close" aria-label="關閉">×</button>
+          </header>
+          <div class="shortcut-dialog-context">
+            <span class="shortcut-context-dot" aria-hidden="true"></span>
+            <p id="shortcutDialogContext">快速鍵僅在 YouTube 影片播放頁生效。</p>
+          </div>
+          <div class="shortcut-help-sections" id="shortcutKeys"></div>
+          <p class="shortcut-dialog-tip" id="shortcutDialogTip">分享快速鍵只會在複製成功提示顯示期間生效。</p>
+        </form>
+      </dialog>
+
       <dialog class="import-dialog" id="importDialog" aria-labelledby="importDialogTitle">
         <form method="dialog">
           <div class="dialog-heading">
@@ -225,7 +346,7 @@
               <p class="section-kicker" id="importDialogKicker">匯入預覽</p>
               <h2 id="importDialogTitle">確認設定變更</h2>
             </div>
-            <span class="version-badge" id="importVersionBadge">v2</span>
+            <span class="version-badge" id="importVersionBadge">v4</span>
           </div>
           <fieldset class="import-mode">
             <legend id="importModeLegend">匯入方式</legend>
@@ -249,6 +370,7 @@
       </dialog>
     </main>
     <script src="copy-utils.js"></script>
+    <script src="date-utils.js"></script>
     <script src="settings-transfer.js"></script>
     <script src="popup.js"></script>
   </body>
