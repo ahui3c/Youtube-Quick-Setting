@@ -18,6 +18,16 @@ const locales = {
     eyebrow: "YOUTUBE QUICK TOOLBOX",
     brandName: "YouTube 快速設定工具箱"
   },
+  "zh-shorts": {
+    language: "zh-Hant",
+    systemLanguage: "zh-TW",
+    contentType: "shorts",
+    title: "Shorts，也能照自己的節奏看",
+    subtitle: "獨立速度、方向鍵快轉、發布時間與首頁排列一次設定",
+    chips: ["Shorts 獨立速度", "← / → 快退快進", "0 回到片頭", "發布時間", "每行 2～6 部"],
+    eyebrow: "SHORTS CONTROL",
+    brandName: "YouTube 快速設定工具箱"
+  },
   en: {
     language: "en",
     systemLanguage: "en-US",

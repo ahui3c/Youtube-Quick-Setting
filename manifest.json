@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "__MSG_extensionName__",
   "description": "__MSG_extensionDescription__",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "default_locale": "zh_TW",
   "permissions": [
     "storage",
@@ -12,6 +12,9 @@
   "host_permissions": [
     "https://www.youtube.com/*"
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
     "default_title": "__MSG_extensionName__",
     "default_popup": "popup.html",
@@ -34,6 +37,8 @@
         "https://www.youtube.com/*"
       ],
       "js": [
+        "build-info.js",
+        "instance-coordinator.js",
         "copy-utils.js",
         "date-utils.js",
         "content.js"

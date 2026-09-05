@@ -1,10 +1,15 @@
 {
   "name": "youtube-quick-setting",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "private": true,
-  "description": "Localized Chrome extension for automatic YouTube playback speed and quality preferences.",
+  "description": "Cross-browser YouTube toolbox with isolated Chrome, Firefox, and Safari-ready builds.",
   "scripts": {
-    "test": "node tests/date-utils.test.js && node tests/quality-selection.test.js && node tests/settings-profiles.test.js && node tests/copy-and-transfer.test.js && node tests/content-behavior.test.js && node tests/popup-ui.test.js && node tests/shorts-contrast-ui.test.js",
+    "test": "node tests/date-utils.test.js && node tests/quality-selection.test.js && node tests/quality-menu-runtime.test.js && node tests/settings-profiles.test.js && node tests/copy-and-transfer.test.js && node tests/instance-coordinator.test.js && node tests/content-behavior.test.js && node tests/popup-ui.test.js && node tests/shorts-contrast-ui.test.js && node tests/platform-build.test.js",
+    "build:chrome": "node scripts/build-platforms.js chrome",
+    "build:firefox": "node scripts/build-platforms.js firefox",
+    "build:safari": "node scripts/build-platforms.js safari",
+    "build:platforms": "node scripts/build-platforms.js all",
+    "package:firefox": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package-firefox.ps1",
     "render:marketing": "node scripts/render-marketing-assets.js",
     "render:store": "node scripts/render-store-assets.js"
   },

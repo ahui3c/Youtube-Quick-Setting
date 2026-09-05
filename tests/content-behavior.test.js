@@ -29,14 +29,17 @@ assert.match(source, /\.ytqs-shorts-page-publish-time\.ytqs-on-video/);
 assert.match(source, /window\.addEventListener\("resize", ytqsScheduleShortsCardScan/);
 assert.match(source, /#ytqs-speed-overlay\.ytqs-seek-overlay\.ytqs-show\{opacity:\.82\}/);
 assert.match(source, /rect\.left \+ rect\.width \/ 2/);
+assert.match(source, /YTQS_INSTANCE_PEER/);
+assert.match(source, /YTQS_INSTANCE_CONFLICT_STATUS/);
 assert.match(source, /function showSpeedOverlay\([\s\S]*?positionOverlayForContent\(overlay\)/);
 assert.match(source, /function showCopyOverlay\([\s\S]*?positionOverlayForContent\(overlay\)/);
 source = source.replace(/^\s*show(?:Speed|Seek|Copy)Overlay\([^;]+;\r?$/gm, "");
-source = source.replace(/\ndocument\.addEventListener\("keydown"[\s\S]*$/, "\nthis.__contentTest = { contentType, isVideoPage, effectiveSettings, applyEndScreenRecommendationVisibility, restoreNormalSpeed, seekShorts, handleKeyboardShortcut, isSphericalVideo, currentVideoInfo, copyCurrentVideoInfo, captureCurrentVideoFrame, ytqsScreenshotFilename, socialShareReady, openSocialShareWindow, positionShortsOverlay, positionOverlayForContent, ytqsNormalizeSettings, ytqsIsHomeGridPage, ytqsHomeGridStyleText, ytqsShortsVideoId, ytqsNormalizeShortsAuthor, ytqsExtractShortsPublishDate, ytqsNormalizePublishDate, ytqsCurrentShortsPagePublishDate, ytqsFormatShortsPublishTime, ytqsVideoIdFromCard, ytqsLooksLikeRelativeDate, ytqsCardDateElement, ytqsDeduplicateShortsChannelNames, ytqsDeduplicateShortsPublishTimes, ytqsDeduplicateShortsPagePublishTimes, ytqsIsMarkerOverVideo, setSettings: (value) => { ytqsSettings = ytqsNormalizeSettings(value); }, setContext: (value) => { ytqsContext = value; } };" );
+source = source.replace(/\nfunction ytqsHandleKeydown[\s\S]*$/, "\nthis.__contentTest = { contentType, isVideoPage, effectiveSettings, applyEndScreenRecommendationVisibility, restoreNormalSpeed, seekShorts, handleKeyboardShortcut, isSphericalVideo, currentVideoInfo, copyCurrentVideoInfo, captureCurrentVideoFrame, ytqsScreenshotFilename, socialShareReady, openSocialShareWindow, positionShortsOverlay, positionOverlayForContent, ytqsNormalizeSettings, ytqsIsHomeGridPage, ytqsHomeGridStyleText, ytqsShortsVideoId, ytqsNormalizeShortsAuthor, ytqsExtractShortsPublishDate, ytqsNormalizePublishDate, ytqsCurrentShortsPagePublishDate, ytqsFormatShortsPublishTime, ytqsVideoIdFromCard, ytqsLooksLikeRelativeDate, ytqsCardDateElement, ytqsDeduplicateShortsChannelNames, ytqsDeduplicateShortsPublishTimes, ytqsDeduplicateShortsPagePublishTimes, ytqsIsMarkerOverVideo, setSettings: (value) => { ytqsSettings = ytqsNormalizeSettings(value); }, setContext: (value) => { ytqsContext = value; } };" );
 
 const messages = [];
 const clipboardWrites = [];
 const clipboardImageWrites = [];
+const firefoxClipboardImageWrites = [];
 const openedWindows = [];
 const screenshotDownloads = [];
 const screenshotDraws = [];
@@ -94,7 +97,7 @@ const sandbox = {
           width: 0,
           height: 0,
           getContext: () => ({ drawImage: (...args) => screenshotDraws.push(args) }),
-          toBlob: (callback, type) => callback({ type, size: 128 })
+          toBlob: (callback, type) => callback({ type, size: 128, arrayBuffer: async () => new ArrayBuffer(8) })
         };
       }
       if (tagName === "a") {
@@ -457,6 +460,15 @@ setImmediate(async () => {
   assert.equal(clipboardImageWrites.length, 1);
   assert.equal(clipboardImageWrites[0][0] instanceof MockClipboardItem, true);
   assert.equal(clipboardImageWrites[0][0].items["image/png"].type, "image/png");
+  const standardImageWrite = sandbox.navigator.clipboard.write;
+  sandbox.navigator.clipboard.write = undefined;
+  sandbox.browser = { clipboard: { setImageData: async (...args) => firefoxClipboardImageWrites.push(args) } };
+  const firefoxScreenshot = await api.captureCurrentVideoFrame(video, "clipboard");
+  assert.equal(firefoxScreenshot.ok, true);
+  assert.equal(firefoxClipboardImageWrites.length, 1);
+  assert.equal(firefoxClipboardImageWrites[0][1], "png");
+  sandbox.navigator.clipboard.write = standardImageWrite;
+  delete sandbox.browser;
   assert.equal(api.socialShareReady(), true);
   const secondS = keyboardEvent("s", "KeyS");
   assert.equal(api.handleKeyboardShortcut(secondS), true);

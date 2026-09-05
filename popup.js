@@ -55,6 +55,7 @@ const MESSAGES = {
     hideEndScreenRecommendationsTitle: "隱藏片尾推薦卡", hideEndScreenRecommendationsDescription: "移出播放器時隱藏，滑鼠移入即可暫時顯示",
     channelTheater: "這個頻道的劇院模式", theaterInherit: "跟隨全局", theaterOn: "強制開啟", theaterOff: "強制關閉",
     connected: "已連線到目前影片", disconnected: "請開啟 YouTube 影片或 Shorts", languageLabel: "介面語言",
+    instanceConflictTitle: "此版本已暫停運作", instanceConflictNewer: "偵測到優先版本 v{winner}，為避免兩套工具同時控制 YouTube，本版本 v{current} 已關閉全部功能。", instanceConflictSameVersion: "同為 v{version} 時由未封裝版優先；目前的 Chrome 商店版已關閉全部功能。",
     qualityHighest: "自動最高", quality4k: "4K", quality1080: "1080p", qualityPremiumHint: "Premium 強化畫質由下方開關獨立控制",
     premiumQualityTitle: "使用 Premium 強化畫質", premiumQualityDescription: "開啟後才會選擇 1080p Premium，僅適用已訂閱會員",
     channelPremiumQualityDescription: "只為這個頻道允許選擇 1080p Premium"
@@ -99,6 +100,7 @@ const MESSAGES = {
     hideEndScreenRecommendationsTitle: "Hide end-screen recommendations", hideEndScreenRecommendationsDescription: "Hide them when the pointer leaves the player; hover to reveal",
     channelTheater: "Theater mode for this channel", theaterInherit: "Follow global", theaterOn: "Force on", theaterOff: "Force off",
     connected: "Connected to the current video", disconnected: "Open a YouTube video or Short", languageLabel: "Interface language",
+    instanceConflictTitle: "This version is paused", instanceConflictNewer: "Preferred version v{winner} was detected. To prevent duplicate YouTube controls, this v{current} instance has disabled all features.", instanceConflictSameVersion: "For matching v{version} builds, the unpacked build takes priority. This Chrome Web Store instance has disabled all features.",
     qualityHighest: "Highest", quality4k: "4K", quality1080: "1080p", qualityPremiumHint: "Premium enhanced quality is controlled separately below",
     premiumQualityTitle: "Use Premium enhanced quality", premiumQualityDescription: "Allows 1080p Premium only when enabled; requires a Premium subscription",
     channelPremiumQualityDescription: "Allow 1080p Premium for this channel only"
@@ -143,6 +145,7 @@ const MESSAGES = {
     hideEndScreenRecommendationsTitle: "終了画面のおすすめを非表示", hideEndScreenRecommendationsDescription: "プレーヤーからポインターを外すと非表示、重ねると一時表示します",
     channelTheater: "このチャンネルのシアターモード", theaterInherit: "全体設定に従う", theaterOn: "常にオン", theaterOff: "常にオフ",
     connected: "現在の動画に接続しました", disconnected: "YouTube 動画またはショートを開いてください", languageLabel: "表示言語",
+    instanceConflictTitle: "このバージョンは一時停止中です", instanceConflictNewer: "優先バージョン v{winner} を検出しました。YouTube の二重操作を防ぐため、この v{current} の全機能を停止しました。", instanceConflictSameVersion: "同じ v{version} では未パッケージ版が優先されます。Chrome ウェブストア版の全機能を停止しました。",
     qualityHighest: "最高画質", quality4k: "4K", quality1080: "1080p", qualityPremiumHint: "Premium 高画質は下のスイッチで個別に設定",
     premiumQualityTitle: "Premium 高画質を使用", premiumQualityDescription: "オンの場合のみ 1080p Premium を選択。Premium 登録が必要です",
     channelPremiumQualityDescription: "このチャンネルだけ 1080p Premium を許可"
@@ -170,6 +173,7 @@ let activeLanguage = "zh-Hant";
 let saveTimer = null;
 let pendingImport = null;
 let restorePoint = null;
+let instanceConflict = null;
 const $ = (selector) => document.querySelector(selector);
 
 function normalizeProfile(value, fallback = DEFAULT_PROFILE) {
@@ -542,6 +546,7 @@ function flashSaved() {
 }
 
 async function persist() {
+  if (instanceConflict?.active) return;
   await chrome.storage.sync.set({ ytQuickSettings: settings });
   flashSaved();
 }
@@ -715,6 +720,31 @@ async function getPageContext() {
   } catch {
     return null;
   }
+}
+
+async function getInstanceConflictStatus() {
+  try {
+    return await chrome.runtime.sendMessage({ type: "YTQS_INSTANCE_CONFLICT_STATUS" });
+  } catch {
+    return null;
+  }
+}
+
+function renderInstanceConflict() {
+  const conflict = instanceConflict?.active ? instanceConflict : null;
+  const banner = $("#instanceConflict");
+  document.body.classList.toggle("has-instance-conflict", Boolean(conflict));
+  banner.hidden = !conflict;
+  $("#instanceConflictTitle").textContent = t("instanceConflictTitle");
+  const sameVersionDevelopment = conflict?.reason === "same-version-development-priority";
+  $("#instanceConflictDetail").textContent = sameVersionDevelopment
+    ? t("instanceConflictSameVersion").replace("{version}", conflict.currentVersion || conflict.winnerVersion || "")
+    : t("instanceConflictNewer")
+      .replace("{winner}", conflict?.winnerVersion || "")
+      .replace("{current}", conflict?.currentVersion || "");
+  document.querySelectorAll(".panel > :not(.masthead):not(.instance-conflict)").forEach((element) => {
+    element.inert = Boolean(conflict);
+  });
 }
 
 async function copyTextToClipboard(text) {
@@ -1172,8 +1202,21 @@ $("#removeChannel").addEventListener("click", async () => {
 });
 
 async function init() {
-  const stored = await chrome.storage.sync.get("ytQuickSettings");
+  const [stored, coordination] = await Promise.all([
+    chrome.storage.sync.get("ytQuickSettings"),
+    getInstanceConflictStatus()
+  ]);
   settings = normalizeSettings(stored.ytQuickSettings);
+  instanceConflict = coordination?.conflict?.active ? coordination.conflict : null;
+  $("#languageSelect").value = settings.language;
+  activeLanguage = resolveLanguage();
+  if (instanceConflict) {
+    applyTranslations();
+    renderInstanceConflict();
+    $("#statusDot").classList.remove("online");
+    $("#statusDot").title = t("instanceConflictTitle");
+    return;
+  }
   if (Number(stored.ytQuickSettings?.schemaVersion || 1) < SETTINGS_FORMAT_VERSION || !stored.ytQuickSettings?.copy || !stored.ytQuickSettings?.gridLayout || !stored.ytQuickSettings?.screenshot) {
     await chrome.storage.sync.set({ ytQuickSettings: settings });
   }
@@ -1186,6 +1229,7 @@ async function init() {
   $("#copyFormatToggle").disabled = !context?.isVideo;
   $("#captureVideoFrame").disabled = !context?.isVideo;
   renderType();
+  renderInstanceConflict();
 }
 
 init();

@@ -4,7 +4,7 @@
 
 ![YouTube 快速設定速度與畫質 4K 宣傳圖](docs/images/promo-zh-4k.png)
 
-自動為 YouTube 一般影片套用播放速度、畫質與頻道專屬設定，並為 Shorts 提供獨立速度與快速操作的 Chrome 擴充功能。
+自動為 YouTube 一般影片套用播放速度、畫質與頻道專屬設定，並為 Shorts 提供獨立速度與快速操作。Chrome 為穩定基準版本，Firefox 使用隔離建置，並提供 Safari 轉換準備輸出。
 
 ## 主要功能
 
@@ -29,7 +29,7 @@
 - 播放速度與畫質會盡可能同步至 YouTube 原生設定面板
 - 相同影片與畫質設定只排程一次，避免畫質切換造成開頭重複載入
 - 支援繁體中文、英文、日文，可跟隨系統或手動選擇
-- 設定透過 `chrome.storage.sync` 在 Chrome 中同步保存
+- 設定透過瀏覽器的 `storage.sync` 同步保存
 
 ## 操作畫面
 
@@ -53,6 +53,18 @@
 
 更新程式後，請在 `chrome://extensions/` 對擴充功能按一次「重新載入」，並重新整理 YouTube 分頁。
 
+### 商店版與未封裝版共存
+
+Chrome 同時安裝支援此機制的商店版與未封裝版時，兩者會在 YouTube 頁面互相驗證版本。版本較新的實例會接管，較舊的實例會停止所有 YouTube 操作，並在工具列圖示顯示 `OLD`；版本相同時由未封裝版優先，Chrome 商店版停止運作。停用版本的面板會顯示目前接管的版本，不會寫入或套用設定。
+
+這項功能必須兩個版本都已內建協調機制才能完整生效；尚未支援此功能的舊版本無法被新版遠端停用。移除或停用優先版本後，原本暫停的版本會自動恢復。
+
+### Firefox 與 Safari
+
+Firefox 不直接修改 Chrome 原始套件；請執行 `pnpm run build:firefox`，再從 Firefox 的 `about:debugging` 暫時載入 `dist-firefox/manifest.json`。執行 `pnpm run package:firefox` 可產生 AMO 上傳用 ZIP。完整步驟與平台差異請參閱 [Firefox 開發說明](docs/FIREFOX.md)。
+
+Safari 目前提供轉換準備版：執行 `pnpm run build:safari` 產生 `dist-safari/`，再於 macOS 使用 Xcode 轉換與簽署。請參閱 [Safari 準備說明](docs/SAFARI.md)。
+
 ## 使用方式
 
 ### 一般影片與 Shorts
@@ -75,11 +87,11 @@ Shorts 設定中的「首頁 Shorts 顯示頻道名稱」預設開啟，「Short
 
 ### 取消自動播放下一部影片
 
-此選項第一次安裝時預設關閉。啟用後，擴充功能會在一般影片載入時關閉 YouTube 播放器的原生自動播放開關，並在 YouTube 嘗試重新開啟時再次關閉；停用選項後不會強制開啟自動播放。設定會透過 Chrome 同步儲存。
+此選項第一次安裝時預設關閉。啟用後，擴充功能會在一般影片載入時關閉 YouTube 播放器的原生自動播放開關，並在 YouTube 嘗試重新開啟時再次關閉；停用選項後不會強制開啟自動播放。設定會透過瀏覽器同步儲存。
 
 ### 隱藏片尾推薦卡
 
-此選項第一次安裝時預設關閉。啟用後，一般影片結束時會隱藏 YouTube 的片尾推薦卡與下一部影片推薦區域；將滑鼠移入播放器範圍即可暫時恢復顯示，移出後再次隱藏。此功能不會移除播放途中出現的資訊卡，設定會透過 Chrome 同步儲存。
+此選項第一次安裝時預設關閉。啟用後，一般影片結束時會隱藏 YouTube 的片尾推薦卡與下一部影片推薦區域；將滑鼠移入播放器範圍即可暫時恢復顯示，移出後再次隱藏。此功能不會移除播放途中出現的資訊卡，設定會透過瀏覽器同步儲存。
 
 套用優先順序：
 
@@ -122,26 +134,31 @@ Shorts 設定頁可將左右方向鍵設為開啟或關閉，並選擇每次跳�
 
 目前桌面版 YouTube Shorts 沒有穩定可用的原生畫質控制，因此 Shorts 設定頁不提供畫質選項，也不會在背景強制套用畫質；Shorts 播放速度與快速操作不受此限制。
 
+進入瀏覽器原生 PiP 或 Document Picture-in-Picture 浮動播放器後，擴充功能會暫停尚未完成的畫質、播放器介面及播放位置重試，避免其他 PiP 工具搬移影片元素時受到干擾；離開浮動播放器後仍保留原本已套用的速度與畫質。
+
 ## 隱私
 
 - 不收集、傳送或販售個人資料。
 - 不使用外部分析服務。
 - 僅在 `youtube.com` 執行。
-- 設定只保存在 Chrome 同步儲存空間。
+- 設定只保存在瀏覽器的同步儲存空間。
 
 完整內容請參閱 [隱私權政策](PRIVACY.md)。
 
 ## 開發與測試
 
-此專案使用 Chrome Manifest V3，主要檔案如下：
+此專案以 Chrome Manifest V3 為穩定基準，透過平台建置層輸出 Firefox 與 Safari 準備版本，主要檔案如下：
 
 - `popup.html`／`popup.js`／`popup.css`：設定介面與多語系
 - `content.js`：YouTube 導航、頻道偵測、快捷鍵與提示
+- `instance-coordinator.js`／`background.js`：商店版與未封裝版的版本驗證、優先權與功能暫停
 - `copy-utils.js`：五種影片資訊複製格式、時間點網址與社群分享網址
 - `settings-transfer.js`：設定檔版本、匯入合併與差異預覽
 - `page-bridge.js`：同步 YouTube 播放器狀態與原生設定面板
 - `_locales/`：Chrome 擴充功能名稱與說明的系統語言版本
 - `tests/`：畫質選擇、設定遷移、快捷鍵與介面渲染測試
+- `scripts/build-platforms.js`：建立互不污染的 Chrome、Firefox、Safari 輸出
+- `scripts/package-firefox.ps1`：產生 Firefox 未簽署發布 ZIP 與 SHA-256
 
 安裝開發相依套件並執行全部測試：
 
@@ -149,6 +166,13 @@ Shorts 設定頁可將左右方向鍵設為開啟或關閉，並選擇每次跳�
 npm install
 npx playwright install chromium
 npm test
+```
+
+建立三個平台的輸出並封裝 Firefox：
+
+```powershell
+pnpm run build:platforms
+pnpm run package:firefox
 ```
 
 ## 宣傳素材

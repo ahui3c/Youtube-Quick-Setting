@@ -1,8 +1,8 @@
 # YouTube 快速設定工具箱－隱私權政策
 
-最後更新：2026 年 8 月 31 日
+最後更新：2026 年 9 月 5 日
 
-本隱私權政策適用於 Chrome 擴充功能「YouTube 快速設定工具箱」（以下稱「本擴充功能」）。
+本隱私權政策適用於 Chrome 與 Firefox 版本的「YouTube 快速設定工具箱」（以下稱「本擴充功能」）。Safari 轉換準備版尚未公開發布。
 
 ## 我們處理的資料
 
@@ -14,11 +14,11 @@
 
 ## 儲存的設定
 
-本擴充功能會使用 Chrome 的 `storage.sync` 儲存使用者選擇的語言、全域設定、自動播放下一部影片開關、片尾推薦卡顯示設定、Shorts 設定、截圖結果、複製格式及頻道專屬設定。若使用者已在 Chrome 啟用同步，這些偏好可能由 Google Chrome 在使用者自己的裝置間同步；開發者無法存取這些資料。匯入設定前建立的單一還原點儲存在 `storage.local`，只存在使用者裝置中。
+本擴充功能會使用瀏覽器的 `storage.sync` 儲存使用者選擇的語言、全域設定、自動播放下一部影片開關、片尾推薦卡顯示設定、Shorts 設定、截圖結果、複製格式及頻道專屬設定。若使用者已啟用瀏覽器同步，這些偏好可能由 Chrome 或 Firefox 在使用者自己的裝置間同步；開發者無法存取這些資料。匯入設定前建立的單一還原點儲存在 `storage.local`，只存在使用者裝置中。
 
 設定匯出與匯入由使用者主動操作，JSON 檔案只在本機產生或讀取，不會上傳至開發者或第三方服務。
 
-移除本擴充功能或清除其儲存資料，即可移除本機設定；Chrome 同步副本則依使用者的 Chrome 帳戶與同步設定管理。
+移除本擴充功能或清除其儲存資料，即可移除本機設定；同步副本依使用者的瀏覽器帳戶與同步設定管理。
 
 ## 權限用途
 
@@ -30,7 +30,7 @@
 
 ## 資料安全與第三方
 
-本擴充功能不使用自有伺服器、不執行遠端程式碼，也不包含廣告或分析服務。Shorts 頻道名稱與發布日期只從目前正在使用的 YouTube 頁面讀取或向 YouTube 服務查詢。使用者偏好的跨裝置同步由 Chrome 提供並受 Google 的隱私條款約束。Facebook 分享只會在使用者連續兩次按下 `S` 或主動選擇分享選單時開啟，且不需要 Facebook 主機權限；Facebook 分享頁面的登入、預覽與發佈行為由 Facebook 控制。
+本擴充功能不使用自有伺服器、不執行遠端程式碼，也不包含廣告或分析服務。Shorts 頻道名稱與發布日期只從目前正在使用的 YouTube 頁面讀取或向 YouTube 服務查詢。使用者偏好的跨裝置同步由 Chrome 或 Firefox 提供，並受相應瀏覽器供應商的隱私條款約束。社群分享只會在使用者主動選擇分享項目，或在複製提示期間按下對應快速鍵時開啟，且不需要社群平台主機權限；分享頁面的登入、預覽與發佈行為由各平台控制。
 
 本擴充功能對從 Google API 或 Google 服務取得之資訊的使用，遵守 Chrome Web Store User Data Policy，包括 Limited Use 要求。
 
@@ -40,8 +40,8 @@
 
 ## English
 
-This extension locally reads the current YouTube video type, title, public URL, current playback time, channel name, channel identifier, and public publish date only to provide its features. Selected video information is written to the clipboard only after the user clicks a copy control or presses `S`/`Shift+S`; clipboard contents are never read. Video screenshots are generated locally from the current video frame and either downloaded or copied to the clipboard according to the user's saved preference; they are never uploaded or sent to the developer. Facebook, X, or Threads sharing opens only after the user explicitly selects it or presses `F`, `X`, or `T` while the copy confirmation is visible. JSON exports, imports, and the single local restore point are processed only on the user's device. Home Shorts channel names and publish dates are obtained from YouTube without login cookies. Synced preferences are stored with Chrome `storage.sync`; the developer cannot access them. The extension contains no ads, trackers, analytics, remote code, or developer-operated server.
+This extension locally reads the current YouTube video type, title, public URL, current playback time, channel name, channel identifier, and public publish date only to provide its features. Selected video information is written to the clipboard only after the user clicks a copy control or presses `S`/`Shift+S`; clipboard contents are never read. Video screenshots are generated locally from the current video frame and either downloaded or copied to the clipboard according to the user's saved preference; they are never uploaded or sent to the developer. Facebook, X, or Threads sharing opens only after the user explicitly selects it or presses `F`, `X`, or `T` while the copy confirmation is visible. JSON exports, imports, and the single local restore point are processed only on the user's device. Home Shorts channel names and publish dates are obtained from YouTube without login cookies. Synced preferences are stored with the browser's `storage.sync`; the developer cannot access them. The Chrome and Firefox builds contain no ads, trackers, analytics, remote code, or developer-operated server. The Safari conversion-ready output has not been publicly released.
 
 ## 日本語
 
-本拡張機能は、機能提供のために現在の YouTube 動画タイプ、タイトル、公開 URL、現在の再生位置、チャンネル名、チャンネル識別情報、公開日をローカルで読み取ります。選択した動画情報は、ユーザーがコピー操作を行うか `S`／`Shift+S` キーを押した場合のみクリップボードへ書き込み、内容は読み取りません。動画スクリーンショットは現在の動画フレームから端末内で生成し、保存済みの選択に従ってファイル保存またはクリップボードへコピーします。開発者へのアップロードや送信は行いません。Facebook、X、Threads の共有は、ユーザーが明示的に選択するか、コピー確認表示中に `F`、`X`、`T` を押した場合のみ開きます。JSON の書き出し・読み込みと単一の復元ポイントは端末内だけで処理されます。ホームのショートのチャンネル名と公開日は、ログイン Cookie なしで YouTube から取得します。同期設定は Chrome の同期ストレージに保存され、開発者はアクセスできません。広告、トラッカー、解析サービス、リモートコード、開発者運営サーバーは使用しません。
+本拡張機能は、機能提供のために現在の YouTube 動画タイプ、タイトル、公開 URL、現在の再生位置、チャンネル名、チャンネル識別情報、公開日をローカルで読み取ります。選択した動画情報は、ユーザーがコピー操作を行うか `S`／`Shift+S` キーを押した場合のみクリップボードへ書き込み、内容は読み取りません。動画スクリーンショットは現在の動画フレームから端末内で生成し、保存済みの選択に従ってファイル保存またはクリップボードへコピーします。開発者へのアップロードや送信は行いません。Facebook、X、Threads の共有は、ユーザーが明示的に選択するか、コピー確認表示中に `F`、`X`、`T` を押した場合のみ開きます。JSON の書き出し・読み込みと単一の復元ポイントは端末内だけで処理されます。ホームのショートのチャンネル名と公開日は、ログイン Cookie なしで YouTube から取得します。同期設定はブラウザーの `storage.sync` に保存され、開発者はアクセスできません。Chrome 版と Firefox 版には、広告、トラッカー、解析サービス、リモートコード、開発者運営サーバーは含まれません。Safari 変換準備版はまだ一般公開していません。

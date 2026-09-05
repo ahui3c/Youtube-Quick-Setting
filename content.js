@@ -25,6 +25,14 @@ let ytqsShortsScanTimer = 0;
 let ytqsShortsMutationObserver = null;
 let ytqsShortsIntersectionObserver = null;
 let ytqsSocialShareReadyUntil = 0;
+let ytqsInstanceActive = false;
+let ytqsFeatureListenersInstalled = false;
+let ytqsInstanceConflict = null;
+let ytqsInstanceMarker = null;
+let ytqsInstanceMarkerObserver = null;
+let ytqsInstanceStartTimer = 0;
+let ytqsInstanceConflictCheckTimer = 0;
+const ytqsDiscoveredInstanceIds = new Set();
 let ytqsShortsMetadataRequests = 0;
 const ytqsShortsMetadataCache = new Map();
 const ytqsShortsMetadataPending = new Map();
@@ -259,19 +267,30 @@ function showChannelSettingsNotice(channelSettings) {
   notice.id = "ytqs-channel-settings-notice";
   notice.setAttribute("role", "status");
   notice.setAttribute("aria-live", "polite");
-  const qualityMarkup = isShorts ? "" : `
-      <span class="ytqs-channel-divider" aria-hidden="true"></span>
-      <span class="ytqs-channel-label">${ytqsText("quality")}</span>
-      <strong>${YTQS_QUALITY_LABELS[channelSettings.quality] || channelSettings.quality}</strong>`;
-  notice.innerHTML = `
-    <span class="ytqs-channel-accent" aria-hidden="true"></span>
-    <span class="ytqs-channel-title">${ytqsText("channelSettings")}</span>
-    <span class="ytqs-channel-values">
-      <span class="ytqs-channel-label">${ytqsText("speed")}</span>
-      <strong>${Number(channelSettings.speed)}×</strong>
-      ${qualityMarkup}
-    </span>
-  `;
+  const createNoticeElement = (tagName, className, text) => {
+    const element = document.createElement(tagName);
+    element.className = className;
+    if (text !== undefined) element.textContent = text;
+    return element;
+  };
+  const accent = createNoticeElement("span", "ytqs-channel-accent");
+  accent.setAttribute("aria-hidden", "true");
+  const title = createNoticeElement("span", "ytqs-channel-title", ytqsText("channelSettings"));
+  const values = createNoticeElement("span", "ytqs-channel-values");
+  values.append(
+    createNoticeElement("span", "ytqs-channel-label", ytqsText("speed")),
+    createNoticeElement("strong", "", `${Number(channelSettings.speed)}×`)
+  );
+  if (!isShorts) {
+    const divider = createNoticeElement("span", "ytqs-channel-divider");
+    divider.setAttribute("aria-hidden", "true");
+    values.append(
+      divider,
+      createNoticeElement("span", "ytqs-channel-label", ytqsText("quality")),
+      createNoticeElement("strong", "", YTQS_QUALITY_LABELS[channelSettings.quality] || channelSettings.quality)
+    );
+  }
+  notice.append(accent, title, values);
 
   const player = currentPlayer();
   if (player) {
@@ -360,6 +379,7 @@ function applyEndScreenRecommendationVisibility() {
 }
 
 function refreshContextAndApply(attempt = 0) {
+  if (!ytqsInstanceActive) return;
   const next = readChannelContext();
   ytqsContext = next;
   if (next.isVideo && !next.channelId && attempt < 8) {
@@ -371,6 +391,7 @@ function refreshContextAndApply(attempt = 0) {
 }
 
 function scheduleRefresh() {
+  if (!ytqsInstanceActive) return;
   clearTimeout(ytqsRefreshTimer);
   const videoId = currentVideoId();
   if (videoId !== ytqsLastNavigationVideoId) {
@@ -755,6 +776,7 @@ async function ytqsRenderShortsPagePublishTime() {
 }
 
 function ytqsScanShortsCards() {
+  if (!ytqsInstanceActive) return;
   ytqsScanAbsoluteDates();
   const onHome = location.pathname === "/";
   const onShortsPage = contentType() === "shorts";
@@ -783,6 +805,7 @@ function ytqsScanShortsCards() {
 }
 
 function ytqsScheduleShortsCardScan() {
+  if (!ytqsInstanceActive) return;
   clearTimeout(ytqsShortsScanTimer);
   ytqsShortsScanTimer = setTimeout(ytqsScanShortsCards, 180);
 }
@@ -820,6 +843,7 @@ function showSpeedOverlay(speed) {
     overlay.id = "ytqs-speed-overlay";
     overlay.innerHTML = '<span class="ytqs-speed-icon">▶▶</span><span class="ytqs-speed-value"></span><span class="ytqs-speed-label"></span>';
     const style = document.createElement("style");
+    style.id = "ytqs-speed-overlay-style";
     style.textContent = `
       #ytqs-speed-overlay{position:fixed;z-index:2147483647;left:50%;top:24%;transform:translate(-50%,-8px);display:grid;grid-template-columns:auto auto;align-items:center;gap:2px 10px;min-width:158px;padding:14px 18px;border:1px solid rgba(255,255,255,.2);border-radius:12px;background:rgba(16,16,18,.9);box-shadow:0 14px 45px rgba(0,0,0,.4);color:#fff;font-family:Roboto,"Microsoft JhengHei UI",sans-serif;opacity:0;pointer-events:none;transition:opacity .15s ease,transform .15s ease;backdrop-filter:blur(8px)}
       #ytqs-speed-overlay.ytqs-show{opacity:1;transform:translate(-50%,0)}
@@ -910,6 +934,7 @@ function showCopyOverlay(success, title = "", messageKey = "", kind = "copy") {
     overlay.id = "ytqs-copy-overlay";
     overlay.innerHTML = '<span class="ytqs-copy-icon"></span><span class="ytqs-copy-value"></span><span class="ytqs-copy-title"></span>';
     const style = document.createElement("style");
+    style.id = "ytqs-copy-overlay-style";
     style.textContent = `
       #ytqs-copy-overlay{position:fixed;z-index:2147483647;left:50%;top:24%;transform:translate(-50%,-8px);display:grid;grid-template-columns:28px minmax(0,1fr);align-items:center;column-gap:10px;min-width:230px;max-width:min(440px,calc(100vw - 32px));padding:13px 17px;border:1px solid rgba(255,255,255,.2);border-radius:12px;background:rgba(16,16,18,.92);box-shadow:0 14px 45px rgba(0,0,0,.4);color:#fff;font-family:Roboto,"Microsoft JhengHei UI",sans-serif;opacity:0;pointer-events:none;transition:opacity .15s ease,transform .15s ease;backdrop-filter:blur(8px)}
       #ytqs-copy-overlay.ytqs-show{opacity:1;transform:translate(-50%,0)}
@@ -972,8 +997,13 @@ async function captureCurrentVideoFrame(video = currentVideo(), requestedOutput 
     const filename = ytqsScreenshotFilename(currentVideoInfo()?.title || document.title);
     const output = requestedOutput === "clipboard" ? "clipboard" : "download";
     if (output === "clipboard") {
-      if (!navigator.clipboard?.write || typeof ClipboardItem !== "function") throw new Error("image-clipboard-unavailable");
-      await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+      if (navigator.clipboard?.write && typeof ClipboardItem === "function") {
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+      } else if (globalThis.browser?.clipboard?.setImageData) {
+        await globalThis.browser.clipboard.setImageData(await blob.arrayBuffer(), "png");
+      } else {
+        throw new Error("image-clipboard-unavailable");
+      }
       showCopyOverlay(true, `${width}×${height}`, "screenshotCopied", "screenshot");
       return { ok: true, output, width, height };
     }
@@ -1201,41 +1231,206 @@ function handleKeyboardShortcut(event) {
   return handled;
 }
 
-document.addEventListener("keydown", (event) => {
+function ytqsHandleKeydown(event) {
   handleKeyboardShortcut(event);
-}, true);
+}
 
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  if (message?.type === "YTQS_GET_CONTEXT") {
-    ytqsContext = readChannelContext();
-    sendResponse(ytqsContext);
+function ytqsHandleRuntimeMessage(message, _sender, sendResponse) {
+  if (message?.type === "YTQS_GET_INSTANCE_STATUS") {
+    sendResponse(ytqsInstanceStatus());
     return false;
   }
+  if (message?.type === "YTQS_INSTANCE_CONFLICT") {
+    ytqsApplyInstanceConflict(message.conflict);
+    sendResponse({ ok: true });
+    return false;
+  }
+  if (message?.type === "YTQS_GET_CONTEXT") {
+    if (!ytqsInstanceActive) {
+      const status = ytqsInstanceStatus();
+      sendResponse({ isVideo: false, contentType: contentType(), channelId: "", channelName: "", instanceStatus: status });
+      return false;
+    }
+    ytqsContext = readChannelContext();
+    sendResponse({ ...ytqsContext, instanceStatus: ytqsInstanceStatus() });
+    return false;
+  }
+  if (!ytqsInstanceActive) return false;
   if (message?.type === "YTQS_CAPTURE_VIDEO_FRAME") {
     captureCurrentVideoFrame(currentVideo(), message.output).then(sendResponse);
     return true;
   }
   return false;
-});
+}
 
-chrome.storage.onChanged.addListener((changes, area) => {
+function ytqsHandleStorageChange(changes, area) {
+  if (!ytqsInstanceActive) return;
   if (area !== "sync" || !changes.ytQuickSettings) return;
   ytqsSettings = ytqsNormalizeSettings(changes.ytQuickSettings.newValue);
   refreshContextAndApply();
   ytqsScheduleShortsCardScan();
-});
+}
 
-injectPageBridge();
-chrome.storage.sync.get("ytQuickSettings", (stored) => {
-  ytqsSettings = ytqsNormalizeSettings(stored.ytQuickSettings);
-  scheduleRefresh();
-  ytqsInstallShortsCardObservers();
-});
+function ytqsStartFeatures() {
+  if (ytqsInstanceActive) return;
+  ytqsInstanceActive = true;
+  if (!ytqsFeatureListenersInstalled) {
+    document.addEventListener("keydown", ytqsHandleKeydown, true);
+    chrome.storage.onChanged.addListener(ytqsHandleStorageChange);
+    document.addEventListener("yt-navigate-finish", scheduleRefresh, true);
+    document.addEventListener("yt-page-data-updated", scheduleRefresh, true);
+    document.addEventListener("yt-navigate-finish", ytqsScheduleShortsCardScan, true);
+    document.addEventListener("yt-page-data-updated", ytqsScheduleShortsCardScan, true);
+    window.addEventListener("popstate", scheduleRefresh);
+    window.addEventListener("popstate", ytqsScheduleShortsCardScan);
+    window.addEventListener("resize", ytqsScheduleShortsCardScan, { passive: true });
+    ytqsFeatureListenersInstalled = true;
+  }
+  injectPageBridge();
+  chrome.storage.sync.get("ytQuickSettings", (stored) => {
+    if (!ytqsInstanceActive) return;
+    ytqsSettings = ytqsNormalizeSettings(stored.ytQuickSettings);
+    scheduleRefresh();
+    ytqsInstallShortsCardObservers();
+  });
+}
 
-document.addEventListener("yt-navigate-finish", scheduleRefresh, true);
-document.addEventListener("yt-page-data-updated", scheduleRefresh, true);
-document.addEventListener("yt-navigate-finish", ytqsScheduleShortsCardScan, true);
-document.addEventListener("yt-page-data-updated", ytqsScheduleShortsCardScan, true);
-window.addEventListener("popstate", scheduleRefresh);
-window.addEventListener("popstate", ytqsScheduleShortsCardScan);
-window.addEventListener("resize", ytqsScheduleShortsCardScan, { passive: true });
+function ytqsStopFeatures() {
+  if (!ytqsInstanceActive && !ytqsFeatureListenersInstalled) return;
+  ytqsInstanceActive = false;
+  clearTimeout(ytqsRefreshTimer);
+  clearTimeout(ytqsShortsScanTimer);
+  clearTimeout(showSpeedOverlay.timer);
+  clearTimeout(showCopyOverlay.timer);
+  ytqsShortsMutationObserver?.disconnect();
+  ytqsShortsIntersectionObserver?.disconnect();
+  ytqsShortsMutationObserver = null;
+  ytqsShortsIntersectionObserver = null;
+  if (ytqsFeatureListenersInstalled) {
+    document.removeEventListener("keydown", ytqsHandleKeydown, true);
+    chrome.storage.onChanged.removeListener(ytqsHandleStorageChange);
+    document.removeEventListener("yt-navigate-finish", scheduleRefresh, true);
+    document.removeEventListener("yt-page-data-updated", scheduleRefresh, true);
+    document.removeEventListener("yt-navigate-finish", ytqsScheduleShortsCardScan, true);
+    document.removeEventListener("yt-page-data-updated", ytqsScheduleShortsCardScan, true);
+    window.removeEventListener("popstate", scheduleRefresh);
+    window.removeEventListener("popstate", ytqsScheduleShortsCardScan);
+    window.removeEventListener("resize", ytqsScheduleShortsCardScan);
+    ytqsFeatureListenersInstalled = false;
+  }
+  ytqsRestoreAbsoluteDates();
+  document.querySelector("#movie_player")?.classList?.remove("ytqs-hide-end-screen-recommendations");
+  document.querySelectorAll([
+    "#ytqs-channel-settings-notice",
+    "#ytqs-channel-settings-style",
+    "#ytqs-home-grid-style",
+    "#ytqs-end-screen-style",
+    "#ytqs-shorts-channel-style",
+    "#ytqs-speed-overlay",
+    "#ytqs-speed-overlay-style",
+    "#ytqs-copy-overlay",
+    "#ytqs-copy-overlay-style",
+    ".ytqs-shorts-channel-name",
+    ".ytqs-shorts-publish-time",
+    ".ytqs-shorts-page-publish-time"
+  ].join(",")).forEach((element) => element.remove());
+}
+
+function ytqsOwnInstance() {
+  const coordinator = globalThis.YTQSInstanceCoordinator;
+  return {
+    extensionId: String(chrome.runtime?.id || ""),
+    version: String(chrome.runtime?.getManifest?.().version || "0.0.0"),
+    distribution: coordinator?.classifyDistribution(chrome.runtime?.id, globalThis.YTQS_BUILD?.distribution) || "unknown"
+  };
+}
+
+function ytqsInstanceStatus() {
+  return { active: ytqsInstanceActive, self: ytqsOwnInstance(), conflict: ytqsInstanceConflict };
+}
+
+function ytqsScheduleInstanceStart() {
+  clearTimeout(ytqsInstanceStartTimer);
+  ytqsInstanceStartTimer = setTimeout(() => {
+    if (!ytqsInstanceConflict?.active) ytqsStartFeatures();
+  }, 220);
+}
+
+function ytqsApplyInstanceConflict(conflict) {
+  const wasConflicted = ytqsInstanceConflict?.active === true;
+  ytqsInstanceConflict = conflict?.active ? conflict : null;
+  if (ytqsInstanceConflict) {
+    clearTimeout(ytqsInstanceStartTimer);
+    ytqsStopFeatures();
+    if (!ytqsInstanceConflictCheckTimer && ytqsInstanceConflict.winnerExtensionId) {
+      ytqsInstanceConflictCheckTimer = setInterval(() => {
+        ytqsEvaluateDiscoveredInstance(ytqsInstanceConflict?.winnerExtensionId || "");
+      }, 30000);
+    }
+    return;
+  }
+  if (ytqsInstanceConflictCheckTimer) clearInterval(ytqsInstanceConflictCheckTimer);
+  ytqsInstanceConflictCheckTimer = 0;
+  if (wasConflicted || !ytqsInstanceActive) ytqsScheduleInstanceStart();
+}
+
+function ytqsEvaluateDiscoveredInstance(extensionId) {
+  const coordinator = globalThis.YTQSInstanceCoordinator;
+  if (!coordinator?.validExtensionId(extensionId) || extensionId === chrome.runtime?.id) return;
+  try {
+    chrome.runtime.sendMessage({ type: "YTQS_INSTANCE_PEER", extensionId }, (response) => {
+      if (chrome.runtime.lastError) return;
+      if (response?.ok) ytqsApplyInstanceConflict(response.conflict);
+    });
+  } catch {}
+}
+
+function ytqsStartInstanceCoordination() {
+  const coordinator = globalThis.YTQSInstanceCoordinator;
+  const own = ytqsOwnInstance();
+  if (!coordinator?.validExtensionId(own.extensionId)
+    || ![coordinator.DEVELOPMENT_DISTRIBUTION, coordinator.CHROME_STORE_DISTRIBUTION].includes(own.distribution)) {
+    ytqsStartFeatures();
+    return;
+  }
+  ytqsDiscoveredInstanceIds.add(own.extensionId);
+  const scan = () => {
+    document.querySelectorAll(`meta[name="${coordinator.MARKER_NAME}"]`).forEach((marker) => {
+      if (marker.getAttribute("data-product") !== coordinator.PRODUCT
+        || marker.getAttribute("data-protocol") !== String(coordinator.PROTOCOL_VERSION)) return;
+      const extensionId = String(marker.getAttribute("data-extension-id") || "");
+      if (ytqsDiscoveredInstanceIds.has(extensionId) || !coordinator.validExtensionId(extensionId)) return;
+      ytqsDiscoveredInstanceIds.add(extensionId);
+      ytqsEvaluateDiscoveredInstance(extensionId);
+    });
+  };
+  const publish = () => {
+    if (!document.documentElement || ytqsInstanceMarker) return;
+    ytqsInstanceMarker = document.createElement("meta");
+    ytqsInstanceMarker.setAttribute("name", coordinator.MARKER_NAME);
+    ytqsInstanceMarker.setAttribute("data-product", coordinator.PRODUCT);
+    ytqsInstanceMarker.setAttribute("data-protocol", String(coordinator.PROTOCOL_VERSION));
+    ytqsInstanceMarker.setAttribute("data-extension-id", own.extensionId);
+    document.documentElement.append(ytqsInstanceMarker);
+    ytqsInstanceMarkerObserver = new MutationObserver(scan);
+    ytqsInstanceMarkerObserver.observe(document.documentElement, { childList: true });
+    scan();
+    try {
+      chrome.runtime.sendMessage({ type: "YTQS_INSTANCE_CONFLICT_STATUS" }, (response) => {
+        if (chrome.runtime.lastError) {
+          ytqsScheduleInstanceStart();
+          return;
+        }
+        ytqsApplyInstanceConflict(response?.conflict);
+        if (response?.conflict?.winnerExtensionId) ytqsEvaluateDiscoveredInstance(response.conflict.winnerExtensionId);
+      });
+    } catch {
+      ytqsScheduleInstanceStart();
+    }
+  };
+  if (document.documentElement) publish();
+  else setTimeout(publish, 0);
+}
+
+chrome.runtime.onMessage.addListener(ytqsHandleRuntimeMessage);
+ytqsStartInstanceCoordination();

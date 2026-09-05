@@ -23,6 +23,7 @@
   let lastApplySignature = "";
   let pendingQualityResume = null;
   let pendingQualityResumeTimer = 0;
+  let pictureInPictureResumeTimer = 0;
   let autoplayToggleObserver = null;
   let autoplayToggleTarget = null;
 
@@ -43,6 +44,54 @@
       return video?.closest("ytd-reel-video-renderer")?.querySelector("#shorts-player, #movie_player") || video?.parentElement;
     }
     return document.querySelector("#movie_player");
+  }
+
+  function documentPictureInPictureWindow() {
+    try {
+      const pipWindow = window.documentPictureInPicture?.window;
+      return pipWindow && !pipWindow.closed ? pipWindow : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function isPictureInPictureActive() {
+    if (document.pictureInPictureElement) return true;
+    if (document.querySelector("video[__pip__]")) return true;
+    const pipWindow = documentPictureInPictureWindow();
+    try {
+      return Boolean(pipWindow?.document?.querySelector("video"));
+    } catch {
+      return Boolean(pipWindow);
+    }
+  }
+
+  function suspendPlayerChangesForPictureInPicture() {
+    // Cancel delayed load-time retries. Some PiP extensions move YouTube's
+    // actual <video> into a Document Picture-in-Picture window; changing its
+    // quality or restoring its position while detached can break that window.
+    applyToken += 1;
+    pendingQualityResume = null;
+    clearTimeout(pendingQualityResumeTimer);
+  }
+
+  function resumePlayerChangesAfterPictureInPicture() {
+    clearTimeout(pictureInPictureResumeTimer);
+    pictureInPictureResumeTimer = setTimeout(() => {
+      if (isPictureInPictureActive() || !currentSettings) return;
+      // The video may have been moved back into the YouTube player. Reset the
+      // signature so settings changed during PiP can now be applied safely.
+      lastApplySignature = "";
+      applyWithRetries(currentSettings);
+    }, 250);
+  }
+
+  function handleDocumentPictureInPictureEnter(event) {
+    suspendPlayerChangesForPictureInPicture();
+    const pipWindow = event?.window || documentPictureInPictureWindow();
+    try {
+      pipWindow?.addEventListener("pagehide", resumePlayerChangesAfterPictureInPicture, { once: true });
+    } catch {}
   }
 
   function applyPlaybackRate(player, video, speed) {
@@ -145,7 +194,48 @@
     return new Promise((resolve) => setTimeout(resolve, milliseconds));
   }
 
+  async function waitForCondition(condition, timeout = 1000, interval = 25) {
+    const deadline = Date.now() + timeout;
+    while (Date.now() < deadline) {
+      if (condition()) return true;
+      await wait(interval);
+    }
+    return Boolean(condition());
+  }
+
+  function settingsMenuIsOpen(settingsButton) {
+    return settingsButton?.getAttribute("aria-expanded") === "true";
+  }
+
+  async function closeSettingsMenu(player, settingsButton) {
+    // A quality row click usually closes the menu itself. Give YouTube time to
+    // finish that transition before deciding whether another click is needed.
+    await wait(100);
+    if (!settingsMenuIsOpen(settingsButton)) return true;
+
+    settingsButton.click();
+    if (await waitForCondition(() => !settingsMenuIsOpen(settingsButton), 500)) return true;
+
+    // YouTube occasionally replaces the menu while applying a quality. Escape
+    // closes that replacement without depending on the old menu node.
+    try {
+      document.dispatchEvent(new KeyboardEvent("keydown", {
+        key: "Escape",
+        code: "Escape",
+        bubbles: true,
+        cancelable: true
+      }));
+    } catch {}
+    if (await waitForCondition(() => !settingsMenuIsOpen(settingsButton), 350)) return true;
+
+    // Last guarded attempt: never click when aria-expanded is already false,
+    // because that would reopen the menu we are trying to close.
+    if (settingsMenuIsOpen(settingsButton)) settingsButton.click();
+    return waitForCondition(() => !settingsMenuIsOpen(settingsButton), 350);
+  }
+
   function rememberQualityPlaybackPosition() {
+    if (isPictureInPictureActive()) return;
     const player = getPlayer();
     const video = /^\/shorts\/[^/]+/.test(location.pathname)
       ? getActiveShortVideo()
@@ -170,6 +260,11 @@
   }
 
   function restoreQualityPlaybackPosition() {
+    if (isPictureInPictureActive()) {
+      pendingQualityResume = null;
+      clearTimeout(pendingQualityResumeTimer);
+      return;
+    }
     const pending = pendingQualityResume;
     if (!pending || pending.videoKey !== currentTheaterVideoKey()) return;
     pendingQualityResume = null;
@@ -223,7 +318,7 @@
   }
 
   async function applyQualityViaMenu(token, attempt = 0) {
-    if (token !== applyToken || !currentSettings?.quality || qualityMenuBusy) return;
+    if (token !== applyToken || !currentSettings?.quality || qualityMenuBusy || isPictureInPictureActive()) return;
     const player = getPlayer();
     const settingsButton = player?.querySelector(".ytp-settings-button");
     if (!player || !settingsButton) return;
@@ -238,24 +333,33 @@
     }
 
     qualityMenuBusy = true;
-    let menuWasOpened = false;
+    let menuWasRequested = false;
     const concealStyle = document.createElement("style");
-    concealStyle.textContent = "#movie_player .ytp-settings-menu{opacity:0!important;pointer-events:none!important}";
+    concealStyle.textContent = ".ytqs-quality-menu-transaction .ytp-settings-menu{visibility:hidden!important;opacity:0!important;pointer-events:none!important}";
+    player.classList.add("ytqs-quality-menu-transaction");
     document.documentElement.append(concealStyle);
 
     try {
       settingsButton.click();
-      menuWasOpened = true;
-      await wait(60);
-      if (token !== applyToken) return;
+      menuWasRequested = true;
+      const mainMenuReady = await waitForCondition(() => {
+        const menu = player.querySelector(".ytp-settings-menu");
+        return settingsMenuIsOpen(settingsButton) && Boolean(menu?.querySelectorAll(".ytp-menuitem")?.length);
+      }, 1200);
+      if (!mainMenuReady) return;
+      if (token !== applyToken || isPictureInPictureActive()) return;
 
       const menu = player.querySelector(".ytp-settings-menu");
       const mainRows = [...(menu?.querySelectorAll(".ytp-menuitem") || [])];
       const qualityEntry = mainRows.at(-1);
       if (!qualityEntry) return;
       qualityEntry.click();
-      await wait(60);
-      if (token !== applyToken) return;
+      const qualityMenuReady = await waitForCondition(() => {
+        const rows = [...(menu?.querySelectorAll(".ytp-menuitem") || [])];
+        return rows.some((row) => /(\d{3,4})\s*p/i.test(row.textContent || ""));
+      }, 1200);
+      if (!qualityMenuReady) return;
+      if (token !== applyToken || isPictureInPictureActive()) return;
 
       const qualityRows = [...(menu?.querySelectorAll(".ytp-menuitem") || [])];
       const selected = chooseMenuQuality(
@@ -272,16 +376,19 @@
       // YouTube may rebuild the menu during SPA navigation; later navigation
       // or settings changes will try again with the new player tree.
     } finally {
-      if (menuWasOpened && settingsButton.getAttribute("aria-expanded") === "true") {
-        settingsButton.click();
-      }
+      if (menuWasRequested) await closeSettingsMenu(player, settingsButton);
       concealStyle.remove();
+      player.classList.remove("ytqs-quality-menu-transaction");
       qualityMenuBusy = false;
     }
   }
 
   function applyNow(token) {
     if (token !== applyToken || !currentSettings) return;
+    // Preserve an active native or Document PiP session. Load-time retries are
+    // intentionally skipped until that session ends; the selected settings
+    // were already applied before the user opened PiP in the normal flow.
+    if (isPictureInPictureActive()) return;
     const player = getPlayer();
     const video = /^\/shorts\/[^/]+/.test(location.pathname)
       ? getActiveShortVideo()
@@ -350,7 +457,14 @@
   // source after a quality change. applyWithRetries de-duplicates the same
   // video/settings signature so that replacement cannot become a reload loop.
   document.addEventListener("loadedmetadata", () => {
+    if (isPictureInPictureActive()) return;
     restoreQualityPlaybackPosition();
     if (currentSettings) applyWithRetries(currentSettings);
   }, true);
+
+  document.addEventListener("enterpictureinpicture", suspendPlayerChangesForPictureInPicture, true);
+  document.addEventListener("leavepictureinpicture", resumePlayerChangesAfterPictureInPicture, true);
+  try {
+    window.documentPictureInPicture?.addEventListener("enter", handleDocumentPictureInPictureEnter);
+  } catch {}
 })();

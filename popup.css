@@ -109,6 +109,20 @@ h2 { font-size: 16px; line-height: 1.35; }
   box-shadow: 0 0 0 4px rgb(79 209 139 / 14%);
 }
 
+.instance-conflict {
+  display: grid;
+  gap: 4px;
+  margin: -4px 0 12px;
+  padding: 11px 13px;
+  border: 1px solid rgb(255 93 84 / 48%);
+  border-radius: 11px;
+  background: rgb(122 35 31 / 24%);
+}
+.instance-conflict[hidden] { display: none; }
+.instance-conflict strong { color: #ff8e87; font-size: 12px; }
+.instance-conflict span { color: #d6c2c0; font-size: 10px; line-height: 1.55; }
+body.has-instance-conflict .panel > :not(.masthead):not(.instance-conflict) { opacity: .38; }
+
 .type-switch {
   display: grid;
   grid-template-columns: 1fr 1fr;

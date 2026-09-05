@@ -5,9 +5,14 @@ const vm = require("node:vm");
 let source = fs.readFileSync("page-bridge.js", "utf8");
 assert.match(source, /!currentSettings\?\.quality/);
 assert.match(source, /if \(settings\?\.quality\) setTimeout\(\(\) => applyQualityViaMenu/);
+assert.match(source, /waitForCondition[\s\S]*mainMenuReady/);
+assert.match(source, /ytqs-quality-menu-transaction/);
+assert.match(source, /if \(settingsMenuIsOpen\(settingsButton\)\) settingsButton\.click\(\)/);
+assert.match(source, /leavepictureinpicture.*resumePlayerChangesAfterPictureInPicture/);
+assert.match(source, /pagehide.*resumePlayerChangesAfterPictureInPicture/);
 source = source.replace(
   /\n\}\)\(\);\s*$/,
-  "\nwindow.__qualityTest = { bestQuality, chooseMenuQuality, applyTheaterMode, applyTheaterModeOnce, disableAutoplayNext, applyWithRetries, shouldRestoreQualityPosition };\n})();"
+  "\nwindow.__qualityTest = { bestQuality, chooseMenuQuality, applyTheaterMode, applyTheaterModeOnce, disableAutoplayNext, applyWithRetries, shouldRestoreQualityPosition, isPictureInPictureActive };\n})();"
 );
 
 let theaterEnabled = false;
@@ -39,7 +44,18 @@ const sandbox = {
 vm.createContext(sandbox);
 vm.runInContext(source, sandbox, { filename: "page-bridge.js" });
 
-const { bestQuality, chooseMenuQuality, applyTheaterMode, applyTheaterModeOnce, disableAutoplayNext, applyWithRetries, shouldRestoreQualityPosition } = sandbox.window.__qualityTest;
+const { bestQuality, chooseMenuQuality, applyTheaterMode, applyTheaterModeOnce, disableAutoplayNext, applyWithRetries, shouldRestoreQualityPosition, isPictureInPictureActive } = sandbox.window.__qualityTest;
+
+assert.equal(isPictureInPictureActive(), false);
+sandbox.document.pictureInPictureElement = {};
+assert.equal(isPictureInPictureActive(), true);
+sandbox.document.pictureInPictureElement = null;
+sandbox.window.documentPictureInPicture = {
+  window: { closed: false, document: { querySelector: (selector) => selector === "video" ? {} : null } }
+};
+assert.equal(isPictureInPictureActive(), true);
+sandbox.window.documentPictureInPicture.window.closed = true;
+assert.equal(isPictureInPictureActive(), false);
 
 assert.equal(applyTheaterMode(player, true), true);
 assert.equal(theaterEnabled, true);

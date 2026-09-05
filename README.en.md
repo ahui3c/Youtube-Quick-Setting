@@ -4,7 +4,7 @@
 
 ![YouTube Quick Speed and Quality Settings 4K promotional image](docs/images/promo-en-4k.png)
 
-A Chrome extension that applies playback speed, video quality, and channel-specific preferences to standard YouTube videos, with separate speed and quick controls for Shorts.
+Applies playback speed, video quality, and channel-specific preferences to standard YouTube videos, with separate speed and quick controls for Shorts. Chrome remains the stable baseline, Firefox uses an isolated build, and a Safari conversion-ready output is provided.
 
 ## Features
 
@@ -53,6 +53,12 @@ A Chrome extension that applies playback speed, video quality, and channel-speci
 
 After updating the files, click **Reload** for the extension on `chrome://extensions/`, then refresh open YouTube tabs.
 
+### Running the Web Store and unpacked builds together
+
+When Chrome has both a Web Store build and an unpacked build that support this coordination feature, the two instances authenticate each other on YouTube and compare versions. The newer version remains active; the older version stops all YouTube features and shows an `OLD` toolbar badge. For matching versions, the unpacked build wins and the Chrome Web Store build pauses. The paused popup identifies the preferred version and does not apply or write settings.
+
+Both installed versions must include the coordination feature. A legacy version that predates it cannot be disabled remotely by a newer build. If the preferred version is removed or disabled, the paused version resumes automatically.
+
 ## Usage
 
 Use the **Videos / Shorts** selector to configure each content type independently. When the popup is opened from a Short, it automatically selects the Shorts profile.
@@ -71,11 +77,11 @@ Enable **Automatically open Theater mode** under **Videos** to switch through Yo
 
 ### Disable autoplay of the next video
 
-This option is off on first install. When enabled, the extension turns off YouTube's native autoplay toggle when a standard video loads and turns it off again if YouTube re-enables it. Disabling the option does not force autoplay back on. The preference is saved with Chrome sync storage.
+This option is off on first install. When enabled, the extension turns off YouTube's native autoplay toggle when a standard video loads and turns it off again if YouTube re-enables it. Disabling the option does not force autoplay back on. The preference is saved with browser sync storage.
 
 ### Hide end-screen recommendations
 
-This option is off on first install. When enabled, recommendation cards and the next-video area are hidden at the end of standard videos. Move the pointer over the player to reveal them temporarily; they hide again when the pointer leaves. Mid-video info cards are unaffected, and the preference is saved with Chrome sync storage.
+This option is off on first install. When enabled, recommendation cards and the next-video area are hidden at the end of standard videos. Move the pointer over the player to reveal them temporarily; they hide again when the pointer leaves. Mid-video info cards are unaffected, and the preference is saved with browser sync storage.
 
 Priority order:
 
@@ -118,17 +124,25 @@ Highest, 4K, and 1080p exclude Premium quality by default. `1080p Premium` becom
 
 The current desktop Shorts player does not expose stable native quality controls. The Shorts settings page therefore omits video quality and the extension does not force a quality level in the background. Shorts playback speed and quick controls are unaffected.
 
+When native PiP or a Document Picture-in-Picture floating player is active, the extension suspends unfinished quality, player-UI, and playback-position retries. This prevents interference when another PiP tool moves the actual video element into a floating document. Previously applied speed and quality remain in effect after the floating player closes.
+
 ## Privacy
 
 - No personal data is collected, transmitted, or sold.
 - No external analytics are used.
 - The extension runs only on `youtube.com`.
-- Preferences stay in Chrome sync storage.
+- Preferences stay in the browser's sync storage.
 
 See the complete [Privacy Policy](PRIVACY.md).
 
 ## Development
 
 The project uses Chrome Manifest V3. Tests under `tests/` cover quality fallback, legacy-setting migration, keyboard behavior, and localized popup rendering. Run `npm install`, `npx playwright install chromium`, and `npm test` to execute the complete suite.
+
+## Firefox and Safari builds
+
+Run `pnpm run build:firefox` and temporarily load `dist-firefox/manifest.json` from Firefox `about:debugging`. Run `pnpm run package:firefox` for an unsigned AMO upload ZIP. See [Firefox development notes](docs/FIREFOX.md).
+
+Run `pnpm run build:safari` to create `dist-safari/`, then convert and sign it with Xcode on macOS. This is preparation output, not a Safari-tested App Store build. See [Safari preparation notes](docs/SAFARI.md).
 
 The 4K Traditional Chinese, English, and Japanese promotional assets are available under `docs/images/`.
